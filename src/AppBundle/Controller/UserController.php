@@ -94,6 +94,7 @@ class UserController extends Controller
                         $arrApi['message'] = 'Successfully logged in.';
 
                         $arrApi['data']['user']['username'] = $user->getUsername();
+                        $arrApi['data']['user']['userid'] = $user->getId();
                         $arrApi['data']['user']['isActive'] = $user->getIsActive();
                         $arrApi['data']['user']['token'] = $token;
                     }
