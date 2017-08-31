@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 use AppBundle\Service\JsonToArrayGenerator;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -15,7 +16,6 @@ use AppBundle\Entity\Profile;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-
 
 class UserController extends Controller
 {
@@ -94,6 +94,7 @@ class UserController extends Controller
                         $arrApi['message'] = 'Successfully logged in.';
 
                         $arrApi['data']['user']['username'] = $user->getUsername();
+                        $arrApi['data']['user']['userid'] = $user->getId();
                         $arrApi['data']['user']['isActive'] = $user->getIsActive();
                         $arrApi['data']['user']['token'] = $token;
                     }
@@ -122,9 +123,11 @@ class UserController extends Controller
     /**
      * @Route("api/user/addUser")
      * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
      * parameters: email, password
      * mandatory: All
      * url: http://localhost/Talbert/backend/web/app_dev.php/api/user/addUser
+     *
      */
 
     public function addUserAction(Request $request) {
@@ -217,6 +220,7 @@ class UserController extends Controller
     /**
      * @Route("api/user/getUsersList")
      * @Method("GET")
+     * @Security("is_granted('ROLE_USER')")
      * parameters: None
      * url: http://localhost/Talbert/backend/web/app_dev.php/api/user/getUsersList
      */
@@ -246,6 +250,7 @@ class UserController extends Controller
     /**
      * @Route("api/user/getUserDetailsAndEditUser")
      * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
      * parameters: In first case - user_id,role_id and in second case
      * mandatory: All
      * url: http://localhost/Talbert/backend/web/app_dev.php/api/user/getUserDetailsAndEditUser
