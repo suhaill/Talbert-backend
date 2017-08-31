@@ -250,7 +250,6 @@ class UserController extends Controller
     /**
      * @Route("api/user/getUserDetailsAndEditUser")
      * @Method("POST")
-     * @Security("is_granted('ROLE_USER')")
      * parameters: In first case - user_id,role_id and in second case
      * mandatory: All
      * url: http://localhost/Talbert/backend/web/app_dev.php/api/user/getUserDetailsAndEditUser
@@ -261,7 +260,9 @@ class UserController extends Controller
             $_DATA = file_get_contents('php://input');
             $_DATA = json_decode($_DATA, true);
             $arrApi = array();
-            if ( $_DATA['current_user_id'] != 1 ) {
+            $currLoggedInUserId     = $_DATA['current_user_id'];
+            $currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
+            if ( $currLoggedInUserRoleId != 1 ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no access.';
             } else {
@@ -271,7 +272,7 @@ class UserController extends Controller
                     $arrApi['message'] = 'This user does not exists.';
                 } else {
                     if (count($_DATA) == 2 && array_key_exists('user_id', $_DATA) && array_key_exists('current_user_id', $_DATA)) {
-                        if (empty($_DATA['user_id']) || empty($_DATA['current_user_id'])) {
+                        if (empty($_DATA['user_id']) || empty($currLoggedInUserRoleId)) {
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Parameter missing.';
                         } else {
@@ -370,8 +371,59 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * @Route("api/user/getUserName")
+     * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
+     * parameters: user_id
+     * mandatory: All
+     * url: http://localhost/Talbert-backend/web/app_dev.php/api/user/getUserName
+     */
+
+    public function getUserNameAction(Request $request) {
+        if ($request->getMethod() == 'POST') {
+            $_DATA = file_get_contents('php://input');
+            $_DATA = json_decode($_DATA, true);
+            $arrApi = array();
+            if ( empty($_DATA['user_id']) ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Parameter missing.';
+            } else {
+                $user_id = $_DATA['user_id'];
+                $username = $this->getUsernameByUserId($user_id);
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived username.';
+                if (empty($username)) {
+                    $arrApi['data']['user']['username'] = null;
+                } else {
+                    $arrApi['data']['user']['username'] = $username;
+                }
+            }
+            return new JsonResponse($arrApi);
+        }
+    }
+
+
 
     // Reusable methods
+
+    private function getRoleIdByUserId($currLoggedInUserId) {
+        $loggedInUserData = $this->getDoctrine()->getRepository('AppBundle:User')->findOneById($currLoggedInUserId);
+        $roleId = $loggedInUserData->getRoleId();
+        return $roleId;
+    }
+
+    private function getUsernameByUserId($user_id) {
+        $usrNameData = $this->getDoctrine()
+            ->getRepository('AppBundle:User')
+            ->findOneById($user_id);
+        $username = $usrNameData->getUsername();
+        if (empty($username)) {
+            return null;
+        } else {
+            return $username;
+        }
+    }
 
     private function getProfileIdByUserId($userId) {
         $profile = $this->getDoctrine()

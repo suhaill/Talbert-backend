@@ -48,9 +48,13 @@ class ModuleController extends Controller
                            $i=0;
                            foreach ($moduleData as $module) {
                                $moduleId = $module->getModuleId();
-                               $moduleRecord[$i] = $this->getModuleDataByModuleId($moduleId);
+                               if ( !empty($moduleId) ) {
+                                   $moduleRecord[$i] = $this->getModuleDataByModuleId($moduleId);
+                               }
                                $i++;
                            }
+                           $arrApi['status'] = 1;
+                           $arrApi['message'] = 'Success in getting modules list.';
                            for ($j=0; $j<count($moduleRecord); $j++) {
                                $arrApi['data']['module'][$j]['id'] = $moduleRecord[$j]->getId();
                                $arrApi['data']['module'][$j]['name'] = $moduleRecord[$j]->getModuleName();
