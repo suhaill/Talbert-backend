@@ -29,37 +29,14 @@ class UserController extends Controller
      */
     public function apiLoginAction(Request $request,UserPasswordEncoderInterface $passwordEncoder) {
 
-
-        //Api 
-
-
-//
-//        $em = $this->getDoctrine()->getManager();
-//
-//        $user = new User();
-//       $password = password_hash("rajesh", PASSWORD_DEFAULT);
-//        $user->setUsername('rajesh');
-//        $user->setPassword($password);
-//        $user->setRoleId(1);
-//        $user->setIsActive(1);
-//
-//        // tells Doctrine you want to (eventually) save the Product (no queries yet)
-//        $em->persist($user);
-//
-//        // actually executes the queries (i.e. the INSERT query)
-//        $em->flush();
-//        $response = new JsonResponse("success");
-//        return $response;
-
-
         $arrApi = array();
         $statusCode = 200;
         $jsontoarraygenerator = new JsonToArrayGenerator();
 
         if ($request->getMethod() == 'POST') {
             $getJson = $jsontoarraygenerator->getJson($request);
-            $username = $getJson->get('username');
-            $password = $getJson->get('password');
+            $username = trim($getJson->get('username'));
+            $password = trim($getJson->get('password'));
 
 
 
