@@ -36,7 +36,7 @@ class ForgotController extends Controller
 
         if ($request->getMethod() == 'POST') {
             $getJson = $jsontoarraygenerator->getJson($request);
-            $email = $getJson->get('email');
+            $email = trim($getJson->get('email'));
 
 
             if (empty($email) || $email == "" || !filter_var($email,FILTER_VALIDATE_EMAIL)) {
@@ -127,9 +127,9 @@ class ForgotController extends Controller
 
         if ($request->getMethod() == 'POST') {
             $getJson = $jsontoarraygenerator->getJson($request);
-            $token = $getJson->get('token');
-            $newpassword = $getJson->get('newpassword');
-            $cnpassword = $getJson->get('cnpassword');
+            $token = trim($getJson->get('token'));
+            $newpassword = trim($getJson->get('newpassword'));
+            $cnpassword = trim($getJson->get('cnpassword'));
 
              if(empty($token) || empty($newpassword) || empty($cnpassword)
                  || $token == "" || $newpassword == "" || $cnpassword == "" ||
@@ -143,7 +143,7 @@ class ForgotController extends Controller
                 if($newpassword != $cnpassword){
 
                     $arrApi['status'] = 0;
-                    $arrApi['message'] = 'Password and confirm password did not match';
+                    $arrApi['message'] = 'Passwords should be same';
                     $statusCode = 422;
                 } else{
 
