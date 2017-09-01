@@ -143,7 +143,7 @@ class ForgotController extends Controller
                 if($newpassword != $cnpassword){
 
                     $arrApi['status'] = 0;
-                    $arrApi['message'] = 'Password and confirm password did not match';
+                    $arrApi['message'] = 'Passwords should be same';
                     $statusCode = 422;
                 } else{
 

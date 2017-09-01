@@ -4,7 +4,6 @@
     <list default="true" id="80e28df3-ed42-4494-9ad7-d3a1639389c6" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Controller/ForgotController.php" afterPath="$PROJECT_DIR$/src/AppBundle/Controller/ForgotController.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Controller/UserController.php" afterPath="$PROJECT_DIR$/src/AppBundle/Controller/UserController.php" />
     </list>
     <ignored path="talbert-backend.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -40,11 +39,11 @@
         <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/UserController.php">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="-780">
-              <caret line="38" column="55" selection-start-line="38" selection-start-column="55" selection-end-line="38" selection-end-column="55" />
+              <caret line="39" column="0" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
               <folding>
-                <marker date="1504255910825" expanded="true" signature="19467:19530" ph="select * fro... user" />
-                <marker date="1504255910825" expanded="true" signature="20018:20083" ph="select * fro... profile" />
-                <marker date="1504255910825" expanded="true" signature="20567:20634" ph="select * fro... profile" />
+                <marker date="1504256169508" expanded="true" signature="20227:20290" ph="select * fro... user" />
+                <marker date="1504256169508" expanded="true" signature="20778:20843" ph="select * fro... profile" />
+                <marker date="1504256169508" expanded="true" signature="21327:21394" ph="select * fro... profile" />
               </folding>
             </state>
           </provider>
@@ -53,8 +52,8 @@
       <file leaf-file-name="ForgotController.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/ForgotController.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-75">
-              <caret line="131" column="59" selection-start-line="131" selection-start-column="59" selection-end-line="131" selection-end-column="59" />
+            <state relative-caret-position="1290">
+              <caret line="147" column="23" selection-start-line="147" selection-start-column="23" selection-end-line="147" selection-end-column="23" />
               <folding />
             </state>
           </provider>
@@ -276,12 +275,12 @@
       <option name="presentableId" value="Default" />
       <updated>1504170834650</updated>
       <workItem from="1504170835878" duration="1560000" />
-      <workItem from="1504238618589" duration="4208000" />
+      <workItem from="1504238618589" duration="5571000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="5768000" />
+    <option name="totallyTimeSpent" value="7131000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="24" width="1535" height="876" extended-state="6" />
@@ -358,19 +357,19 @@
     <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/UserController.php">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-780">
-          <caret line="38" column="55" selection-start-line="38" selection-start-column="55" selection-end-line="38" selection-end-column="55" />
+          <caret line="39" column="0" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
           <folding>
-            <marker date="1504255910825" expanded="true" signature="19467:19530" ph="select * fro... user" />
-            <marker date="1504255910825" expanded="true" signature="20018:20083" ph="select * fro... profile" />
-            <marker date="1504255910825" expanded="true" signature="20567:20634" ph="select * fro... profile" />
+            <marker date="1504256169508" expanded="true" signature="20227:20290" ph="select * fro... user" />
+            <marker date="1504256169508" expanded="true" signature="20778:20843" ph="select * fro... profile" />
+            <marker date="1504256169508" expanded="true" signature="21327:21394" ph="select * fro... profile" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/ForgotController.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-75">
-          <caret line="131" column="59" selection-start-line="131" selection-start-column="59" selection-end-line="131" selection-end-column="59" />
+        <state relative-caret-position="1290">
+          <caret line="147" column="23" selection-start-line="147" selection-start-column="23" selection-end-line="147" selection-end-column="23" />
           <folding />
         </state>
       </provider>
