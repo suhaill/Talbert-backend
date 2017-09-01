@@ -405,6 +405,8 @@ class UserController extends Controller
                     $arrApi['data']['user']['username'] = null;
                 } else {
                     $arrApi['data']['user']['username'] = $username;
+                    $arrApi['data']['user']['fname'] = $this->getFnameById($user_id);
+                    $arrApi['data']['user']['lname'] = $this->getLnameById($user_id);
                 }
             }
             return new JsonResponse($arrApi);
