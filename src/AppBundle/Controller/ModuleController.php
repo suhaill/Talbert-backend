@@ -56,9 +56,11 @@ class ModuleController extends Controller
                            $arrApi['status'] = 1;
                            $arrApi['message'] = 'Success in getting modules list.';
                            for ($j=0; $j<count($moduleRecord); $j++) {
-                               $arrApi['data']['module'][$j]['id'] = $moduleRecord[$j]->getId();
-                               $arrApi['data']['module'][$j]['name'] = $moduleRecord[$j]->getModuleName();
-                               $arrApi['data']['module'][$j]['url'] = $moduleRecord[$j]->getModuleUrl();
+                               if (!empty($moduleRecord[$j])) {
+                                   $arrApi['data']['module'][$j]['id'] = $moduleRecord[$j]->getId();
+                                   $arrApi['data']['module'][$j]['name'] = $moduleRecord[$j]->getModuleName();
+                                   $arrApi['data']['module'][$j]['url'] = $moduleRecord[$j]->getModuleUrl();
+                               }
                            }
                        }
                    }

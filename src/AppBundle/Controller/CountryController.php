@@ -56,7 +56,7 @@ class CountryController extends Controller
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Parameter missing.';
             } else {
-                $states = $this->getDoctrine()->getRepository('AppBundle:State')->findAll();
+                $states = $this->getDoctrine()->getRepository('AppBundle:State')->findBy(array('countryId' => $_DATA['country_id']));
                 if (empty($states) ) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'There is no state for this country.';
@@ -65,7 +65,7 @@ class CountryController extends Controller
                     $arrApi['message'] = 'Successfully retreived the state list.';
                     for($i=0;$i<count($states);$i++) {
                         $arrApi['data']['states'][$i]['id'] = $states[$i]->getId();
-                        $arrApi['data']['states'][$i]['country_name'] = $states[$i]->getStateName();
+                        $arrApi['data']['states'][$i]['state_name'] = $states[$i]->getStateName();
                         $arrApi['data']['states'][$i]['country_code'] = $states[$i]->getCountryId();
                     }
                 }

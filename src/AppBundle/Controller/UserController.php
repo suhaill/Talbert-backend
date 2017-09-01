@@ -111,88 +111,94 @@ class UserController extends Controller
     public function addUserAction(Request $request) {
         if ($request->getMethod() == 'POST') {
             $_DATA = file_get_contents('php://input');
-            $_DATA = json_decode($_DATA,true);
-            $arrApi = array();
-            if ( empty($_DATA['company']) || empty($_DATA['fname']) || empty($_DATA['lname']) ||
-                empty($_DATA['email'])   || empty($_DATA['phone']) || empty($_DATA['username']) || $_DATA['is_active'] > 1 ||
-                empty($_DATA['password']) || empty($_DATA['address']) || empty($_DATA['country_id']) ||
-                empty($_DATA['state_id']) || empty($_DATA['city']) || empty($_DATA['role_id']) ) {
-
+            $_DATA = json_decode($_DATA, true);
+            $currLoggedInUserId = $_DATA['current_user_id'];
+            $currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
+            if ($currLoggedInUserRoleId != 1) {
                 $arrApi['status'] = 0;
-                $arrApi['message'] = 'Parameter missing.';
+                $arrApi['message'] = 'There is no access.';
             } else {
-                $company = $_DATA['company'];
-                $fname   = $_DATA['fname'];
-                $lname   = $_DATA['lname'];
-                $email   = $_DATA['email'];
-                $phone   = $_DATA['phone'];
-                $usrname = $_DATA['username'];
-                $roleId  = $_DATA['role_id'];
-                $isAct   = $_DATA['is_active'];
-                $passwd  = password_hash($_DATA['password'], PASSWORD_DEFAULT);
-                $addrs   = $_DATA['address'];
-                $cntId   = $_DATA['country_id'];
-                $stId    = $_DATA['state_id'];
-                $city    = $_DATA['city'];
-                $datime    = new \DateTime('now');
-                $emailCount = $this->checkIfEmailExists($email);
-                if ($emailCount) {
+                $arrApi = array();
+                if (empty($_DATA['company']) || empty($_DATA['fname']) || empty($_DATA['lname']) ||
+                    empty($_DATA['email']) || empty($_DATA['phone']) || empty($_DATA['username']) || $_DATA['is_active'] > 1 ||
+                    empty($_DATA['password']) || empty($_DATA['address']) || empty($_DATA['country_id']) ||
+                    empty($_DATA['state_id']) || empty($_DATA['city']) || empty($_DATA['role_id'])) {
+
                     $arrApi['status'] = 0;
-                    $arrApi['message'] = 'This email already exists.';
+                    $arrApi['message'] = 'Parameter missing.';
                 } else {
-                    $phoneCount = $this->checkIfPhoneExists($phone);
-                    if ($phoneCount) {
+                    $company = $_DATA['company'];
+                    $fname = $_DATA['fname'];
+                    $lname = $_DATA['lname'];
+                    $email = $_DATA['email'];
+                    $phone = $_DATA['phone'];
+                    $usrname = $_DATA['username'];
+                    $roleId = $_DATA['role_id'];
+                    $isAct = $_DATA['is_active'];
+                    $passwd = password_hash($_DATA['password'], PASSWORD_DEFAULT);
+                    $addrs = $_DATA['address'];
+                    $cntId = $_DATA['country_id'];
+                    $stId = $_DATA['state_id'];
+                    $city = $_DATA['city'];
+                    $datime = new \DateTime('now');
+                    $emailCount = $this->checkIfEmailExists($email);
+                    if ($emailCount) {
                         $arrApi['status'] = 0;
-                        $arrApi['message'] = 'This phone already exists.';
+                        $arrApi['message'] = 'This email already exists.';
                     } else {
-                        $userNameData = $this->checkIfUserNameExists($usrname);
-                        if ($userNameData) {
+                        $phoneCount = $this->checkIfPhoneExists($phone);
+                        if ($phoneCount) {
                             $arrApi['status'] = 0;
-                            $arrApi['message'] = 'This username already exists.';
+                            $arrApi['message'] = 'This phone already exists.';
                         } else {
-                            $em = $this->getDoctrine()->getManager();
-                            $user = new User();
-                            $user->setUsername($usrname);
-                            $user->setPassword($passwd);
-                            $user->setRoleId($roleId);
-                            $user->setIsActive($isAct);
-                            $user->setCreatedAt($datime);
-                            $user->setUpdatedAt($datime);
-                            $em->persist($user);
-                            $em->flush();
-                            $lastInsertId = $user->getId();
-                            if (empty($lastInsertId)) {
+                            $userNameData = $this->checkIfUserNameExists($usrname);
+                            if ($userNameData) {
                                 $arrApi['status'] = 0;
-                                $arrApi['message'] = 'Error occured while inserting user data into database.';
+                                $arrApi['message'] = 'This username already exists.';
                             } else {
-                                $profile = new Profile();
-                                $profile->setUserId($lastInsertId);
-                                $profile->setCompany($company);
-                                $profile->setFname($fname);
-                                $profile->setLname($lname);
-                                $profile->setEmail($email);
-                                $profile->setPhone($phone);
-                                $profile->setAddress($addrs);
-                                $profile->setCountryId($cntId);
-                                $profile->setStateId($stId);
-                                $profile->setCity($city);
-                                $em->persist($profile);
+                                $em = $this->getDoctrine()->getManager();
+                                $user = new User();
+                                $user->setUsername($usrname);
+                                $user->setPassword($passwd);
+                                $user->setRoleId($roleId);
+                                $user->setIsActive($isAct);
+                                $user->setCreatedAt($datime);
+                                $user->setUpdatedAt($datime);
+                                $em->persist($user);
                                 $em->flush();
-                                if (empty($profile->getId())) {
+                                $lastInsertId = $user->getId();
+                                if (empty($lastInsertId)) {
                                     $arrApi['status'] = 0;
-                                    $arrApi['message'] = 'Error occured while inserting user profile data into database.';
+                                    $arrApi['message'] = 'Error occured while inserting user data into database.';
                                 } else {
-                                    $arrApi['status'] = 1;
-                                    $arrApi['message'] = 'User data inserted into database successfully.';
+                                    $profile = new Profile();
+                                    $profile->setUserId($lastInsertId);
+                                    $profile->setCompany($company);
+                                    $profile->setFname($fname);
+                                    $profile->setLname($lname);
+                                    $profile->setEmail($email);
+                                    $profile->setPhone($phone);
+                                    $profile->setAddress($addrs);
+                                    $profile->setCountryId($cntId);
+                                    $profile->setStateId($stId);
+                                    $profile->setCity($city);
+                                    $em->persist($profile);
+                                    $em->flush();
+                                    if (empty($profile->getId())) {
+                                        $arrApi['status'] = 0;
+                                        $arrApi['message'] = 'Error occured while inserting user profile data into database.';
+                                    } else {
+                                        $arrApi['status'] = 1;
+                                        $arrApi['message'] = 'User data inserted into database successfully.';
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-
-            return new JsonResponse($arrApi);
-        }
+                return new JsonResponse($arrApi);
+            }
     }
 
     /**
@@ -228,6 +234,7 @@ class UserController extends Controller
     /**
      * @Route("api/user/getUserDetailsAndEditUser")
      * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
      * parameters: In first case - user_id,role_id and in second case
      * mandatory: All
      * url: http://localhost/Talbert/backend/web/app_dev.php/api/user/getUserDetailsAndEditUser
@@ -387,8 +394,13 @@ class UserController extends Controller
 
     private function getRoleIdByUserId($currLoggedInUserId) {
         $loggedInUserData = $this->getDoctrine()->getRepository('AppBundle:User')->findOneById($currLoggedInUserId);
-        $roleId = $loggedInUserData->getRoleId();
-        return $roleId;
+        if (empty($loggedInUserData)) {
+            return null;
+        } else {
+            $roleId = $loggedInUserData->getRoleId();
+            return $roleId;
+        }
+
     }
 
     private function getUsernameByUserId($user_id) {
