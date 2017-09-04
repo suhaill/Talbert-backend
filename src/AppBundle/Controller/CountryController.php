@@ -53,8 +53,14 @@ class CountryController extends Controller
             $_DATA = json_decode($_DATA,true);
             $arrApi = array();
             if (empty($_DATA['country_id'])) {
-                $arrApi['status'] = 0;
-                $arrApi['message'] = 'Parameter missing.';
+                $states = $this->getDoctrine()->getRepository('AppBundle:State')->findAll();
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived the state list.';
+                for($i=0;$i<count($states);$i++) {
+                    $arrApi['data']['states'][$i]['id'] = $states[$i]->getId();
+                    $arrApi['data']['states'][$i]['state_name'] = $states[$i]->getStateName();
+                    $arrApi['data']['states'][$i]['country_code'] = $states[$i]->getCountryId();
+                }
             } else {
                 $states = $this->getDoctrine()->getRepository('AppBundle:State')->findBy(array('countryId' => $_DATA['country_id']));
                 if (empty($states) ) {

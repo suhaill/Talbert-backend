@@ -244,9 +244,17 @@ class UserController extends Controller
         if ($request->getMethod() == 'POST') {
             $_DATA = file_get_contents('php://input');
             $_DATA = json_decode($_DATA, true);
+
+            $jsontoarraygenerator = new JsonToArrayGenerator();
+
+            $getJson = $jsontoarraygenerator->getJson($request);
+
+
             $arrApi = array();
-            $currLoggedInUserId     = $_DATA['current_user_id'];
+            $currLoggedInUserId = $_DATA['current_user_id'];
             $currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
+
+
             if ( $currLoggedInUserRoleId != 1 ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no access.';
@@ -256,7 +264,9 @@ class UserController extends Controller
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'This user does not exists.';
                 } else {
+
                     if (count($_DATA) == 2 && array_key_exists('user_id', $_DATA) && array_key_exists('current_user_id', $_DATA)) {
+                        
                         if (empty($_DATA['user_id']) || empty($currLoggedInUserRoleId)) {
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Parameter missing.';
@@ -290,6 +300,9 @@ class UserController extends Controller
                             $arrApi['message'] = 'Parameter missing.';
                         } else {
                             $userId = $_DATA['user_id'];
+                          
+                            $profileObj = $this->getProfileDataOfUser($userId);
+                             $user = $this->getDoctrine()->getRepository('AppBundle:User')->findOneById($userId);
                             $company = $_DATA['company'];
                             $fname = $_DATA['fname'];
                             $lname = $_DATA['lname'];
@@ -298,23 +311,40 @@ class UserController extends Controller
                             $usrname = $_DATA['username'];
                             $roleId = $_DATA['role_id'];
                             $isAct = $_DATA['is_active'];
-                            $passwd = password_hash($_DATA['password'], PASSWORD_DEFAULT);
+                            if(isset($_DATA['password'])){
+                             $passwd = password_hash($_DATA['password'], PASSWORD_DEFAULT);
+                            }
                             $addrs = $_DATA['address'];
                             $cntId = $_DATA['country_id'];
                             $stId = $_DATA['state_id'];
                             $city = $_DATA['city'];
                             $datime = new \DateTime('now');
-                            $emailCount = $this->checkIfOthrUsrHasThisEmail($email,$userId);
+                          
+
+                            if($profileObj->getEmail() != $email){
+                                $emailCount = $this->checkIfOthrUsrHasThisEmail($email,$userId);
+                            }else{
+                                $emailCount = false;
+                            }
+                          
                             if ($emailCount) {
                                 $arrApi['status'] = 0;
                                 $arrApi['message'] = 'This email already exists.';
                             } else {
+                                if($profileObj->getPhone() != $phone){
                                 $phoneCount = $this->checkIfOthrUsrHasThisPhone($phone,$userId);
+                            }else{
+                                $phoneCount = false;
+                            }
                                 if ($phoneCount) {
                                     $arrApi['status'] = 0;
                                     $arrApi['message'] = 'This phone already exists.';
                                 } else {
+                                    if($user->getUsername() != $usrname){
                                     $userNameData = $this->checkIfOthrUsrHasThisUsername($usrname,$userId);
+                                }else{
+                                    $usrNameData = false;
+                                }
                                     if ($phoneCount) {
                                         $arrApi['status'] = 0;
                                         $arrApi['message'] = 'This username already exists.';
