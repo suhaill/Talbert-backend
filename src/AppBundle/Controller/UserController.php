@@ -37,9 +37,7 @@ class UserController extends Controller
             $getJson = $jsontoarraygenerator->getJson($request);
             $username = trim($getJson->get('username'));
             $password = trim($getJson->get('password'));
-
-
-
+            
             if (empty($username) || empty($password)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Parameters missing.';
@@ -52,35 +50,44 @@ class UserController extends Controller
 
                 $user = $this->getDoctrine()->getRepository('AppBundle:User')->findOneBy(['username'=>$username]);
 
+                if($user){
 
-                $hashedPassword = $user->getPassword();
+                         $hashedPassword = $user->getPassword();
 
-                if (password_verify($password, $hashedPassword)) {
 
-                    if($user->getIsActive()=== 0){
+                    if (password_verify($password, $hashedPassword)) {
+
+                        if($user->getIsActive()=== 0){
+                            $arrApi['status'] = 0;
+                            $arrApi['message'] = 'Deactive User';
+                            $statusCode = 422;
+                        }else{
+                            $token = $this->get('lexik_jwt_authentication.encoder')
+                                ->encode([
+                                    'username' => $user->getUsername(),
+                                    'exp' => time() + 3600 // 1 hour expiration
+                                ]);
+                            $arrApi['status'] = 1;
+                            $arrApi['message'] = 'Successfully logged in.';
+
+                            $arrApi['data']['user']['username'] = $user->getUsername();
+                            $arrApi['data']['user']['userid'] = $user->getId();
+                            $arrApi['data']['user']['isActive'] = $user->getIsActive();
+                            $arrApi['data']['user']['role_id'] = $user->getRoleId();
+                            $arrApi['data']['user']['token'] = $token;
+                        }
+
+                    } else {
                         $arrApi['status'] = 0;
-                        $arrApi['message'] = 'Deactive User';
-                        $statusCode = 422;
-                    }else{
-                        $token = $this->get('lexik_jwt_authentication.encoder')
-                            ->encode([
-                                'username' => $user->getUsername(),
-                                'exp' => time() + 3600 // 1 hour expiration
-                            ]);
-                        $arrApi['status'] = 1;
-                        $arrApi['message'] = 'Successfully logged in.';
-
-                        $arrApi['data']['user']['username'] = $user->getUsername();
-                        $arrApi['data']['user']['userid'] = $user->getId();
-                        $arrApi['data']['user']['isActive'] = $user->getIsActive();
-                        $arrApi['data']['user']['role_id'] = $user->getRoleId();
-                        $arrApi['data']['user']['token'] = $token;
+                        $arrApi['message'] = 'Invalid password';
+                        $statusCode = 401;
                     }
+                }else{
 
-                } else {
                     $arrApi['status'] = 0;
-                    $arrApi['message'] = 'Invalid password';
-                    $statusCode = 401;
+                    $arrApi['message'] = 'Username or password is invalid';
+                    $statusCode = 422;
+
                 }
 
 
