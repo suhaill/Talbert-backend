@@ -132,7 +132,7 @@ class UserController extends Controller
                     empty($_DATA['state_id']) || empty($_DATA['city']) || empty($_DATA['role_id'])) {
 
                     $arrApi['status'] = 0;
-                    $arrApi['message'] = 'Parameter missing.';
+                    $arrApi['message'] = 'Required parameters missing or invalid';
                 } else {
                     $company = $_DATA['company'];
                     $fname = $_DATA['fname'];
