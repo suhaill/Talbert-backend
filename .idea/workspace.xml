@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="80e28df3-ed42-4494-9ad7-d3a1639389c6" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Controller/UserController.php" afterPath="$PROJECT_DIR$/src/AppBundle/Controller/UserController.php" />
     </list>
     <ignored path="talbert-backend.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -25,16 +24,16 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="UserController.php" pinned="false" current-in-tab="true">
+      <file leaf-file-name="UserController.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/UserController.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1560">
-              <caret line="350" column="107" selection-start-line="350" selection-start-column="107" selection-end-line="350" selection-end-column="107" />
+            <state relative-caret-position="435">
+              <caret line="50" column="111" selection-start-line="50" selection-start-column="102" selection-end-line="50" selection-end-column="111" />
               <folding>
                 <element signature="e#39#82#0#PHP" expanded="true" />
-                <marker date="1504521960018" expanded="true" signature="21869:21932" ph="select * fro... user" />
-                <marker date="1504521960018" expanded="true" signature="22420:22485" ph="select * fro... profile" />
-                <marker date="1504521960018" expanded="true" signature="22969:23036" ph="select * fro... profile" />
+                <marker date="1504527584600" expanded="true" signature="21869:21932" ph="select * fro... user" />
+                <marker date="1504527584600" expanded="true" signature="22420:22485" ph="select * fro... profile" />
+                <marker date="1504527584600" expanded="true" signature="22969:23036" ph="select * fro... profile" />
               </folding>
             </state>
           </provider>
@@ -50,7 +49,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ForgotController.php" pinned="false" current-in-tab="false">
+      <file leaf-file-name="ForgotController.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/ForgotController.php">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="195">
@@ -115,6 +114,9 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
+  <component name="PhpServers">
+    <servers />
+  </component>
   <component name="PhpWorkspaceProjectConfiguration" backward_compatibility_performed="true" />
   <component name="ProjectFrameBounds">
     <option name="x" value="65" />
@@ -147,6 +149,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -200,12 +203,11 @@
         </subPane>
       </pane>
       <pane id="Scratches" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Talbert-frontend" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../talbert-frontend" />
     <property name="js-jscs-nodeInterpreter" value="/usr/bin/node" />
   </component>
   <component name="RunManager">
@@ -243,6 +245,9 @@
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
   </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="80e28df3-ed42-4494-9ad7-d3a1639389c6" name="Default" comment="" />
@@ -255,11 +260,12 @@
       <workItem from="1504343384675" duration="2325000" />
       <workItem from="1504401569371" duration="4966000" />
       <workItem from="1504508995466" duration="3906000" />
+      <workItem from="1504593807379" duration="1256000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="18328000" />
+    <option name="totallyTimeSpent" value="19584000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="24" width="1535" height="876" extended-state="6" />
@@ -308,9 +314,54 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#39#82#0#PHP" expanded="true" />
-            <marker date="1504521960018" expanded="true" signature="21869:21932" ph="select * fro... user" />
-            <marker date="1504521960018" expanded="true" signature="22420:22485" ph="select * fro... profile" />
-            <marker date="1504521960018" expanded="true" signature="22969:23036" ph="select * fro... profile" />
+            <marker date="1504527584600" expanded="true" signature="21869:21932" ph="select * fro... user" />
+            <marker date="1504527584600" expanded="true" signature="22420:22485" ph="select * fro... profile" />
+            <marker date="1504527584600" expanded="true" signature="22969:23036" ph="select * fro... profile" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/CountryController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1035">
+          <caret line="74" column="24" selection-start-line="74" selection-start-column="24" selection-end-line="74" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/ForgotController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="195">
+          <caret line="26" column="23" selection-start-line="26" selection-start-column="22" selection-end-line="26" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/AppBundle/Service/JsonToArrayGenerator.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="15" column="6" selection-start-line="15" selection-start-column="6" selection-end-line="15" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/AppBundle/Entity/User.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1035">
+          <caret line="70" column="25" selection-start-line="70" selection-start-column="20" selection-end-line="70" selection-end-column="29" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/UserController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#39#82#0#PHP" expanded="true" />
+            <marker date="1504527584600" expanded="true" signature="21869:21932" ph="select * fro... user" />
+            <marker date="1504527584600" expanded="true" signature="22420:22485" ph="select * fro... profile" />
+            <marker date="1504527584600" expanded="true" signature="22969:23036" ph="select * fro... profile" />
           </folding>
         </state>
       </provider>
@@ -360,9 +411,9 @@
           <caret line="39" column="0" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
           <folding>
             <element signature="e#39#82#0#PHP" expanded="true" />
-            <marker date="1504521960018" expanded="true" signature="21869:21932" ph="select * fro... user" />
-            <marker date="1504521960018" expanded="true" signature="22420:22485" ph="select * fro... profile" />
-            <marker date="1504521960018" expanded="true" signature="22969:23036" ph="select * fro... profile" />
+            <marker date="1504527584600" expanded="true" signature="21869:21932" ph="select * fro... user" />
+            <marker date="1504527584600" expanded="true" signature="22420:22485" ph="select * fro... profile" />
+            <marker date="1504527584600" expanded="true" signature="22969:23036" ph="select * fro... profile" />
           </folding>
         </state>
       </provider>
@@ -411,9 +462,9 @@
           <caret line="39" column="0" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
           <folding>
             <element signature="e#39#82#0#PHP" expanded="true" />
-            <marker date="1504521960018" expanded="true" signature="21869:21932" ph="select * fro... user" />
-            <marker date="1504521960018" expanded="true" signature="22420:22485" ph="select * fro... profile" />
-            <marker date="1504521960018" expanded="true" signature="22969:23036" ph="select * fro... profile" />
+            <marker date="1504527584600" expanded="true" signature="21869:21932" ph="select * fro... user" />
+            <marker date="1504527584600" expanded="true" signature="22420:22485" ph="select * fro... profile" />
+            <marker date="1504527584600" expanded="true" signature="22969:23036" ph="select * fro... profile" />
           </folding>
         </state>
       </provider>
@@ -479,11 +530,16 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/ForgotController.php">
+    <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/UserController.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
-          <caret line="26" column="23" selection-start-line="26" selection-start-column="22" selection-end-line="26" selection-end-column="23" />
-          <folding />
+        <state relative-caret-position="435">
+          <caret line="50" column="111" selection-start-line="50" selection-start-column="102" selection-end-line="50" selection-end-column="111" />
+          <folding>
+            <element signature="e#39#82#0#PHP" expanded="true" />
+            <marker date="1504527584600" expanded="true" signature="21869:21932" ph="select * fro... user" />
+            <marker date="1504527584600" expanded="true" signature="22420:22485" ph="select * fro... profile" />
+            <marker date="1504527584600" expanded="true" signature="22969:23036" ph="select * fro... profile" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -495,16 +551,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/UserController.php">
+    <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/ForgotController.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1560">
-          <caret line="350" column="107" selection-start-line="350" selection-start-column="107" selection-end-line="350" selection-end-column="107" />
-          <folding>
-            <element signature="e#39#82#0#PHP" expanded="true" />
-            <marker date="1504521960018" expanded="true" signature="21869:21932" ph="select * fro... user" />
-            <marker date="1504521960018" expanded="true" signature="22420:22485" ph="select * fro... profile" />
-            <marker date="1504521960018" expanded="true" signature="22969:23036" ph="select * fro... profile" />
-          </folding>
+        <state relative-caret-position="195">
+          <caret line="26" column="23" selection-start-line="26" selection-start-column="22" selection-end-line="26" selection-end-column="23" />
+          <folding />
         </state>
       </provider>
     </entry>
