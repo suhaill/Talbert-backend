@@ -531,28 +531,28 @@ class UserController extends Controller
     private function getFnameById($userid) {
         $profileObj = $this->getDoctrine()
             ->getRepository('AppBundle:Profile')
-            ->findOneBy(array('user_id' => $userid));
+            ->findOneBy(array('userId' => $userid));
         return $profileObj->getFname();
     }
 
     private function getLnameById($userid) {
         $profileObj = $this->getDoctrine()
             ->getRepository('AppBundle:Profile')
-            ->findOneBy(array('user_id' => $userid));
+            ->findOneBy(array('userId' => $userid));
         return $profileObj->getLname();
     }
 
     private function getEmailById($userid) {
         $profileObj = $this->getDoctrine()
             ->getRepository('AppBundle:Profile')
-            ->findOneBy(array('user_id' => $userid));
+            ->findOneBy(array('userId' => $userid));
         return $profileObj->getEmail();
     }
 
     private function getProfileDataOfUser($userId) {
         $profileData = $this->getDoctrine()
             ->getRepository('AppBundle:Profile')
-            ->findOneBy(array('user_id' => $userId));
+            ->findOneBy(array('userId' => $userId));
         return $profileData;
     }
 
