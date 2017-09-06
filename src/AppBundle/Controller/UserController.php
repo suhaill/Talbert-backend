@@ -452,7 +452,7 @@ class UserController extends Controller
 
     private function checkIfOthrUsrHasThisUsername($usrname,$userId){
         $conn = $this->getDoctrine()->getConnection('default');
-        $SQL="select * from user WHERE id != :userid AND username = :username";
+        $SQL="select * from users WHERE id != :userid AND username = :username";
         $stmt=$conn->prepare($SQL);
         $stmt->bindParam(':userid',$userId,PDO::PARAM_INT);
         $stmt->bindParam(':username',$usrname,PDO::PARAM_STR);
@@ -467,7 +467,7 @@ class UserController extends Controller
 
     private function checkIfOthrUsrHasThisPhone($phone,$userId){
         $conn = $this->getDoctrine()->getConnection('default');
-        $SQL="select * from profile WHERE user_id != :userid AND phone = :phone";
+        $SQL="select * from profiles WHERE user_id != :userid AND phone = :phone";
         $stmt=$conn->prepare($SQL);
         $stmt->bindParam(':userid',$userId,PDO::PARAM_INT);
         $stmt->bindParam(':phone',$phone,PDO::PARAM_STR);
@@ -482,7 +482,7 @@ class UserController extends Controller
 
     private function checkIfOthrUsrHasThisEmail($email,$userId) {
         $conn = $this->getDoctrine()->getConnection('default');
-        $SQL="select * from profile WHERE user_id != :userid AND email = :emailid";
+        $SQL="select * from profiles WHERE user_id != :userid AND email = :emailid";
         $stmt=$conn->prepare($SQL);
         $stmt->bindParam(':userid',$userId,PDO::PARAM_INT);
         $stmt->bindParam(':emailid',$email,PDO::PARAM_STR);

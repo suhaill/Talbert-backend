@@ -55,7 +55,7 @@ class ForgotController extends Controller
 
                 if(!$user || is_null($user)){
                     $arrApi['status'] = 0;
-                    $arrApi['message'] = 'Record not found in our database';
+                    $arrApi['message'] = 'Email not found';
                     $statusCode = 404;
                 }else{
                     $userid = $user->getUserId();
@@ -152,7 +152,7 @@ class ForgotController extends Controller
 
                 if(!$user || is_null($user)){
                     $arrApi['status'] = 0;
-                    $arrApi['message'] = 'Record not found in our database';
+                    $arrApi['message'] = 'Email not found';
                     $statusCode = 422;
                 }else{
 
