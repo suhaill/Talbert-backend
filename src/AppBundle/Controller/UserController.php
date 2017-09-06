@@ -119,6 +119,7 @@ class UserController extends Controller
         if ($request->getMethod() == 'POST') {
             $_DATA = file_get_contents('php://input');
             $_DATA = json_decode($_DATA, true);
+
             $currLoggedInUserId = $_DATA['current_user_id'];
             $currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
             if ($currLoggedInUserRoleId != 1) {
@@ -126,15 +127,15 @@ class UserController extends Controller
                 $arrApi['message'] = 'There is no access.';
             } else {
                 $arrApi = array();
-                if (empty($_DATA['company']) || empty($_DATA['fname']) || empty($_DATA['lname']) ||
-                    empty($_DATA['email']) || empty($_DATA['phone']) || empty($_DATA['username']) || $_DATA['is_active'] > 1 ||
-                    empty($_DATA['password']) || empty($_DATA['address']) || empty($_DATA['country_id']) ||
-                    empty($_DATA['state_id']) || empty($_DATA['city']) || empty($_DATA['role_id'])) {
+                if (/*empty(trim($_DATA['company'])) ||*/ empty(trim($_DATA['fname'])) || empty(trim($_DATA['lname'])) ||
+                    empty(trim($_DATA['email'])) || empty(trim($_DATA['phone'])) || empty(trim($_DATA['username'])) || $_DATA['is_active'] > 1 ||
+                    empty(trim($_DATA['password'])) || empty(trim($_DATA['address'])) || empty($_DATA['country_id']) ||
+                    empty($_DATA['state_id']) || empty(trim($_DATA['city'])) || empty($_DATA['role_id'])) {
 
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'Required parameters missing or invalid';
                 } else {
-                    $company = $_DATA['company'];
+                    //$company = $_DATA['company'];
                     $fname = $_DATA['fname'];
                     $lname = $_DATA['lname'];
                     $email = $_DATA['email'];
@@ -151,12 +152,12 @@ class UserController extends Controller
                     $emailCount = $this->checkIfEmailExists($email);
                     if ($emailCount) {
                         $arrApi['status'] = 0;
-                        $arrApi['message'] = 'This email already exists.';
+                        $arrApi['message'] = 'This Email Address already exists in the database.';
                     } else {
                         $phoneCount = $this->checkIfPhoneExists($phone);
                         if ($phoneCount) {
                             $arrApi['status'] = 0;
-                            $arrApi['message'] = 'This phone already exists.';
+                            $arrApi['message'] = 'This Phone number already exists in the database.';
                         } else {
                             $userNameData = $this->checkIfUserNameExists($usrname);
                             if ($userNameData) {
@@ -180,7 +181,7 @@ class UserController extends Controller
                                 } else {
                                     $profile = new Profile();
                                     $profile->setUserId($lastInsertId);
-                                    $profile->setCompany($company);
+                                    //$profile->setCompany($company);
                                     $profile->setFname($fname);
                                     $profile->setLname($lname);
                                     $profile->setEmail($email);
@@ -251,17 +252,9 @@ class UserController extends Controller
         if ($request->getMethod() == 'POST') {
             $_DATA = file_get_contents('php://input');
             $_DATA = json_decode($_DATA, true);
-
-            $jsontoarraygenerator = new JsonToArrayGenerator();
-
-            $getJson = $jsontoarraygenerator->getJson($request);
-
-
             $arrApi = array();
             $currLoggedInUserId = $_DATA['current_user_id'];
             $currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
-
-
             if ( $currLoggedInUserRoleId != 1 ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no access.';
@@ -271,9 +264,7 @@ class UserController extends Controller
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'This user does not exists.';
                 } else {
-
                     if (count($_DATA) == 2 && array_key_exists('user_id', $_DATA) && array_key_exists('current_user_id', $_DATA)) {
-                        
                         if (empty($_DATA['user_id']) || empty($currLoggedInUserRoleId)) {
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Parameter missing.';
@@ -296,21 +287,19 @@ class UserController extends Controller
                             $arrApi['data']['user']['state_id'] = $profileObj->getStateId();
                             $arrApi['data']['user']['city'] = $profileObj->getCity();
                         }
-
                     } else {
-                        if (empty($_DATA['company']) || empty($_DATA['fname']) || empty($_DATA['lname']) ||
-                            empty($_DATA['email']) || empty($_DATA['phone']) || empty($_DATA['username']) || $_DATA['is_active'] > 1 ||
-                            empty($_DATA['address']) || empty($_DATA['country_id']) ||
-                            empty($_DATA['state_id']) || empty($_DATA['city']) || empty($_DATA['role_id']) || empty($_DATA['user_id'])) {
+                        if ( /* empty(trim($_DATA['company'])) ||*/ empty(trim($_DATA['fname'])) || empty(trim($_DATA['lname'])) ||
+                            empty(trim($_DATA['email'])) || empty(trim($_DATA['phone'])) || empty(trim($_DATA['username'])) || $_DATA['is_active'] > 1 ||
+                            empty(trim($_DATA['address'])) || empty($_DATA['country_id']) ||
+                            empty($_DATA['state_id']) || empty(trim($_DATA['city'])) || empty($_DATA['role_id']) || empty($_DATA['user_id'])) {
 
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Parameter missing.';
                         } else {
                             $userId = $_DATA['user_id'];
-                          
                             $profileObj = $this->getProfileDataOfUser($userId);
-                             $user = $this->getDoctrine()->getRepository('AppBundle:User')->findOneById($userId);
-                            $company = $_DATA['company'];
+                            $user = $this->getDoctrine()->getRepository('AppBundle:User')->findOneById($userId);
+                            //$company = $_DATA['company'];
                             $fname = $_DATA['fname'];
                             $lname = $_DATA['lname'];
                             $email = $_DATA['email'];
@@ -326,26 +315,23 @@ class UserController extends Controller
                             $stId = $_DATA['state_id'];
                             $city = $_DATA['city'];
                             $datime = new \DateTime('now');
-                          
-
                             if($profileObj->getEmail() != $email){
                                 $emailCount = $this->checkIfOthrUsrHasThisEmail($email,$userId);
-                            }else{
+                            } else {
                                 $emailCount = false;
                             }
-                          
                             if ($emailCount) {
                                 $arrApi['status'] = 0;
-                                $arrApi['message'] = 'This email already exists.';
+                                $arrApi['message'] = 'This Email Address already exists in the database.';
                             } else {
                                 if($profileObj->getPhone() != $phone){
                                 $phoneCount = $this->checkIfOthrUsrHasThisPhone($phone,$userId);
-                            }else{
+                            } else {
                                 $phoneCount = false;
                             }
                                 if ($phoneCount) {
                                     $arrApi['status'] = 0;
-                                    $arrApi['message'] = 'This phone already exists.';
+                                    $arrApi['message'] = 'This Phone number already exists in the database.';
                                 } else {
                                     if($user->getUsername() != $usrname){
                                     $userNameData = $this->checkIfOthrUsrHasThisUsername($usrname,$userId);
@@ -369,7 +355,7 @@ class UserController extends Controller
                                         // Update profile table record
                                         $profileId = $this->getProfileIdByUserId($userId);
                                         $profile = $em->getRepository(Profile::class)->find($profileId);
-                                        $profile->setCompany($company);
+                                        //$profile->setCompany($company);
                                         $profile->setFname($fname);
                                         $profile->setLname($lname);
                                         $profile->setEmail($email);
@@ -381,7 +367,6 @@ class UserController extends Controller
                                         $em->flush();
                                         $arrApi['status'] = 1;
                                         $arrApi['message'] = 'Successfully updated user data.';
-
                                     }
                                 }
                             }
@@ -439,7 +424,6 @@ class UserController extends Controller
             $roleId = $loggedInUserData->getRoleId();
             return $roleId;
         }
-
     }
 
     private function getUsernameByUserId($user_id) {
