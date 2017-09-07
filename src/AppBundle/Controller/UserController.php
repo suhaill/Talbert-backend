@@ -275,19 +275,22 @@ class UserController extends Controller
                             $arrApi['message'] = 'Successfully retrerived the user details.';
                             $userId = $_DATA['user_id'];
                             $profileObj = $this->getProfileDataOfUser($userId);
+
                             $arrApi['data']['user']['id'] = $userId;
                             $arrApi['data']['user']['username'] = $user->getUsername();
                             $arrApi['data']['user']['role_id'] = $user->getRoleId();
                             $arrApi['data']['user']['is_active'] = $user->getIsActive();
-                            $arrApi['data']['user']['company'] = $profileObj->getCompany();
-                            $arrApi['data']['user']['fname'] = $profileObj->getFname();
-                            $arrApi['data']['user']['lname'] = $profileObj->getLname();
-                            $arrApi['data']['user']['email'] = $profileObj->getEmail();
-                            $arrApi['data']['user']['phone'] = $profileObj->getPhone();
-                            $arrApi['data']['user']['address'] = $profileObj->getAddress();
-                            $arrApi['data']['user']['country_id'] = $profileObj->getCountryId();
-                            $arrApi['data']['user']['state_id'] = $profileObj->getStateId();
-                            $arrApi['data']['user']['city'] = $profileObj->getCity();
+                            //$arrApi['data']['user']['company'] = $profileObj->getCompany();
+                            if (!empty($profileObj)) {
+                                $arrApi['data']['user']['fname'] = $profileObj->getFname();
+                                $arrApi['data']['user']['lname'] = $profileObj->getLname();
+                                $arrApi['data']['user']['email'] = $profileObj->getEmail();
+                                $arrApi['data']['user']['phone'] = $profileObj->getPhone();
+                                $arrApi['data']['user']['address'] = $profileObj->getAddress();
+                                $arrApi['data']['user']['country_id'] = $profileObj->getCountryId();
+                                $arrApi['data']['user']['state_id'] = $profileObj->getStateId();
+                                $arrApi['data']['user']['city'] = $profileObj->getCity();
+                            }
                         }
                     } else {
                         if ( /* empty(trim($_DATA['company'])) ||*/ empty(trim($_DATA['fname'])) || empty(trim($_DATA['lname'])) ||
@@ -548,12 +551,10 @@ class UserController extends Controller
     }
 
     private function getEmailById($userid) {
-        if (!empty($userid)) {
             $profileObj = $this->getDoctrine()
                 ->getRepository('AppBundle:Profile')
                 ->findOneBy(array('userId' => $userid));
             return $profileObj->getEmail();
-        }
     }
 
 
@@ -566,12 +567,13 @@ class UserController extends Controller
 //
 
     private function getProfileDataOfUser($userId) {
-        if (!empty($userid)) {
-            $profileData = $this->getDoctrine()
+        $profileData = $this->getDoctrine()
                 ->getRepository('AppBundle:Profile')
                 ->findOneBy(array('userId' => $userId));
+        if (!empty($profileData)) {
             return $profileData;
         }
+
     }
 
 }
