@@ -229,10 +229,12 @@ class UserController extends Controller
                 $arrApi['message'] = 'Successfully retreived the users list.';
                 for ($i=0; $i<count($users); $i++) {
                     $userId = $users[$i]->getId();
-                    $arrApi['data']['users'][$i]['id'] = $users[$i]->getId();
-                    $arrApi['data']['users'][$i]['fname'] = $this->getFnameById($userId);
-                    $arrApi['data']['users'][$i]['lname'] = $this->getLnameById($userId);
-                    $arrApi['data']['users'][$i]['email'] = $this->getEmailById($userId);
+                    if (!empty($userId)) {
+                        $arrApi['data']['users'][$i]['id'] = $users[$i]->getId();
+                        $arrApi['data']['users'][$i]['fname'] = $this->getFnameById($userId);
+                        $arrApi['data']['users'][$i]['lname'] = $this->getLnameById($userId);
+                        $arrApi['data']['users'][$i]['email'] = $this->getEmailById($userId);
+                    }
                 }
             }
             return new JsonResponse($arrApi);
