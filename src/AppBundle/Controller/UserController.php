@@ -550,8 +550,7 @@ class UserController extends Controller
     }
 
 
-    /* getProfileDataofUser
-    */
+
     private function getProfileDataOfUser($userId) {
         $profileData = $this->getDoctrine()
             ->getRepository('AppBundle:Profile')
