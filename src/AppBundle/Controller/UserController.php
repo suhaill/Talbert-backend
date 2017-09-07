@@ -550,6 +550,13 @@ class UserController extends Controller
     }
 
 
+//    private function getEmailById($userid) {
+//        $profileObj = $this->getDoctrine()
+//            ->getRepository('AppBundle:Profile')
+//            ->findOneBy(array('userId' => $userid));
+//        return $profileObj->getEmail();
+//    }
+//
 
     private function getProfileDataOfUser($userId) {
         $profileData = $this->getDoctrine()
