@@ -412,18 +412,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * @Route("api/test/testGetUserNameById")
-     * @Method("GET")
-     */
-
-    public function getUserNameByIdddAction(Request $request) {
-        echo $this->getFnameById(null);die;
-    }
-
-
-
-
 
     // Reusable methods
 
@@ -549,17 +537,21 @@ class UserController extends Controller
     }
 
     private function getLnameById($userid) {
-        $profileObj = $this->getDoctrine()
-            ->getRepository('AppBundle:Profile')
-            ->findOneBy(array('userId' => $userid));
-        return $profileObj->getLname();
+        if (!empty($userid)) {
+            $profileObj = $this->getDoctrine()
+                ->getRepository('AppBundle:Profile')
+                ->findOneBy(array('userId' => $userid));
+            return $profileObj->getLname();
+        }
     }
 
     private function getEmailById($userid) {
-        $profileObj = $this->getDoctrine()
-            ->getRepository('AppBundle:Profile')
-            ->findOneBy(array('userId' => $userid));
-        return $profileObj->getEmail();
+        if (!empty($userid)) {
+            $profileObj = $this->getDoctrine()
+                ->getRepository('AppBundle:Profile')
+                ->findOneBy(array('userId' => $userid));
+            return $profileObj->getEmail();
+        }
     }
 
 
@@ -572,10 +564,12 @@ class UserController extends Controller
 //
 
     private function getProfileDataOfUser($userId) {
-        $profileData = $this->getDoctrine()
-            ->getRepository('AppBundle:Profile')
-            ->findOneBy(array('userId' => $userId));
-        return $profileData;
+        if (!empty($userid)) {
+            $profileData = $this->getDoctrine()
+                ->getRepository('AppBundle:Profile')
+                ->findOneBy(array('userId' => $userId));
+            return $profileData;
+        }
     }
 
 }
