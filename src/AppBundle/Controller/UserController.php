@@ -549,6 +549,9 @@ class UserController extends Controller
         return $profileObj->getEmail();
     }
 
+
+    /* getProfileDataofUser
+    */
     private function getProfileDataOfUser($userId) {
         $profileData = $this->getDoctrine()
             ->getRepository('AppBundle:Profile')
