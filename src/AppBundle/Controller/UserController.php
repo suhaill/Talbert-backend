@@ -532,7 +532,12 @@ class UserController extends Controller
         $profileObj = $this->getDoctrine()
             ->getRepository('AppBundle:Profile')
             ->findOneBy(array('userId' => $userid));
-        return $profileObj->getFname();
+        if (!empty($profileObj->getFname()) {
+            return $profileObj->getFname();
+        } else {
+            return null;
+        }
+
     }
 
     private function getLnameById($userid) {
