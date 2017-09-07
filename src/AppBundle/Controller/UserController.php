@@ -412,6 +412,17 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * @Route("api/test/testGetUserNameById")
+     * @Method("GET")
+     */
+
+    public function getUserNameByIdddAction(Request $request) {
+        echo $this->getFnameById(null);die;
+    }
+
+
+
 
 
     // Reusable methods
@@ -529,15 +540,12 @@ class UserController extends Controller
     }
 
     private function getFnameById($userid) {
-        $profileObj = $this->getDoctrine()
-            ->getRepository('AppBundle:Profile')
-            ->findOneBy(array('userId' => $userid));
-        if (!empty($profileObj->getFname()) {
+        if (!empty($userid)) {
+            $profileObj = $this->getDoctrine()
+                ->getRepository('AppBundle:Profile')
+                ->findOneBy(array('userId' => $userid));
             return $profileObj->getFname();
-        } else {
-            return null;
         }
-
     }
 
     private function getLnameById($userid) {
