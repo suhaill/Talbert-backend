@@ -62,6 +62,11 @@ class User implements UserInterface
      */
     private $token;
 
+    /**
+     * @ORM\Column(name="user_type", type="string", columnDefinition="enum('customer', 'vendor','both')")
+     */
+    private $userType;
+
 
   
 
