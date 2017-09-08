@@ -45,9 +45,9 @@ class User implements UserInterface
      */
     private $roleId;
     /**
-     * @ORM\Column(type="boolean")
+     * @ORM\Column(type="boolean", nullable=false)
      */
-    private $isActive;
+    private $isActive=true;
     /**
      * @ORM\Column(type="datetime")
      */

@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Repository;
+use Doctrine\Common\Collections;
 
 /**
  * UserRepository
@@ -10,4 +11,15 @@ namespace AppBundle\Repository;
  */
 class UserRepository extends \Doctrine\ORM\EntityRepository
 {
+    public function findUser($username)
+    {
+        $result =  $this->createQueryBuilder('users')
+            ->andWhere('users.username=:username')
+            ->andWhere('users.isActive = :isActive')
+            ->setParameter('isActive', 1)
+            ->setParameter('username', $username)
+            ->getQuery()
+            ->getOneOrNullResult();
+        return $result;
+    }
 }
