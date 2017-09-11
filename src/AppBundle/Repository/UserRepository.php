@@ -22,4 +22,8 @@ class UserRepository extends \Doctrine\ORM\EntityRepository
             ->getOneOrNullResult();
         return $result;
     }
+
+    public function checkUser($username){
+       // SELECT p.id profile_id,u.id user_id FROM profiles p LEFT JOIN users u ON p.user_id = u.id WHERE u.username = 'rajesh@gmail.com' OR p.email = 'rajesh@gmail.com'
+    }
 }
