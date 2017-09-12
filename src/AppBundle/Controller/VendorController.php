@@ -48,7 +48,7 @@ class VendorController extends Controller
         $city = $getJson->get('city');
         $state = $getJson->get('state');
         $zip = $getJson->get('zip');
-        $term = $getJson->get('term');
+        $term = $getJson->get('terms');
         $usertype = 'vendor';
         $comments = $getJson->get('comments');
         $roleId = 11;
