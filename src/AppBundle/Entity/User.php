@@ -258,6 +258,22 @@ class User implements UserInterface
         $this->token = $token;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getUserType()
+    {
+        return $this->userType;
+    }
+
+    /**
+     * @param mixed $userType
+     */
+    public function setUserType($userType)
+    {
+        $this->userType = $userType;
+    }
+
 
 
 }

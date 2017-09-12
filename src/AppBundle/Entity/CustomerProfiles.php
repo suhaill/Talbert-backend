@@ -21,6 +21,12 @@ class CustomerProfiles
      */
     private $id;
 
+
+    /**
+     * @ORM\Column(type="integer",name="userid",nullable=false)
+     */
+    private $userId;
+
     /**
      * @var int
      *
@@ -93,5 +99,22 @@ class CustomerProfiles
     {
         return $this->comment;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getUserId()
+    {
+        return $this->userId;
+    }
+
+    /**
+     * @param mixed $userId
+     */
+    public function setUserId($userId)
+    {
+        $this->userId = $userId;
+    }
+
 }
 
