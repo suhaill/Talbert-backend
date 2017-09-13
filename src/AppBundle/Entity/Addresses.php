@@ -57,11 +57,11 @@ class Addresses
     private $zip;
 
     /**
-     * @var int
+     * @var string
      *
-     * @ORM\Column(name="delivery_charge_id", type="integer", nullable=true)
+     * @ORM\Column(name="delivery_charge", type="string", length=15, nullable=true)
      */
-    private $deliveryChargeId;
+    private $deliveryCharge;
 
     /**
      * @var string

@@ -22,6 +22,13 @@ class Discounts
     private $id;
 
     /**
+     * @var int
+     *
+     * @ORM\Column(name="user_id", type="integer", nullable=true)
+     */
+    private $userId;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="product_name", type="string", length=255)
@@ -51,6 +58,30 @@ class Discounts
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Set userId
+     *
+     * @param integer $userId
+     *
+     * @return Addresses
+     */
+    public function setUserId($userId)
+    {
+        $this->userId = $userId;
+
+        return $this;
+    }
+
+    /**
+     * Get userId
+     *
+     * @return int
+     */
+    public function getUserId()
+    {
+        return $this->userId;
     }
 
     /**
