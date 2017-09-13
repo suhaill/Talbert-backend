@@ -25,6 +25,7 @@ class CustomerController extends Controller
 {
     /**
      * @Route("/api/customer/addCustomer")
+     * @Security("is_granted('ROLE_USER')")
      * @Method("POST")
      * params: Various
      */
@@ -106,6 +107,37 @@ class CustomerController extends Controller
             return new JsonResponse($arrApi);
         }
     }
+
+    /**
+     * @Route("/api/customer/getCustomersList")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("GET")
+     * params: None
+     */
+    public function getCustomersAction(Request $request){
+        if ($request->getMethod() == 'GET') {
+            $arrApi = array();
+            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'));
+            if ( empty($users) ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'There is no user.';
+            } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived the customers list.';
+                for ($i=0; $i<count($users); $i++) {
+                    $userId = $users[$i]->getId();
+                    if (!empty($userId)) {
+                        $arrApi['data']['customers'][$i]['id'] = $users[$i]->getId();
+                        $arrApi['data']['customers'][$i]['fname'] = $this->getFnameById($userId);
+                        $arrApi['data']['customers'][$i]['comapny'] = $this->getCompanyById($userId);
+                        $arrApi['data']['customers'][$i]['createdDate'] = $this->getCreatedDateById($userId);
+                    }
+                }
+            }
+            return new JsonResponse($arrApi);
+        }
+    }
+
 
     // Reusable code
 
@@ -228,5 +260,29 @@ class CustomerController extends Controller
             return false;
         }
     }
+
+    private function getFnameById($userid) {
+        if (!empty($userid)) {
+            $profileObj = $this->getDoctrine()
+                ->getRepository('AppBundle:Profile')
+                ->findOneBy(array('userId' => $userid));
+            return $profileObj->getFname();
+        }
+    }
+
+    private function getCompanyById($userid) {
+        $profileObj = $this->getDoctrine()
+            ->getRepository('AppBundle:Profile')
+            ->findOneBy(array('userId' => $userid));
+        return $profileObj->getCompany();
+    }
+
+    private function getCreatedDateById($userid) {
+        $profileObj = $this->getDoctrine()
+            ->getRepository('AppBundle:User')
+            ->findOneById($userid);
+        return $profileObj->getCreatedAt()->format('m/d/Y');
+    }
+
  
 }
