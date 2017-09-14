@@ -36,7 +36,6 @@ class CustomerController extends Controller
             $data = $jsontoarraygenerator->getJson($request);
             $currLoggedInUserId = $data->get('current_user_id');
 			$currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
-
 			$company = trim($data->get('company'));
 			$fName = trim($data->get('fname'));
 			$passwd = password_hash('123456', PASSWORD_DEFAULT);
@@ -57,7 +56,7 @@ class CustomerController extends Controller
             $datime = new \DateTime('now');
             if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
 				$arrApi['status'] = 0;
-				$arrApi['message'] = 'You are not allowed add customers';
+				$arrApi['message'] = 'You are not allowed to add customers';
 			} else {
 				if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($email) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty ($prdArr) || empty ($shipArr) || empty (trim($prdArr[0]['products'])) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) ) {
 					$arrApi['status'] = 0;
@@ -117,7 +116,7 @@ class CustomerController extends Controller
     public function getCustomersAction(Request $request){
         if ($request->getMethod() == 'GET') {
             $arrApi = array();
-            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'));
+            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'));
             if ( empty($users) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no user.';
@@ -138,8 +137,56 @@ class CustomerController extends Controller
         }
     }
 
+    /**
+     * @Route("/api/customer/getCustomerDetails")
+     * @Method("POST")
+     * params: customer_id (user_id), current_user_id
+     */
+    public function getCustomerDetailsAction(Request $request) {
+        if ($request->getMethod() == 'POST') {
+            $arrApi = array();
+            $jsontoarraygenerator = new JsonToArrayGenerator();
+            $data = $jsontoarraygenerator->getJson($request);
+            $userId = $data->get('customer_id');
+            $currLoggedInUserId = $data->get('current_user_id');
+            $currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
+            if ( empty($userId) || empty($currLoggedInUserId)) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Please specify the customer and logged in user.';
+            } else {
+                if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
+                    $arrApi['status'] = 0;
+                    $arrApi['message'] = 'You are not allowed to view details';
+                } else {
+                    $customerExists = $this->checkIfCustomerExists($userId);
+                    if (!$customerExists) {
+                        $arrApi['status'] = 0;
+                        $arrApi['message'] = 'This customer does not exists';
+                    } else {
+                        $arrApi['status'] = 1;
+                        $arrApi['message'] = 'Successfuly retreived customer data';
+                        $arrApi['data']['customer'] = $this->getCustomerData($userId);
 
-    // Reusable code
+                    }
+                }
+            }
+            return new JsonResponse($arrApi);
+        }
+    }
+
+
+    // Reusable methods
+
+    private function checkIfCustomerExists($userId) {
+        if (!empty($userId)) {
+            $userData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('id'=>$userId,'userType'=>'customer'));
+            if (empty($userData)) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
 
     private function saveShippingAddress($shipArr, $lastUserId, $datime) {
         $em = $this->getDoctrine()->getManager();
@@ -282,6 +329,56 @@ class CustomerController extends Controller
             ->getRepository('AppBundle:User')
             ->findOneById($userid);
         return $profileObj->getCreatedAt()->format('m/d/Y');
+    }
+
+    private function getCustomerData($userId) {
+        if (!empty($userId)) {
+            $user = array();
+            $userData = $this->getDoctrine()->getRepository('AppBundle:User')->findOneBy(array('id'=>$userId,'userType'=>'customer'));
+            if (empty($userData)) {
+                return false;
+            } else {
+                $user['id'] = $userData->getId();
+                $user['username'] = $userData->getUsername();
+                $user['roleId'] = $userData->getRoleId();
+                $user['isActive'] = $userData->getIsActive();
+                $user['userType'] = $userData->getUserType();
+                $profileData = $this->getDoctrine()->getRepository('AppBundle:Profile')->findOneBy(array('userId' => $userId));
+                if (!empty($profileData)) {
+                    $user['company'] = $profileData->getCompany();
+                    $user['fName'] = $profileData->getFname();
+                    $user['email'] = $profileData->getEmail();
+                    $user['phone'] = $profileData->getPhone();
+                }
+                $add = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findBy(array('userId' => $userId));
+                if (!empty($add)) {
+                    for ($i=0; $i < count($add); $i++) {
+                        $user['address'][$i]['id'] = $add[$i]->getId();
+                        $user['address'][$i]['nickname'] = $add[$i]->getNickname();
+                        $user['address'][$i]['street'] = $add[$i]->getStreet();
+                        $user['address'][$i]['stateId'] = $add[$i]->getStateId();
+                        $user['address'][$i]['city'] = $add[$i]->getCity();
+                        $user['address'][$i]['zip'] = $add[$i]->getZip();
+                        $user['address'][$i]['deliveryCharge'] = $add[$i]->getDeliveryCharge();
+                        $user['address'][$i]['salesTaxRate'] = $add[$i]->getSalesTaxRate();
+                        $user['address'][$i]['addressType'] = $add[$i]->getAddressType();
+                        $user['address'][$i]['status'] = $add[$i]->getStatus();
+                        $user['address'][$i]['userId'] = $add[$i]->getUserId();
+                    }
+                }
+                $discounts = $this->getDoctrine()->getRepository('AppBundle:Discounts')->findBy(array('userId' => $userId));
+                if (!empty($add)) {
+                    for ($i=0; $i< count($discounts); $i++) {
+                        $user['discount'][$i]['id'] = $discounts[$i]->getId();
+                        $user['discount'][$i]['userId'] = $discounts[$i]->getUserId();
+                        $user['discount'][$i]['productName'] = $discounts[$i]->getProductName();
+                        $user['discount'][$i]['rate'] = $discounts[$i]->getRate();
+                        $user['discount'][$i]['status'] = $discounts[$i]->getStatus();
+                    }
+                }
+                return $user;
+            }
+        }
     }
 
  

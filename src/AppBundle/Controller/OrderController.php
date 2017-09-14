@@ -20,25 +20,28 @@ class OrderController extends Controller
 {
     /**
      * @Route("/api/order/getOrders")
+     * @Security("is_granted('ROLE_USER')")
      * @Method("GET")
      * params: None
      */
     public function getOrdersListAction(Request $request) {
         if ($request->getMethod() == 'GET') {
             $arrApi = array();
-            $orders = $this->getDoctrine()->getRepository('AppBundle:Orders')->findAll();
+            $orders = $this->getDoctrine()->getRepository('AppBundle:Orders')->findBy(array(), array('id' => 'DESC'));
             if (empty($orders)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no order right now';
             } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived the orders list';
                 $i=0;
                 foreach ($orders as $orDat) {
-                    $arrApi['data']['customers'][$i]['id'] = $orDat->getId();
-                    $arrApi['data']['customers'][$i]['estNumber'] = $orDat->getEstNumber();
-                    $arrApi['data']['customers'][$i]['orderDate'] = $orDat->getOrderDate()->format('m/d/y');
-                    $arrApi['data']['customers'][$i]['productname'] = $orDat->getProductName();
-                    $arrApi['data']['customers'][$i]['poNumber'] = $orDat->getPoNumber();
-                    $arrApi['data']['customers'][$i]['shipDate'] = $orDat->getShipDate()->format('m/d/y');
+                    $arrApi['data']['orders'][$i]['id'] = $orDat->getId();
+                    $arrApi['data']['orders'][$i]['estNumber'] = $orDat->getEstNumber();
+                    $arrApi['data']['orders'][$i]['orderDate'] = $orDat->getOrderDate()->format('m/d/y');
+                    $arrApi['data']['orders'][$i]['productname'] = $orDat->getProductName();
+                    $arrApi['data']['orders'][$i]['poNumber'] = $orDat->getPoNumber();
+                    $arrApi['data']['orders'][$i]['shipDate'] = $orDat->getShipDate()->format('m/d/y');
                     $i++;
                 }
             }

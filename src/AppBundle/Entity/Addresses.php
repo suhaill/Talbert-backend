@@ -228,27 +228,27 @@ class Addresses
     }
 
     /**
-     * Set deliveryChargeId
+     * Set deliveryCharge
      *
-     * @param integer $deliveryChargeId
+     * @param integer $deliveryCharge
      *
      * @return Addresses
      */
-    public function setDeliveryChargeId($deliveryChargeId)
+    public function setDeliveryCharge($deliveryCharge)
     {
-        $this->deliveryChargeId = $deliveryChargeId;
+        $this->deliveryCharge = $deliveryCharge;
 
         return $this;
     }
 
     /**
-     * Get deliveryChargeId
+     * Get deliveryCharge
      *
      * @return int
      */
-    public function getDeliveryChargeId()
+    public function getDeliveryCharge()
     {
-        return $this->deliveryChargeId;
+        return $this->deliveryCharge;
     }
 
     /**
