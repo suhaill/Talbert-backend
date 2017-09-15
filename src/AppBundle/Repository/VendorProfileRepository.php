@@ -15,12 +15,12 @@ class VendorProfileRepository extends \Doctrine\ORM\EntityRepository
     {
         $em = $this->getEntityManager();
         $result = $em->createQueryBuilder()
-        ->select('t.tag_text, COUNT(*) as num_tags')
+        ->select('.tag_text, COUNT(*) as num_tags')
         ->from('CompanyWebsiteBundle:Tag2Post', 't2p')
         ->innerJoin('CompanyWebsiteBundle:Tags', 't', 'WITH', 't2p.tag_id = t.id')
         ->groupBy('t.tag_text')
     ;
-        $tags = $qb->getQuery()->getResult();
+       // $tags = $qb->getQuery()->getResult();
        // ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
 
     }
