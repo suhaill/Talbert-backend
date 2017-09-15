@@ -73,12 +73,12 @@ class CustomerController extends Controller
                             $phoneCount = $this->checkIfPhoneExists($phone);
                             if ($phoneCount) {
                                 $arrApi['status'] = 0;
-                                $arrApi['message'] = 'This Phone Address already exists in the database.';
+                                $arrApi['message'] = 'This Phone already exists in the database.';
                             } else {
                                 $emailCount = $this->checkIfEmailExists($email);
                                 if ($emailCount) {
                                     $arrApi['status'] = 0;
-                                    $arrApi['message'] = 'This Email number already exists in the database.';
+                                    $arrApi['message'] = 'This Email address already exists in the database.';
                                 } else {
                                     $lastUserId = $this->saveCustomerData($usrname, $passwd, $roleId, $isActive, $datime, $usrType);
                                     if (empty($lastUserId)) {
@@ -139,6 +139,7 @@ class CustomerController extends Controller
 
     /**
      * @Route("/api/customer/getCustomerDetails")
+     * @Security("is_granted('ROLE_USER')")
      * @Method("POST")
      * params: customer_id (user_id), current_user_id
      */
@@ -197,9 +198,9 @@ class CustomerController extends Controller
             $addresses->setCity($val['city']);
             $addresses->setStateId($val['state']);
             $addresses->setZip($val['zip']);
-            $addresses->setDeliveryChargeId($val['deliveryCharge']);
+            $addresses->setDeliveryCharge($val['deliveryCharge']);
             $addresses->setSalesTaxRate($val['salesTaxRate']);
-            $addresses->setAddressType('billing');
+            $addresses->setAddressType('shipping');
             $addresses->setStatus(1);
             $addresses->setUserId($lastUserId);
             $addresses->setUpdatedAt($datime);
@@ -350,20 +351,27 @@ class CustomerController extends Controller
                     $user['email'] = $profileData->getEmail();
                     $user['phone'] = $profileData->getPhone();
                 }
-                $add = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findBy(array('userId' => $userId));
+                $bAdd = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findOneBy(array('userId' => $userId,'addressType'=>'billing'));
+                if (!empty($bAdd)) {
+                    $user['bStreet'] = $bAdd->getStreet();
+                    $user['bStateId'] = $bAdd->getStateId();
+                    $user['bCity'] = $bAdd->getCity();
+                    $user['bZip'] = $bAdd->getZip();
+                }
+                $add = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findBy(array('userId' => $userId,'addressType'=>'shipping'));
                 if (!empty($add)) {
                     for ($i=0; $i < count($add); $i++) {
-                        $user['address'][$i]['id'] = $add[$i]->getId();
-                        $user['address'][$i]['nickname'] = $add[$i]->getNickname();
-                        $user['address'][$i]['street'] = $add[$i]->getStreet();
-                        $user['address'][$i]['stateId'] = $add[$i]->getStateId();
-                        $user['address'][$i]['city'] = $add[$i]->getCity();
-                        $user['address'][$i]['zip'] = $add[$i]->getZip();
-                        $user['address'][$i]['deliveryCharge'] = $add[$i]->getDeliveryCharge();
-                        $user['address'][$i]['salesTaxRate'] = $add[$i]->getSalesTaxRate();
-                        $user['address'][$i]['addressType'] = $add[$i]->getAddressType();
-                        $user['address'][$i]['status'] = $add[$i]->getStatus();
-                        $user['address'][$i]['userId'] = $add[$i]->getUserId();
+                        $user['shippAddress'][$i]['id'] = $add[$i]->getId();
+                        $user['shippAddress'][$i]['nickname'] = $add[$i]->getNickname();
+                        $user['shippAddress'][$i]['street'] = $add[$i]->getStreet();
+                        $user['shippAddress'][$i]['stateId'] = $add[$i]->getStateId();
+                        $user['shippAddress'][$i]['city'] = $add[$i]->getCity();
+                        $user['shippAddress'][$i]['zip'] = $add[$i]->getZip();
+                        $user['shippAddress'][$i]['deliveryCharge'] = $add[$i]->getDeliveryCharge();
+                        $user['shippAddress'][$i]['salesTaxRate'] = $add[$i]->getSalesTaxRate();
+                        $user['shippAddress'][$i]['addressType'] = $add[$i]->getAddressType();
+                        $user['shippAddress'][$i]['status'] = $add[$i]->getStatus();
+                        $user['shippAddress'][$i]['userId'] = $add[$i]->getUserId();
                     }
                 }
                 $discounts = $this->getDoctrine()->getRepository('AppBundle:Discounts')->findBy(array('userId' => $userId));
