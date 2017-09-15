@@ -37,6 +37,7 @@ class VendorController extends Controller
         $username = trim($getJson->get('email'));
         $email    = trim($getJson->get('email'));
         $password = "vendor";
+        $company = trim($getJson->get('company'));
         $password = password_hash($password, PASSWORD_DEFAULT);
         $fname = $getJson->get('name');
         $fname = $this->split_name($fname);
@@ -85,7 +86,7 @@ class VendorController extends Controller
                 } else {
                     $profile = new Profile();
                     $profile->setUserId($lastInsertId);
-                    //$profile->setCompany($company);
+                    $profile->setCompany($company);
                     $profile->setFname($fname);
                     $profile->setLname($lname);
                     $profile->setEmail($email);
@@ -144,30 +145,11 @@ class VendorController extends Controller
         $arrApi = [];
         $statusCode = 200;
         $vendor = $this->getDoctrine()->getRepository('AppBundle:VendorProfile')->getVendors();
-        var_dump($vendor);
-        die();
-
-            if ( empty($users) ) {
-                $arrApi['status'] = 0;
-                $arrApi['message'] = 'There is no vendor.';
-                $statusCode = 204;
-
-            } else {
-                $arrApi['status'] = 1;
-                $arrApi['message'] = 'Successfully retreived the vendor list.';
-                $statusCode = 200;
-
-                for ($i=0; $i<count($users); $i++) {
-                    $userId = $users[$i]->getId();
-                    if (!empty($userId)) {
-                        $arrApi['data']['users'][$i]['id'] = $users[$i]->getId();
-                        $arrApi['data']['users'][$i]['fname'] = $this->getFnameById($userId);
-                        $arrApi['data']['users'][$i]['lname'] = $this->getLnameById($userId);
-                        $arrApi['data']['users'][$i]['email'] = $this->getEmailById($userId);
-                    }
-                }
-            }
-            return new JsonResponse($arrApi,$statusCode);
+        $arrApi['message'] = 'Successfully retreived the vendor list.';
+        $arrApi['status']=1;
+        $arrApi['data'] = $vendor;
+        $statusCode = 200;
+        return new JsonResponse($arrApi,$statusCode);
 
     }
 
