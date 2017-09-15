@@ -73,14 +73,14 @@ class Profile
     /**
      * @var int
      *
-     * @ORM\Column(name="country_id", type="integer")
+     * @ORM\Column(name="country_id", type="integer",  nullable=true)
      */
     private $countryId;
 
     /**
      * @var int
      *
-     * @ORM\Column(name="state_id", type="integer")
+     * @ORM\Column(name="state_id", type="integer",  nullable=true)
      */
     private $stateId;
 

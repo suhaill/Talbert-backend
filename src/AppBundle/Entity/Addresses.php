@@ -57,11 +57,11 @@ class Addresses
     private $zip;
 
     /**
-     * @var int
+     * @var string
      *
-     * @ORM\Column(name="delivery_charge_id", type="integer", nullable=true)
+     * @ORM\Column(name="delivery_charge", type="string", length=15, nullable=true)
      */
-    private $deliveryChargeId;
+    private $deliveryCharge;
 
     /**
      * @var string
@@ -228,27 +228,27 @@ class Addresses
     }
 
     /**
-     * Set deliveryChargeId
+     * Set deliveryCharge
      *
-     * @param integer $deliveryChargeId
+     * @param integer $deliveryCharge
      *
      * @return Addresses
      */
-    public function setDeliveryChargeId($deliveryChargeId)
+    public function setDeliveryCharge($deliveryCharge)
     {
-        $this->deliveryChargeId = $deliveryChargeId;
+        $this->deliveryCharge = $deliveryCharge;
 
         return $this;
     }
 
     /**
-     * Get deliveryChargeId
+     * Get deliveryCharge
      *
      * @return int
      */
-    public function getDeliveryChargeId()
+    public function getDeliveryCharge()
     {
-        return $this->deliveryChargeId;
+        return $this->deliveryCharge;
     }
 
     /**
