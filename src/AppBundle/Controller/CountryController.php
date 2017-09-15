@@ -40,6 +40,31 @@ class CountryController extends Controller
 
     }
 
+
+
+    /**
+     * @Route("/api/state/getstates")
+     * @Method("GET")
+     * params: country_id
+     * mandatory: country_id
+     * url: http://localhost/Talbert/backend/web/app_dev.php/api/state/getStateList
+     */
+
+    public function getStates(Request $request) {
+
+        $arrApi =[];
+        $states = $this->getDoctrine()->getRepository('AppBundle:State')->findAll();
+        for($i=0;$i<count($states);$i++) {
+            $arrApi['data']['states'][$i]['id'] = $states[$i]->getId();
+            $arrApi['data']['states'][$i]['state_name'] = $states[$i]->getStateName();
+        }
+        return new JsonResponse($arrApi);
+    }
+
+
+
+
+
     /**
      * @Route("/api/state/getStateList")
      * @Method("POST")
@@ -80,25 +105,6 @@ class CountryController extends Controller
         }
     }
 
-
-    /**
-     * @Route("/api/state/getStateList")
-     * @Method("GET")
-     * params: country_id
-     * mandatory: country_id
-     * url: http://localhost/Talbert/backend/web/app_dev.php/api/state/getStateList
-     */
-
-    public function getStates(Request $request) {
-
-            $arrApi =[];
-            $states = $this->getDoctrine()->getRepository('AppBundle:State')->findAll();
-            for($i=0;$i<count($states);$i++) {
-                $arrApi['data']['states'][$i]['id'] = $states[$i]->getId();
-                $arrApi['data']['states'][$i]['state_name'] = $states[$i]->getStateName();
-            }
-            return new JsonResponse($arrApi);
-    }
 
 
 }

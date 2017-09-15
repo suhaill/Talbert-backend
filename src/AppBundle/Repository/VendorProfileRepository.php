@@ -10,4 +10,19 @@ namespace AppBundle\Repository;
  */
 class VendorProfileRepository extends \Doctrine\ORM\EntityRepository
 {
+
+    public function getVendors()
+    {
+        $em = $this->getEntityManager();
+        $result = $em->createQueryBuilder()
+        ->select('.tag_text, COUNT(*) as num_tags')
+        ->from('CompanyWebsiteBundle:Tag2Post', 't2p')
+        ->innerJoin('CompanyWebsiteBundle:Tags', 't', 'WITH', 't2p.tag_id = t.id')
+        ->groupBy('t.tag_text')
+    ;
+       // $tags = $qb->getQuery()->getResult();
+       // ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+
+    }
+
 }
