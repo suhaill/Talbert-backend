@@ -139,7 +139,7 @@ class CustomerController extends Controller
 
     /**
      * @Route("/api/customer/getCustomerDetails")
-     * @Security("is_granted('ROLE_USER')")
+
      * @Method("POST")
      * params: customer_id (user_id), current_user_id
      */
@@ -244,210 +244,9 @@ class CustomerController extends Controller
             return new JsonResponse($arrApi, $statusCode);
         }
     }
-	
-	/**
-     * @Route("/api/customer/updateCustomerDetails")
-     
-     * @Method("PUT")
-     * params: All customer details with customer_id (user_id), current_user_id
-     */
-	 
-	 public function updateCustomerAction(Request $request) {
-		 if ($request->getMethod() == 'PUT') {
-			 $arrApi = array();
-			 $statusCode = 200;
-			 try {
-					$jsontoarraygenerator = new JsonToArrayGenerator();
-					$data = $jsontoarraygenerator->getJson($request);
-					$userId = $data->get('customer_id');
-					$currLoggedInUserId = $data->get('current_user_id');
-					$currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
-					$company = trim($data->get('company'));
-					$fName = trim($data->get('fname'));
-					$isActive = $data->get('is_active');
-					$phone = trim($data->get('phone'));
-					$trmId = $data->get('term');
-					$comment = trim($data->get('comment'));	
-					$bStreet = trim($data->get('billingStreet'));	
-					$bCity = trim($data->get('billingCity'));	
-					$bState = $data->get('billingState');	
-					$bZip = trim($data->get('billingZip'));	
-					$prdArr = $data->get('products');	
-					$shipArr = $data->get('shipp');
-					$datime = new \DateTime('now');
-					if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
-						$arrApi['status'] = 0;
-						$arrApi['message'] = 'You are not allowed to update customers';
-						$statusCode = 422;
-					} else {
-						if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty ($prdArr) || empty ($shipArr) || empty (trim($prdArr[0]['products'])) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) ) {
-							$arrApi['status'] = 0;
-							$arrApi['message'] = 'Please fill all required fields';
-							$statusCode = 422;
-						} else {
-							if ( is_numeric($phone) && strlen($phone) > 10 ) {
-								$arrApi['status'] = 0;
-								$arrApi['message'] = 'Please enter correct phone number';
-								$statusCode = 422;
-							} else {
-								$phoneCount = $this->checkIfOthrUsrHasThisPhone($phone, $userId);
-								if ($phoneCount) {
-									$arrApi['status'] = 0;
-									$arrApi['message'] = 'This Phone is already in user.';
-									$statusCode = 422;
-								} else {
-									$arrApi['status'] = 1;
-									$arrApi['message'] = 'Successfully updated customer data.';
-									$this->updateUserRecord($isActive, $company, $fName, $phone, $datime, $userId);
-									$this->updateBillingAddress($bStreet, $bCity, $bState, $bZip, $datime, $userId);
-									$this->updateShippingAddress($shipArr, $userId, $datime);
-									$this->updateDiscountData($prdArr, $userId);
-									$this->updateCustomerprofileData($trmId, $comment, $userId);
-								}
-							}
-						}	
-					}
-			 }
-			 catch(Exception $e) {
-				 throw $e->getMessage();
-			 }
-			 return new JsonResponse($arrApi, $statusCode);
-		 }
-	 }
 
 
     // Reusable methods
-	
-	private function updateUserRecord($isActive, $company, $fName, $phone, $datime, $userId) {
-		$em = $this->getDoctrine()->getManager();
-		$user = $em->getRepository(User::class)->find($userId);
-		$user->setIsActive($isActive);
-		$user->setUpdatedAt($datime);
-		$em->persist($user);
-		// Profile table update 
-		$profileId = $this->getProfileIdByUserId($userId);
-		$profile = $em->getRepository(Profile::class)->find($profileId);
-		$profile->setCompany($company);
-		$profile->setFname($fName);
-		$profile->setPhone($phone);
-		$em->persist($profile);
-		$em->flush();
-	}
-	
-	private function updateBillingAddress($bStreet, $bCity, $bState, $bZip, $datime, $userId){
-		$em = $this->getDoctrine()->getManager();
-		$addressId = $this->getAddressIdByUserId('billing', $userId);
-		$addresses = $em->getRepository(Addresses::class)->find($addressId);
-		$addresses->setStreet($bStreet);
-		$addresses->setCity($bCity);
-		$addresses->setStateId($bState);
-		$addresses->setZip($bZip);
-		$addresses->setUpdatedAt($datime);
-		$em->persist($addresses);
-		$em->flush();
-		
-	}
-	
-	private function updateShippingAddress($shipArr, $userId, $datime){
-		$deleteShipAdd = $this->deleteShippingAddressByUserId('shipping', $userId);
-		if ($deleteShipAdd) {
-			$em = $this->getDoctrine()->getManager();
-			foreach ($shipArr as $val) {
-				$addresses = new Addresses();
-				$addresses->setNickname($val['nickname']);
-				$addresses->setStreet($val['street']);
-				$addresses->setCity($val['city']);
-				$addresses->setStateId($val['state']);
-				$addresses->setZip($val['zip']);
-				$addresses->setDeliveryCharge($val['deliveryCharge']);
-				$addresses->setSalesTaxRate($val['salesTaxRate']);
-				$addresses->setAddressType('shipping');
-				$addresses->setStatus(1);
-				$addresses->setUserId($userId);
-				$addresses->setUpdatedAt($datime);
-				$em->persist($addresses);
-				$em->flush();
-			}
-		}
-	}
-	
-	private function updateDiscountData($prdArr, $userId) {
-		$deleteDiscount = $this->deleteDiscountsDataByUserId($userId);
-		if ($deleteDiscount) {
-			$rate = 20;
-			$sts = 1;
-			$em = $this->getDoctrine()->getManager();
-			foreach ($prdArr as $val) {
-				$dis = new Discounts();
-				$dis->setProductName($val['products']);
-				$dis->setUserId($userId);
-				$dis->setRate($rate);
-				$dis->setStatus($sts);
-				$em->persist($dis);
-				$em->flush();
-			}
-			$em->flush();
-		}
-	}
-	
-	private function updateCustomerprofileData($trmId, $comment, $userId) {
-		$em = $this->getDoctrine()->getManager();
-		$custProfileId = $this->getCustProfIdByUserId($userId);
-		if (!empty($custProfileId)) {
-			$custProfile = $em->getRepository(CustomerProfiles::class)->find($custProfileId);
-			$custProfile->setTermId($trmId);
-			$custProfile->setComment($comment);
-			$em->persist($custProfile);
-		} else {
-			$customerProfile = new CustomerProfiles();
-			$customerProfile->setTermId($trmId);
-			$customerProfile->setComment($comment);
-			$customerProfile->setUserId($userId);
-			$em->persist($customerProfile);
-		}
-		$em->flush();
-	}
-	
-	private function getCustProfIdByUserId($userId) {
-		$custProfile = $this->getDoctrine()->getRepository('AppBundle:CustomerProfiles')->findOneBy(array('userId' => $userId));
-        if ( !empty($custProfile) ) {
-            $custProfileId = $custProfile->getId();
-        } else {
-            $custProfileId = null;
-        }
-        return $custProfileId;
-	}
-	
-	private function deleteShippingAddressByUserId($shipAdd, $userId) {
-		$conn = $this->getDoctrine()->getConnection('default');
-        $SQL="delete from addresses WHERE user_id = :userid AND address_type = :addType";
-        $stmt=$conn->prepare($SQL);
-        $stmt->bindParam(':userid',$userId,PDO::PARAM_INT);
-        $stmt->bindParam(':addType',$shipAdd,PDO::PARAM_STR);
-        $stmt->execute();
-		return true;
-	}
-	
-	private function deleteDiscountsDataByUserId($userId) {
-		$conn = $this->getDoctrine()->getConnection('default');
-        $SQL="delete from discounts WHERE user_id = :userid";
-        $stmt=$conn->prepare($SQL);
-        $stmt->bindParam(':userid',$userId,PDO::PARAM_INT);
-        $stmt->execute();
-		return true;
-	}
-	
-	private function getProfileIdByUserId($userId) {
-        $profile = $this->getDoctrine()
-            ->getRepository('AppBundle:Profile')
-            ->findOneBy(array('userId' => $userId));
-        if ( !empty($profile) ) {
-            $profileId = $profile->getId();
-        } else {
-            $profileId = null;
-        }
-        return $profileId;
-    }
 
     private function updateUserRecord($isActive, $company, $fName, $phone, $datime, $userId) {
         $em = $this->getDoctrine()->getManager();
@@ -753,6 +552,11 @@ class CustomerController extends Controller
                     $user['email'] = $profileData->getEmail();
                     $user['phone'] = $profileData->getPhone();
                 }
+                $customerProfileData = $this->getDoctrine()->getRepository('AppBundle:CustomerProfiles')->findOneBy(array('userId' => $userId));
+                if (!empty($customerProfileData)) {
+                    $user['term'] = $customerProfileData->getTermId();
+                    $user['comment'] = $customerProfileData->getComment();
+                }
                 $bAdd = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findOneBy(array('userId' => $userId,'addressType'=>'billing'));
                 if (!empty($bAdd)) {
                     $user['bStreet'] = $bAdd->getStreet();
@@ -763,60 +567,33 @@ class CustomerController extends Controller
                 $add = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findBy(array('userId' => $userId,'addressType'=>'shipping'));
                 if (!empty($add)) {
                     for ($i=0; $i < count($add); $i++) {
-                        $user['shippAddress'][$i]['id'] = $add[$i]->getId();
-                        $user['shippAddress'][$i]['nickname'] = $add[$i]->getNickname();
-                        $user['shippAddress'][$i]['street'] = $add[$i]->getStreet();
-                        $user['shippAddress'][$i]['stateId'] = $add[$i]->getStateId();
-                        $user['shippAddress'][$i]['city'] = $add[$i]->getCity();
-                        $user['shippAddress'][$i]['zip'] = $add[$i]->getZip();
-                        $user['shippAddress'][$i]['deliveryCharge'] = $add[$i]->getDeliveryCharge();
-                        $user['shippAddress'][$i]['salesTaxRate'] = $add[$i]->getSalesTaxRate();
-                        $user['shippAddress'][$i]['addressType'] = $add[$i]->getAddressType();
-                        $user['shippAddress'][$i]['status'] = $add[$i]->getStatus();
-                        $user['shippAddress'][$i]['userId'] = $add[$i]->getUserId();
+                        //$user['shipp'][$i]['id'] = $add[$i]->getId();
+                        $user['shipp'][$i]['nickname'] = $add[$i]->getNickname();
+                        $user['shipp'][$i]['street'] = $add[$i]->getStreet();
+                        $user['shipp'][$i]['city'] = $add[$i]->getCity();
+                        $user['shipp'][$i]['state'] = $add[$i]->getStateId();
+                        $user['shipp'][$i]['zip'] = $add[$i]->getZip();
+                        $user['shipp'][$i]['deliveryCharge'] = $add[$i]->getDeliveryCharge();
+                        $user['shipp'][$i]['salesTaxRate'] = $add[$i]->getSalesTaxRate();
+                        //$user['shipp'][$i]['addressType'] = $add[$i]->getAddressType();
+                        //$user['shipp'][$i]['status'] = $add[$i]->getStatus();
+                        //$user['shipp'][$i]['userId'] = $add[$i]->getUserId();
                     }
                 }
                 $discounts = $this->getDoctrine()->getRepository('AppBundle:Discounts')->findBy(array('userId' => $userId));
-                if (!empty($add)) {
+                if (!empty($discounts)) {
                     for ($i=0; $i< count($discounts); $i++) {
-                        $user['discount'][$i]['id'] = $discounts[$i]->getId();
-                        $user['discount'][$i]['userId'] = $discounts[$i]->getUserId();
-                        $user['discount'][$i]['productName'] = $discounts[$i]->getProductName();
-                        $user['discount'][$i]['rate'] = $discounts[$i]->getRate();
-                        $user['discount'][$i]['status'] = $discounts[$i]->getStatus();
+                        //$user['discount'][$i]['id'] = $discounts[$i]->getId();
+                        //$user['discount'][$i]['userId'] = $discounts[$i]->getUserId();
+                        $user['products'][$i]['products'] = $discounts[$i]->getProductName();
+                        //$user['discount'][$i]['rate'] = $discounts[$i]->getRate();
+                        //$user['discount'][$i]['status'] = $discounts[$i]->getStatus();
                     }
                 }
                 return $user;
             }
         }
     }
-	
-	private function checkIfOthrUsrHasThisPhone($phone,$userId){
-        $conn = $this->getDoctrine()->getConnection('default');
-        $SQL="select * from profiles WHERE user_id != :userid AND phone = :phone";
-        $stmt=$conn->prepare($SQL);
-        $stmt->bindParam(':userid',$userId,PDO::PARAM_INT);
-        $stmt->bindParam(':phone',$phone,PDO::PARAM_STR);
-        $stmt->execute();
-        $result = $stmt->fetchAll();
-        if (count($result) > 0 ) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-	
-	private function getAddressIdByUserId($addType, $userId) {
-		$address = $this->getDoctrine()
-            ->getRepository('AppBundle:Addresses')
-            ->findOneBy(array('userId' => $userId,'addressType'=>$addType));
-        if ( !empty($address) ) {
-            $addressId = $address->getId();
-        } else {
-            $addressId = null;
-        }
-        return $addressId;
-	}
 
     private function checkIfOthrUsrHasThisPhone($phone,$userId){
         $conn = $this->getDoctrine()->getConnection('default');
