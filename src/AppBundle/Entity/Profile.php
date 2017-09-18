@@ -26,7 +26,7 @@ class Profile
      *
      * @ORM\Column(name="user_id", type="integer")
      */
-    private $userId;
+    public $userId;
 
     /**
      * @var string
@@ -90,6 +90,12 @@ class Profile
      * @ORM\Column(name="city", type="string", length=100, nullable=true)
      */
     private $city;
+
+    /**
+     * @ORM\Column(name="zip",type="string",length=6,nullable=true)
+     */
+    private $zip;
+
 
 
     /**
@@ -341,5 +347,31 @@ class Profile
     {
         return $this->city;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getZip()
+    {
+        return $this->zip;
+    }
+
+    /**
+     * @param mixed $zip
+     */
+    public function setZip($zip)
+    {
+        $this->zip = $zip;
+    }
+
+    /**
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+
 }
 

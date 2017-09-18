@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Repository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\Query\ResultSetMapping;
 
 /**
@@ -28,5 +29,9 @@ class VendorProfileRepository extends \Doctrine\ORM\EntityRepository
         }
 
     }
+
+
+
+
 
 }

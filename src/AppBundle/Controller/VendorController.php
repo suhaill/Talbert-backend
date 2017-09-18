@@ -132,6 +132,48 @@ class VendorController extends Controller
     }
 
 
+    /**
+     * @Route("/api/vendor/get")
+     * @Method({"GET"})
+     * @Security("is_granted('ROLE_USER')")
+     */
+
+    public function getVendorAction(Request $request) {
+
+        $arrApi = [];
+        $statusCode = 200;
+
+        $getupdatevendorId = $request->query->get('id');
+        if(!$getupdatevendorId){
+            $statusCode = 422;
+            $arrApi['message']="Invalid parameters";
+            $arrApi['status'] = 0;
+        }
+
+        $vendor = $this->getDoctrine()->getRepository('AppBundle:Profile')->getVendor($getupdatevendorId);
+        $arrApi['data']['userId']= $vendor['userId'];
+        $arrApi['data']['prId']= $vendor['profileId'];
+        $arrApi['data']['vprId']= $vendor['vprofileId'];
+        $arrApi['data']['company']= $vendor['company'];
+        $arrApi['data']['fname'] = $vendor['fname'];
+        $arrApi['data']['lname'] = $vendor['lname'];
+        $arrApi['data']['email'] = $vendor['email'];
+        $arrApi['data']['phone'] = $vendor['phone'];
+        $arrApi['data']['address'] = $vendor['address'];
+        $arrApi['data']['state'] = $vendor['stateId'];
+        $arrApi['data']['city'] = $vendor['city'];
+        $arrApi['data']['termid'] = $vendor['termId'];
+        $arrApi['data']['comment'] = $vendor['comment'];
+        $arrApi['data']['zip'] = $vendor['zip'];
+
+        $arrApi['message']= "successfully recievd";
+        return new JsonResponse($arrApi,$statusCode);
+
+
+    }
+
+
+
 
     /**
      * @Route("api/vendor/getvendors")
@@ -153,7 +195,107 @@ class VendorController extends Controller
 
     }
 
-    
+
+
+    /**
+     * @Route("api/vendor/update/{id}")
+     * @Method("PUT")
+     * @Security("is_granted('ROLE_USER')")
+     * parameters: None
+     *
+     */
+
+    public function updateVendorAction($id,Request $request) {
+        $arrApi = [];
+        $statusCode = 200;
+
+
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $getJson = $jsontoarraygenerator->getJson($request);
+
+        $vendor = $this->getDoctrine()->getRepository('AppBundle:Profile')->getVendor($id);
+
+        $username = trim($getJson->get('email'));
+        $email    = trim($getJson->get('email'));
+        $password = "vendor";
+        $company = trim($getJson->get('company'));
+        $password = password_hash($password, PASSWORD_DEFAULT);
+        $fname = $getJson->get('name');
+        $fname = $this->split_name($fname);
+
+        $firstname = $fname[0];
+        $lastname = $fname[1];
+
+        $phone = $getJson->get('phone');
+        $street = $getJson->get('street');
+        $city = $getJson->get('city');
+        $state = $getJson->get('state');
+        $zip = $getJson->get('zip');
+        $term = $getJson->get('terms');
+        $usertype = 'vendor';
+        $comments = $getJson->get('comments');
+        $roleId = 11;
+        $isAct = 1;
+        $cntId = 6;
+        $profileId = $getJson->get('profile');
+        $vprofileId = $getJson->get('vprofile');
+        if($username != $vendor['email']){
+            $userNameData = $this->checkIfUserNameExists($username);
+            if ($userNameData) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'This Email already exists.';
+                $statusCode = 303;
+            } else if($this->checkIfEmailExists($email)){
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'This Email already exists.';
+                $statusCode = 303;
+            }
+        }
+        if($phone != $vendor['phone']){
+            if($this->checkIfPhoneExists($phone))
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'This Phone already exists.';
+                $statusCode = 303;
+        }
+
+         try{
+
+
+                    $em = $this->getDoctrine()->getManager();
+                    $profile =  $this->getDoctrine()->getRepository('AppBundle:Profile')->find($profileId);
+                    $profile->setUserId($id);
+                    $profile->setCompany($company);
+                    $profile->setFname($firstname);
+                    $profile->setLname($lastname);
+                    $profile->setEmail($email);
+                    $profile->setPhone($phone);
+                    $profile->setAddress($street);
+                    $profile->setCountryId($cntId);
+                    $profile->setStateId($state);
+                    $profile->setCity($city);
+                    $profile->setZip($zip);
+                    $em->flush();
+                    $vendor = $this->getDoctrine()->getRepository('AppBundle:VendorProfile')->find($vprofileId);
+                    $vendor->setTermId($term);
+                    $vendor->setUserId($id);
+                    $vendor->setComment($comments);
+                    $em->flush();
+                    $arrApi['status'] = 1;
+                    $arrApi['message'] = 'User data updated';
+                    $statusCode = 200;
+
+
+
+            }catch (Exception $e){
+                throw  $e;
+            }
+
+        return new JsonResponse($arrApi,$statusCode);
+
+    }
+
+
+
 
 
 
@@ -271,49 +413,6 @@ class VendorController extends Controller
         }
     }
 
-    private function getFnameById($userid) {
-        if (!empty($userid)) {
-            $profileObj = $this->getDoctrine()
-                ->getRepository('AppBundle:Profile')
-                ->findOneBy(array('userId' => $userid));
-            return $profileObj->getFname();
-        }
-    }
-
-    private function getLnameById($userid) {
-        if (!empty($userid)) {
-            $profileObj = $this->getDoctrine()
-                ->getRepository('AppBundle:Profile')
-                ->findOneBy(array('userId' => $userid));
-            return $profileObj->getLname();
-        }
-    }
-
-    private function getEmailById($userid) {
-        $profileObj = $this->getDoctrine()
-            ->getRepository('AppBundle:Profile')
-            ->findOneBy(array('userId' => $userid));
-        return $profileObj->getEmail();
-    }
-
-
-//    private function getEmailById($userid) {
-//        $profileObj = $this->getDoctrine()
-//            ->getRepository('AppBundle:Profile')
-//            ->findOneBy(array('userId' => $userid));
-//        return $profileObj->getEmail();
-//    }
-//
-
-    private function getProfileDataOfUser($userId) {
-        $profileData = $this->getDoctrine()
-            ->getRepository('AppBundle:Profile')
-            ->findOneBy(array('userId' => $userId));
-        if (!empty($profileData)) {
-            return $profileData;
-        }
-
-    }
 
     public function split_name($name) {
         $name = trim($name);
