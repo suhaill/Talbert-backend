@@ -19,7 +19,7 @@ class ProfileRepository extends \Doctrine\ORM\EntityRepository
         $qb = $this->createQueryBuilder('p');
         $qb->select(
            'p.id profileId', 'vp.id vprofileId','p.userId','p.company','p.fname','p.lname','p.email','p.phone','p.address','p.stateId','p.city','p.zip','vp.termId','vp.comment'
-        )->innerJoin(
+        )->leftJoin(
             'AppBundle:VendorProfile',
             'vp',
             Join::WITH,

@@ -2,19 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="80e28df3-ed42-4494-9ad7-d3a1639389c6" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Controller/CustomerController.php" afterPath="$PROJECT_DIR$/src/AppBundle/Controller/CustomerController.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Controller/OrderController.php" afterPath="$PROJECT_DIR$/src/AppBundle/Controller/OrderController.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php" afterPath="$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Entity/Orders.php" afterPath="$PROJECT_DIR$/src/AppBundle/Entity/Orders.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Entity/Profile.php" afterPath="$PROJECT_DIR$/src/AppBundle/Entity/Profile.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Entity/VendorProfile.php" afterPath="$PROJECT_DIR$/src/AppBundle/Entity/VendorProfile.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Repository/OrdersRepository.php" afterPath="$PROJECT_DIR$/src/AppBundle/Repository/OrdersRepository.php" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Repository/ProfileRepository.php" afterPath="$PROJECT_DIR$/src/AppBundle/Repository/ProfileRepository.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Repository/VendorProfileRepository.php" afterPath="$PROJECT_DIR$/src/AppBundle/Repository/VendorProfileRepository.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Resources/views/Customer/add_customer.html.twig" afterPath="$PROJECT_DIR$/src/AppBundle/Resources/views/Customer/add_customer.html.twig" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Tests/Controller/CustomerControllerTest.php" afterPath="$PROJECT_DIR$/src/AppBundle/Tests/Controller/CustomerControllerTest.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Tests/Controller/OrderControllerTest.php" afterPath="$PROJECT_DIR$/src/AppBundle/Tests/Controller/OrderControllerTest.php" />
     </list>
     <ignored path="talbert-backend.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -36,11 +24,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="VendorController.php" pinned="false" current-in-tab="true">
+      <file leaf-file-name="VendorController.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="570">
-              <caret line="281" column="0" selection-start-line="281" selection-start-column="0" selection-end-line="281" selection-end-column="0" />
+            <state relative-caret-position="270">
+              <caret line="261" column="0" selection-start-line="261" selection-start-column="0" selection-end-line="261" selection-end-column="0" />
               <folding>
                 <element signature="e#39#74#0#PHP" expanded="true" />
                 <element signature="e#2644#5132#0#PHP" expanded="false" />
@@ -99,11 +87,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ProfileRepository.php" pinned="false" current-in-tab="false">
+      <file leaf-file-name="ProfileRepository.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/AppBundle/Repository/ProfileRepository.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="300">
-              <caret line="20" column="46" selection-start-line="20" selection-start-column="46" selection-end-line="20" selection-end-column="46" />
+            <state relative-caret-position="315">
+              <caret line="21" column="20" selection-start-line="21" selection-start-column="20" selection-end-line="21" selection-end-column="20" />
               <folding>
                 <element signature="e#39#74#0#PHP" expanded="true" />
               </folding>
@@ -163,10 +151,10 @@
         <option value="$PROJECT_DIR$/src/AppBundle/Entity/CustomerProfiles.php" />
         <option value="$PROJECT_DIR$/src/AppBundle/Controller/CountryController.php" />
         <option value="$PROJECT_DIR$/src/AppBundle/Repository/VendorProfileRepository.php" />
-        <option value="$PROJECT_DIR$/src/AppBundle/Repository/ProfileRepository.php" />
         <option value="$PROJECT_DIR$/src/AppBundle/Entity/Profile.php" />
         <option value="$PROJECT_DIR$/src/AppBundle/Entity/VendorProfile.php" />
         <option value="$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php" />
+        <option value="$PROJECT_DIR$/src/AppBundle/Repository/ProfileRepository.php" />
       </list>
     </option>
   </component>
@@ -429,12 +417,12 @@
       <workItem from="1505194011294" duration="11085000" />
       <workItem from="1505453510365" duration="7499000" />
       <workItem from="1505472937600" duration="4505000" />
-      <workItem from="1505708318893" duration="17697000" />
+      <workItem from="1505708318893" duration="18661000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="101963000" />
+    <option name="totallyTimeSpent" value="102927000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="24" width="1535" height="876" extended-state="6" />
@@ -835,16 +823,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/AppBundle/Repository/ProfileRepository.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="20" column="46" selection-start-line="20" selection-start-column="46" selection-end-line="20" selection-end-column="46" />
-          <folding>
-            <element signature="e#39#74#0#PHP" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/AppBundle/Entity/Profile.php">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="598">
@@ -873,6 +851,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="270">
+          <caret line="261" column="0" selection-start-line="261" selection-start-column="0" selection-end-line="261" selection-end-column="0" />
+          <folding>
+            <element signature="e#39#74#0#PHP" expanded="true" />
+            <element signature="e#2644#5132#0#PHP" expanded="false" />
+            <marker date="1505738808879" expanded="true" signature="12021:12085" ph="select * fro... users" />
+            <marker date="1505738808879" expanded="true" signature="12573:12639" ph="select * fro... profiles" />
+            <marker date="1505738808879" expanded="true" signature="13123:13191" ph="select * fro... profiles" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/AppBundle/Repository/VendorProfileRepository.php">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="495">
@@ -884,16 +876,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php">
+    <entry file="file://$PROJECT_DIR$/src/AppBundle/Repository/ProfileRepository.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="570">
-          <caret line="281" column="0" selection-start-line="281" selection-start-column="0" selection-end-line="281" selection-end-column="0" />
+        <state relative-caret-position="315">
+          <caret line="21" column="20" selection-start-line="21" selection-start-column="20" selection-end-line="21" selection-end-column="20" />
           <folding>
             <element signature="e#39#74#0#PHP" expanded="true" />
-            <element signature="e#2644#5132#0#PHP" expanded="false" />
-            <marker date="1505738808879" expanded="true" signature="12021:12085" ph="select * fro... users" />
-            <marker date="1505738808879" expanded="true" signature="12573:12639" ph="select * fro... profiles" />
-            <marker date="1505738808879" expanded="true" signature="13123:13191" ph="select * fro... profiles" />
           </folding>
         </state>
       </provider>
