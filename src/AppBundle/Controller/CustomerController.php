@@ -351,6 +351,11 @@ class CustomerController extends Controller
                     $user['email'] = $profileData->getEmail();
                     $user['phone'] = $profileData->getPhone();
                 }
+                $customerProfileData = $this->getDoctrine()->getRepository('AppBundle:CustomerProfiles')->findOneBy(array('userId' => $userId));
+                if (!empty($customerProfileData)) {
+                    $user['term'] = $customerProfileData->getTermId();
+                    $user['comment'] = $customerProfileData->getComment();
+                }
                 $bAdd = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findOneBy(array('userId' => $userId,'addressType'=>'billing'));
                 if (!empty($bAdd)) {
                     $user['bStreet'] = $bAdd->getStreet();
