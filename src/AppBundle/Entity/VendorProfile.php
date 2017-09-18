@@ -117,6 +117,14 @@ class VendorProfile
         $this->userId = $userId;
     }
 
+    /**
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
 
 }
 
