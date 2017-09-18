@@ -13,22 +13,11 @@ use Doctrine\ORM\Query\ResultSetMapping;
 class VendorProfileRepository extends \Doctrine\ORM\EntityRepository
 {
 
-    private  $_rsm;
+
     public function __constructor(){
-    $this->_rsm = new ResultSetMapping();
-    }
-    public function getVendors()
-    {
-
-        $em = $this->getEntityManager();
-        $query = $em->createQuery('SELECT p.company,p.phone,p.userId FROM AppBundle:Profile p');
-        try {
-            return $query->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY); // array of User objects
-        } catch (\Doctrine\ORM\NoResultException $e) {
-            return null;
-        }
 
     }
+ 
 
 
 

@@ -186,7 +186,7 @@ class VendorController extends Controller
     public function getUsersListAction(Request $request) {
         $arrApi = [];
         $statusCode = 200;
-        $vendor = $this->getDoctrine()->getRepository('AppBundle:VendorProfile')->getVendors();
+        $vendor = $this->getDoctrine()->getRepository('AppBundle:Profile')->getVendors();
         $arrApi['message'] = 'Successfully retreived the vendor list.';
         $arrApi['status']=1;
         $arrApi['data'] = $vendor;
