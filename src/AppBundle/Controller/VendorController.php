@@ -152,7 +152,7 @@ class VendorController extends Controller
         $arrApi['data']['vprId']= $vendor['vprofileId'];
         $arrApi['data']['company']= $vendor['company'];
         $arrApi['data']['fname'] = $vendor['fname'];
-        $arrApi['data']['lname'] = $vendor['lname'];
+        $arrApi['data']['lname'] = " ";
         $arrApi['data']['email'] = $vendor['email'];
         $arrApi['data']['phone'] = $vendor['phone'];
         $arrApi['data']['address'] = $vendor['address'];
