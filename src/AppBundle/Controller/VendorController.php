@@ -217,10 +217,10 @@ class VendorController extends Controller
         $company = trim($getJson->get('company'));
         $password = password_hash($password, PASSWORD_DEFAULT);
         $fname = $getJson->get('name');
-        $fname = $this->split_name($fname);
-
-        $firstname = $fname[0];
-        $lastname = $fname[1];
+//        $fname = $this->split_name($fname);
+//
+//        $firstname = $fname[0];
+//        $lastname = $fname[1];
 
         $phone = $getJson->get('phone');
         $street = $getJson->get('street');

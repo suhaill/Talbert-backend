@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="80e28df3-ed42-4494-9ad7-d3a1639389c6" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php" afterPath="$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php" />
     </list>
     <ignored path="talbert-backend.iws" />
@@ -28,13 +27,13 @@
       <file leaf-file-name="VendorController.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="465">
-              <caret line="154" column="39" selection-start-line="154" selection-start-column="39" selection-end-line="154" selection-end-column="39" />
+            <state relative-caret-position="-1080">
+              <caret line="222" column="32" selection-start-line="219" selection-start-column="8" selection-end-line="222" selection-end-column="32" />
               <folding>
                 <element signature="e#39#74#0#PHP" expanded="true" />
-                <marker date="1505825467990" expanded="true" signature="11712:11776" ph="select * fro... users" />
-                <marker date="1505825467990" expanded="true" signature="12264:12330" ph="select * fro... profiles" />
-                <marker date="1505825467990" expanded="true" signature="12814:12882" ph="select * fro... profiles" />
+                <marker date="1505825837036" expanded="true" signature="11720:11784" ph="select * fro... users" />
+                <marker date="1505825837036" expanded="true" signature="12272:12338" ph="select * fro... profiles" />
+                <marker date="1505825837036" expanded="true" signature="12822:12890" ph="select * fro... profiles" />
               </folding>
             </state>
           </provider>
@@ -420,12 +419,12 @@
       <workItem from="1505472937600" duration="4505000" />
       <workItem from="1505708318893" duration="20237000" />
       <workItem from="1505801772101" duration="10076000" />
-      <workItem from="1505825444796" duration="25000" />
+      <workItem from="1505825444796" duration="411000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="114604000" />
+    <option name="totallyTimeSpent" value="114990000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="24" width="1535" height="876" extended-state="6" />
@@ -844,13 +843,13 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="465">
-          <caret line="154" column="39" selection-start-line="154" selection-start-column="39" selection-end-line="154" selection-end-column="39" />
+        <state relative-caret-position="-1080">
+          <caret line="222" column="32" selection-start-line="219" selection-start-column="8" selection-end-line="222" selection-end-column="32" />
           <folding>
             <element signature="e#39#74#0#PHP" expanded="true" />
-            <marker date="1505825467990" expanded="true" signature="11712:11776" ph="select * fro... users" />
-            <marker date="1505825467990" expanded="true" signature="12264:12330" ph="select * fro... profiles" />
-            <marker date="1505825467990" expanded="true" signature="12814:12882" ph="select * fro... profiles" />
+            <marker date="1505825837036" expanded="true" signature="11720:11784" ph="select * fro... users" />
+            <marker date="1505825837036" expanded="true" signature="12272:12338" ph="select * fro... profiles" />
+            <marker date="1505825837036" expanded="true" signature="12822:12890" ph="select * fro... profiles" />
           </folding>
         </state>
       </provider>
