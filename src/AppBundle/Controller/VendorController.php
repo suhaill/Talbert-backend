@@ -216,7 +216,7 @@ class VendorController extends Controller
         $password = "vendor";
         $company = trim($getJson->get('company'));
         $password = password_hash($password, PASSWORD_DEFAULT);
-        $fname = $getJson->get('name');
+        $fname = trim($getJson->get('name'));
 //        $fname = $this->split_name($fname);
 //
 //        $firstname = $fname[0];
@@ -261,7 +261,7 @@ class VendorController extends Controller
                     $profile =  $this->getDoctrine()->getRepository('AppBundle:Profile')->find($profileId);
                     $profile->setUserId($id);
                     $profile->setCompany($company);
-                    $profile->setFname($firstname);
+                    $profile->setFname($fname);
                     $profile->setEmail($email);
                     $profile->setPhone($phone);
                     $profile->setAddress($street);
