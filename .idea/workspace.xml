@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="80e28df3-ed42-4494-9ad7-d3a1639389c6" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Controller/ProductController.php" afterPath="$PROJECT_DIR$/src/AppBundle/Controller/ProductController.php" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php" afterPath="$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php" />
     </list>
     <ignored path="talbert-backend.iws" />
@@ -26,22 +24,22 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="VendorController.php" pinned="false" current-in-tab="false">
+      <file leaf-file-name="VendorController.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-945">
-              <caret line="48" column="29" selection-start-line="48" selection-start-column="29" selection-end-line="48" selection-end-column="29" />
+            <state relative-caret-position="360">
+              <caret line="45" column="40" selection-start-line="45" selection-start-column="40" selection-end-line="45" selection-end-column="40" />
               <folding>
                 <element signature="e#39#74#0#PHP" expanded="true" />
-                <marker date="1505823337934" expanded="true" signature="11810:11874" ph="select * fro... users" />
-                <marker date="1505823337934" expanded="true" signature="12362:12428" ph="select * fro... profiles" />
-                <marker date="1505823337934" expanded="true" signature="12912:12980" ph="select * fro... profiles" />
+                <marker date="1505824525209" expanded="true" signature="11725:11789" ph="select * fro... users" />
+                <marker date="1505824525209" expanded="true" signature="12277:12343" ph="select * fro... profiles" />
+                <marker date="1505824525209" expanded="true" signature="12827:12895" ph="select * fro... profiles" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="OrderHistoryController.php" pinned="false" current-in-tab="true">
+      <file leaf-file-name="OrderHistoryController.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/OrderHistoryController.php">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="0">
@@ -187,8 +185,8 @@
         <option value="$PROJECT_DIR$/src/AppBundle/Controller/VendorOrderHistoryController.php" />
         <option value="$PROJECT_DIR$/src/AppBundle/Controller/OrderHistory.php" />
         <option value="$PROJECT_DIR$/src/AppBundle/Controller/OrderHistoryController.php" />
-        <option value="$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php" />
         <option value="$PROJECT_DIR$/src/AppBundle/Controller/ProductController.php" />
+        <option value="$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php" />
       </list>
     </option>
   </component>
@@ -420,16 +418,16 @@
       <workItem from="1505453510365" duration="7499000" />
       <workItem from="1505472937600" duration="4505000" />
       <workItem from="1505708318893" duration="20237000" />
-      <workItem from="1505801772101" duration="9106000" />
+      <workItem from="1505801772101" duration="9537000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="113609000" />
+    <option name="totallyTimeSpent" value="114040000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="24" width="1535" height="876" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25016287" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -842,19 +840,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-945">
-          <caret line="48" column="29" selection-start-line="48" selection-start-column="29" selection-end-line="48" selection-end-column="29" />
-          <folding>
-            <element signature="e#39#74#0#PHP" expanded="true" />
-            <marker date="1505823337934" expanded="true" signature="11810:11874" ph="select * fro... users" />
-            <marker date="1505823337934" expanded="true" signature="12362:12428" ph="select * fro... profiles" />
-            <marker date="1505823337934" expanded="true" signature="12912:12980" ph="select * fro... profiles" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/AppBundle/Entity/Product.php">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1063">
@@ -879,6 +864,19 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
           <folding>
             <element signature="e#38#72#0#PHP" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/AppBundle/Controller/VendorController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="45" column="40" selection-start-line="45" selection-start-column="40" selection-end-line="45" selection-end-column="40" />
+          <folding>
+            <element signature="e#39#74#0#PHP" expanded="true" />
+            <marker date="1505824525209" expanded="true" signature="11725:11789" ph="select * fro... users" />
+            <marker date="1505824525209" expanded="true" signature="12277:12343" ph="select * fro... profiles" />
+            <marker date="1505824525209" expanded="true" signature="12827:12895" ph="select * fro... profiles" />
           </folding>
         </state>
       </provider>

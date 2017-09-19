@@ -35,11 +35,11 @@ class VendorController extends Controller
         $password = "vendor";
         $company = trim($getJson->get('company'));
         $password = password_hash($password, PASSWORD_DEFAULT);
-        $fname = $getJson->get('name');
-        $fname = $this->split_name($fname);
-
-        $fname = trim($fname[0]);
-        $lname = trim($fname[1]);
+        $fname = trim($getJson->get('name'));
+//        $fname = $this->split_name($fname);
+//
+//        $fname = trim($fname[0]);
+//        $lname = trim($fname[1]);
         $phone = $getJson->get('phone');
         $street = trim($getJson->get('street'));
         $city = trim($getJson->get('city'));
@@ -84,7 +84,6 @@ class VendorController extends Controller
                     $profile->setUserId($lastInsertId);
                     $profile->setCompany($company);
                     $profile->setFname($fname);
-                    $profile->setLname($lname);
                     $profile->setEmail($email);
                     $profile->setPhone($phone);
                     $profile->setAddress($street);
@@ -263,7 +262,6 @@ class VendorController extends Controller
                     $profile->setUserId($id);
                     $profile->setCompany($company);
                     $profile->setFname($firstname);
-                    $profile->setLname($lastname);
                     $profile->setEmail($email);
                     $profile->setPhone($phone);
                     $profile->setAddress($street);
