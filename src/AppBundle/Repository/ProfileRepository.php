@@ -13,6 +13,42 @@ use Doctrine\ORM\Query\Expr\Join;
 class ProfileRepository extends \Doctrine\ORM\EntityRepository
 {
 
+
+    public function getVendors()
+    {
+
+
+        $qb = $this->createQueryBuilder('p');
+        $qb->select(
+            'p.userId','p.company','p.phone'
+        )->innerJoin(
+            'AppBundle:VendorProfile',
+            'vp',
+            Join::WITH,
+            $qb->expr()->eq('p.userId', 'vp.userId')
+        );
+
+        try {
+            return $qb->getQuery()->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+        } catch (\Doctrine\ORM\NoResultException $e) {
+            throw new NoResultException("No record found");
+            // return null;
+        }
+
+
+
+
+//
+//        $em = $this->getEntityManager();
+//        $query = $em->createQuery('SELECT p.company,p.phone,p.userId FROM AppBundle:Profile p');
+//        try {
+//            return $query->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY); // array of User objects
+//        } catch (\Doctrine\ORM\NoResultException $e) {
+//            return null;
+//        }
+
+    }
+    
     public function getVendor($id)
     {
 
