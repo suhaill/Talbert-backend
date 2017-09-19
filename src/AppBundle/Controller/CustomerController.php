@@ -205,6 +205,7 @@ class CustomerController extends Controller
                 $prdArr = $data->get('products');
                 $shipArr = $data->get('shipp');
                 $datime = new \DateTime('now');
+
                 if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'You are not allowed to update customers';
@@ -560,7 +561,7 @@ class CustomerController extends Controller
                 $bAdd = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findOneBy(array('userId' => $userId,'addressType'=>'billing'));
                 if (!empty($bAdd)) {
                     $user['bStreet'] = $bAdd->getStreet();
-                    $user['bStateId'] = $bAdd->getStateId();
+                    $user['billingState'] = $bAdd->getStateId();
                     $user['bCity'] = $bAdd->getCity();
                     $user['bZip'] = $bAdd->getZip();
                 }
