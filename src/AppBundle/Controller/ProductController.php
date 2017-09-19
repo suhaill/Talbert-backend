@@ -61,8 +61,8 @@ class ProductController extends Controller
         $statusCode = 200;
         $jsontoarraygenerator = new JsonToArrayGenerator();
         $getJson = $jsontoarraygenerator->getJson($request);
-        $cost = $getJson->get('cost');
-        $comment = $getJson->get('comments');
+        $cost = trim($getJson->get('cost'));
+        $comment = trim($getJson->get('comments'));
         try{
             $em = $this->getDoctrine()->getManager();
             $product = $this->getDoctrine()->getRepository('AppBundle:Product')->find($id);
