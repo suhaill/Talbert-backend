@@ -10,14 +10,10 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use AppBundle\Entity\User;
 use AppBundle\Entity\Profile;
 use PDO;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
+
 
 class VendorController extends Controller
 {
