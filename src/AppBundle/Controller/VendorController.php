@@ -10,14 +10,10 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use AppBundle\Entity\User;
 use AppBundle\Entity\Profile;
 use PDO;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
+
 
 class VendorController extends Controller
 {
@@ -39,19 +35,19 @@ class VendorController extends Controller
         $password = "vendor";
         $company = trim($getJson->get('company'));
         $password = password_hash($password, PASSWORD_DEFAULT);
-        $fname = $getJson->get('name');
-        $fname = $this->split_name($fname);
-
-        $fname = $fname[0];
-        $lname = $fname[1];
+        $fname = trim($getJson->get('name'));
+//        $fname = $this->split_name($fname);
+//
+//        $fname = trim($fname[0]);
+//        $lname = trim($fname[1]);
         $phone = $getJson->get('phone');
-        $street = $getJson->get('street');
-        $city = $getJson->get('city');
+        $street = trim($getJson->get('street'));
+        $city = trim($getJson->get('city'));
         $state = $getJson->get('state');
-        $zip = $getJson->get('zip');
+        $zip = trim($getJson->get('zip'));
         $term = $getJson->get('terms');
         $usertype = 'vendor';
-        $comments = $getJson->get('comments');
+        $comments = trim($getJson->get('comments'));
         $roleId = 11;
         $isAct = 1;
         $cntId = 6;
@@ -88,13 +84,13 @@ class VendorController extends Controller
                     $profile->setUserId($lastInsertId);
                     $profile->setCompany($company);
                     $profile->setFname($fname);
-                    $profile->setLname($lname);
                     $profile->setEmail($email);
                     $profile->setPhone($phone);
                     $profile->setAddress($street);
                     $profile->setCountryId($cntId);
                     $profile->setStateId($state);
                     $profile->setCity($city);
+                    $profile->setZip($zip);
                     $em->persist($profile);
                     $em->flush();
                     if (empty($profile->getId())) {
@@ -156,7 +152,7 @@ class VendorController extends Controller
         $arrApi['data']['vprId']= $vendor['vprofileId'];
         $arrApi['data']['company']= $vendor['company'];
         $arrApi['data']['fname'] = $vendor['fname'];
-        $arrApi['data']['lname'] = $vendor['lname'];
+        $arrApi['data']['lname'] = " ";
         $arrApi['data']['email'] = $vendor['email'];
         $arrApi['data']['phone'] = $vendor['phone'];
         $arrApi['data']['address'] = $vendor['address'];
@@ -220,11 +216,11 @@ class VendorController extends Controller
         $password = "vendor";
         $company = trim($getJson->get('company'));
         $password = password_hash($password, PASSWORD_DEFAULT);
-        $fname = $getJson->get('name');
-        $fname = $this->split_name($fname);
-
-        $firstname = $fname[0];
-        $lastname = $fname[1];
+        $fname = trim($getJson->get('name'));
+//        $fname = $this->split_name($fname);
+//
+//        $firstname = $fname[0];
+//        $lastname = $fname[1];
 
         $phone = $getJson->get('phone');
         $street = $getJson->get('street');
@@ -265,8 +261,7 @@ class VendorController extends Controller
                     $profile =  $this->getDoctrine()->getRepository('AppBundle:Profile')->find($profileId);
                     $profile->setUserId($id);
                     $profile->setCompany($company);
-                    $profile->setFname($firstname);
-                    $profile->setLname($lastname);
+                    $profile->setFname($fname);
                     $profile->setEmail($email);
                     $profile->setPhone($phone);
                     $profile->setAddress($street);
@@ -413,12 +408,12 @@ class VendorController extends Controller
         }
     }
 
-
-    public function split_name($name) {
-        $name = trim($name);
-        $last_name = (strpos($name, ' ') === false) ? '' : preg_replace('#.*\s([\w-]*)$#', '$1', $name);
-        $first_name = trim( preg_replace('#'.$last_name.'#', '', $name ) );
-        return array($first_name, $last_name);
+    function split_name($name){
+        $names = explode(' ', $name);
+        $lastname = $names[count($names) - 1];
+        unset($names[count($names) - 1]);
+        $firstname = join(' ', $names);
+        return array($firstname, $lastname);
     }
 
 }
