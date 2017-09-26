@@ -34,7 +34,7 @@ class ShippingMethodController extends Controller
                 $arrApi['message'] = 'There is no salesman.';
             } else {
                 $arrApi['status'] = 1;
-                $arrApi['message'] = 'Successfully retreived the salesman list.';
+                $arrApi['message'] = 'Successfully retreived the shipping method list.';
                 for ($i=0; $i<count($users); $i++) {
                     $userId = $users[$i]->getId();
                     if (!empty($userId)) {

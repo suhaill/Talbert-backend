@@ -22,6 +22,13 @@ class Quotes
     private $id;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="estimate_date", type="string", length=30, nullable=true)
+     */
+    private $estimatedate;
+
+    /**
      * @var int
      *
      * @ORM\Column(name="estimator_id", type="integer")
@@ -38,9 +45,32 @@ class Quotes
     /**
      * @var int
      *
+     * @ORM\Column(name="version", type="integer")
+     */
+    private $version;
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="customer_id", type="integer", nullable=true)
      */
     private $customerId;
+
+    /**
+     * @return string
+     */
+    public function getEstimatedate()
+    {
+        return $this->estimatedate;
+    }
+
+    /**
+     * @param string $estimatedate
+     */
+    public function setEstimatedate($estimatedate)
+    {
+        $this->estimatedate = $estimatedate;
+    }
 
     /**
      * @var string
@@ -167,6 +197,22 @@ class Quotes
     public function getControlNumber()
     {
         return $this->controlNumber;
+    }
+
+    /**
+     * @param int $version
+     */
+    public function setVersion($version)
+    {
+        $this->version = $version;
+    }
+
+    /**
+     * @return int
+     */
+    public function getVersion()
+    {
+        return $this->version;
     }
 
     /**
