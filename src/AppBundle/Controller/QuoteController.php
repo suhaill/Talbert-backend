@@ -23,7 +23,7 @@ class QuoteController extends Controller
      * @Route("/api/quote/addQuote")
      * @Security("is_granted('ROLE_USER')")
      * @Method("POST")
-     * params: None
+     * params: Various
      */
     public function addQuoteAction(Request $request) {
         $arrApi = array();
@@ -31,7 +31,6 @@ class QuoteController extends Controller
         try {
             $jsontoarraygenerator = new JsonToArrayGenerator();
             $data = $jsontoarraygenerator->getJson($request);
-            //print_r($data);die;
             $qDate = trim($data->get('date'));
             $quoteAddedby = trim($data->get('current_user_id'));
             $ver = 1;
@@ -75,6 +74,32 @@ class QuoteController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    /**
+     * @Route("/api/quote/getQuotesList")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("GET")
+     * params: None
+     */
+    public function getQuotesAction() {
+        $arrApi = array();
+            $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findAll();
+            if (empty($quotes) ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'There is no quote.';
+            } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived the quote list.';
+                for($i=0;$i<count($quotes);$i++) {
+                    $arrApi['data']['quotes'][$i]['id'] = $quotes[$i]->getId();
+                    $arrApi['data']['quotes'][$i]['estimateNumber'] = 'E-'.$quotes[$i]->getControlNumber().'-'.$quotes[$i]->getVersion();
+                    $arrApi['data']['quotes'][$i]['customername'] = $this->getCustomerNameById($quotes[$i]->getCustomerId());
+                    $arrApi['data']['quotes'][$i]['status'] = $quotes[$i]->getStatus();
+                    $arrApi['data']['quotes'][$i]['estDate'] = $this->getEstimateDateFormate($quotes[$i]->getEstimateDate());
+                }
+            }
+         return new JsonResponse($arrApi);
+    }
+
 
 
     //Reusable codes
@@ -111,4 +136,20 @@ class QuoteController extends Controller
         $em->flush();
     }
 
+    private function getCustomerNameById($customer_id) {
+        if (!empty($customer_id)) {
+            $profileObj = $this->getDoctrine()
+                ->getRepository('AppBundle:Profile')
+                ->findOneBy(array('userId' => $customer_id));
+            $customerName =  $profileObj->getFname();
+            if (!empty($customerName)) {
+                return $customerName;
+            }
+        }
+    }
+
+    private function getEstimateDateFormate($date) {
+        $dateArr =  explode('-', explode('T',$date)[0]);
+        return $d = $dateArr[1].'/'.$dateArr[2].'/'.$dateArr[0];
+    }
 }
