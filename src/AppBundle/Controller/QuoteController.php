@@ -80,7 +80,9 @@ class QuoteController extends Controller
     //Reusable codes
     private function getLastControlNumber() {
         $lastQuote = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneBy(array(),array('id'=>'desc'));
-        return $lastQuote->getControlNumber();
+        if (!empty($lastQuote)) {
+            return $lastQuote->getControlNumber();
+        }
     }
 
     private  function checkIfRefNoExists($refNo) {
