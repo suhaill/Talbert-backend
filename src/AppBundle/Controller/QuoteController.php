@@ -124,8 +124,8 @@ class QuoteController extends Controller
                 $arrApi['data']['id'] = $quoteData->getId();
                 $arrApi['data']['date'] = $quoteData->getEstimateDate();
                 //$arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
-                //$arrApi['data']['controlnumber'] = $quoteData->getControlNumber();
-                //$arrApi['data']['version'] = $quoteData->getVersion();
+                $arrApi['data']['controlnumber'] = $quoteData->getControlNumber();
+                $arrApi['data']['version'] = $quoteData->getVersion();
                 $arrApi['data']['customer'] = $quoteData->getCustomerId();
                 $arrApi['data']['referenceNumber'] = $quoteData->getRefNum();
                 $arrApi['data']['salesman'] = $quoteData->getSalesmanId();
