@@ -43,6 +43,12 @@ class Product
     private $perUnit;
 
     /**
+     * @ORM\Column(type="string",name="product_name",length=255)
+     */
+    private $productName;
+
+
+    /**
      * @var string
      *
      * @ORM\Column(name="description", type="string", length=255)
@@ -217,5 +223,23 @@ class Product
     {
         return $this->createdAt;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getProductName()
+    {
+        return $this->productName;
+    }
+
+    /**
+     * @param mixed $productName
+     */
+    public function setProductName($productName)
+    {
+        $this->productName = $productName;
+    }
+
+
 }
 
