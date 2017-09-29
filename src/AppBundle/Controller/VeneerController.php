@@ -2,14 +2,20 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Entity\Venner;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use AppBundle\Service\JsonToArrayGenerator;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use AppBundle\Service\JsonToArrayGenerator;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
+use Symfony\Component\Serializer\Serializer;
+use AppBundle\Entity\Veneer;
+use PDO;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class VeneerController extends Controller
 {
@@ -23,28 +29,86 @@ class VeneerController extends Controller
 
         $arrApi = [];
         $statusCode = 200;
-        $jsontoarraygenerator = new JsonToArrayGenerator();
-        $getJson = $jsontoarraygenerator->getJson($request);
+        try {
 
-        $quantity = trim($getJson->get('quantity'));
-        $speciesId = trim($getJson->get('speciesId'));
-        $grainPatternId = trim($getJson->get('grainPatternId'));
-        $grainDirectionId = trim($getJson->get('grainDirectionId'));
-        $gradeId = trim($getJson->get('gradeId'));
-        $thicknessId = trim($getJson->get('thicknessId'));
-        $width = trim($getJson->get('width'));
-        $isNetSize = trim($getJson->get('isNetSize'));
-        $length = trim($getJson->get('length'));
-        $coreTypeId = trim($getJson->get('coreTypeId'));
-        $backer = trim($getJson->get('backer'));
-        $isFlexSanded = trim($getJson->get('isFlexSanded'));
-        $sequenced = trim($getJson->get('sequenced'));
-        $lumberFee = trim($getJson->get('lumberFee'));
-        $comments = trim($getJson->get('comments'));
-        $quoteId = trim($getJson->get('quoteId'));
+            $jsontoarraygenerator = new JsonToArrayGenerator();
+            $getJson = $jsontoarraygenerator->getJson($request);
 
-        //$response = new JsonResponse($request);
-        //return $response;
+            $quantity = trim($getJson->get('quantity'));
+            $speciesId = trim($getJson->get('species'));
+            $grainPatternId = trim($getJson->get('grainpattern'));
+            $flakexfigured = trim($getJson->get('flakexfigured'));
+            $pattern = trim($getJson->get('pattern'));
+            $grainDirectionId = trim($getJson->get('graindirection'));
+            $gradeId = trim($getJson->get('facegrade'));
+            $thicknessId = trim($getJson->get('thickness'));
+            $width = trim($getJson->get('width'));
+            $isNetSize = trim($getJson->get('netsize'));
+            $length = trim($getJson->get('length'));
+            $coreTypeId = trim($getJson->get('coretype'));
+            $backer = trim($getJson->get('backer'));
+            $isFlexSanded = trim($getJson->get('flexsanded'));
+            $sequenced = trim($getJson->get('sequenced'));
+            $lumberFee = trim($getJson->get('lumberfee'));
+            $comments = trim($getJson->get('comment'));
+            //$quoteId = trim($getJson->get('quoteId'));
+            $createdAt = new \DateTime('now');
+            
+            
+            if (empty($quantity) || empty($speciesId) || empty($grainPatternId) 
+            || empty($pattern) || empty($grainDirectionId) || empty($gradeId) || 
+            empty($thicknessId) || empty($width) || empty($length) || empty($coreTypeId) 
+            || empty($backer) || empty($lumberFee) || empty($comments )) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Please fill all the fields.';
+                $statusCode = 422;
+            } else {
+
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully saved veneer data.';
+                $statusCode = 200;
+                $this->saveVeneerData($quantity, $speciesId, $grainPatternId, $flakexfigured, 
+                $pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize, 
+                $length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,
+                $comments,$createdAt);
+            
+            }
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function saveVeneerData($quantity, $speciesId, $grainPatternId, $flakexfigured,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$createdAt) 
+    {
+        $em = $this->getDoctrine()->getManager();
+        $veneer = new Veneer();
+        $veneer->setQuantity($quantity);
+        $veneer->setSpeciesId($speciesId);
+        $veneer->setGrainPatternId($grainPatternId);
+        //$veneer->setGrainPatternId($flakexfigured);
+        $veneer->setPatternId($pattern);
+        $veneer->setGrainDirectionId($grainDirectionId);
+        $veneer->setGradeId($gradeId);
+        $veneer->setThicknessId($thicknessId);
+        $veneer->setWidth($width);
+        $veneer->setIsNetSize($isNetSize);
+        $veneer->setLength($length);
+        $veneer->setCoreTypeId($coreTypeId);
+        $veneer->setBacker($backer);
+        $veneer->setIsFlexSanded($isFlexSanded);
+        $veneer->setSequenced($sequenced);
+        $veneer->setLumberFee($lumberFee);
+        $veneer->setComments($comments);
+        
+        $veneer->setQuoteId('1');
+        $veneer->setCreatedAt($createdAt);
+        $veneer->setUpdatedAt($createdAt);
+
+        $em->persist($veneer);
+        $em->flush();
     }
 
 }

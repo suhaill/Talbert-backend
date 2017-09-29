@@ -185,7 +185,7 @@ class Plywood
     /**
      * @var array
      *
-     * @ORM\Column(name="millingDescription", type="simple_array")
+     * @ORM\Column(name="millingDescription", type="text" ,)
      */
     private $millingDescription;
 
@@ -238,6 +238,20 @@ class Plywood
      */
     private $comments;
 
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="created_at", type="datetime")
+     */
+     private $createdAt;
+     
+    /**
+    * @var \DateTime
+    *
+    * @ORM\Column(name="updated_at", type="datetime")
+    */
+    private $updatedAt;
+     
 
     /**
      * Get id
@@ -804,7 +818,7 @@ class Plywood
     /**
      * Set millingDescription
      *
-     * @param array $millingDescription
+     * @param string $millingDescription
      *
      * @return Plywood
      */
@@ -818,7 +832,7 @@ class Plywood
     /**
      * Get millingDescription
      *
-     * @return array
+     * @return string
      */
     public function getMillingDescription()
     {
@@ -992,5 +1006,53 @@ class Plywood
     {
         return $this->comments;
     }
-}
+    
 
+    /**
+     * Set createdAt
+     *
+     * @param \DateTime $createdAt
+     *
+     * @return Veneer
+     */
+     public function setCreatedAt($createdAt)
+     {
+         $this->createdAt = $createdAt;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get createdAt
+      *
+      * @return \DateTime
+      */
+     public function getCreatedAt()
+     {
+         return $this->createdAt;
+     }
+ 
+     /**
+      * Set updatedAt
+      *
+      * @param \DateTime $updatedAt
+      *
+      * @return Veneer
+      */
+     public function setUpdatedAt($updatedAt)
+     {
+         $this->updatedAt = $updatedAt;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get updatedAt
+      *
+      * @return \DateTime
+      */
+     public function getUpdatedAt()
+     {
+         return $this->updatedAt;
+     }
+ }
