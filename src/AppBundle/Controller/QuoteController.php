@@ -83,7 +83,7 @@ class QuoteController extends Controller
     public function getQuotesAction() {
         $arrApi = array();
         $statusCode = 200;
-            $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findAll();
+            $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array(),array('id'=>'desc'));
             if (empty($quotes) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no quote.';
