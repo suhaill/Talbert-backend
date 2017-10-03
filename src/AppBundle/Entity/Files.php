@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * @ORM\Table(name="files")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\FilesRepository")
+ * @ORM\HasLifecycleCallbacks()
  */
 class Files
 {
@@ -20,20 +21,6 @@ class Files
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     private $id;
-
-    /**
-     * @var int
-     *
-     * @ORM\Column(name="table_id", type="integer")
-     */
-    private $tableId;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="table_name", type="string", length=100)
-     */
-    private $tableName;
 
     /**
      * @var string
@@ -67,53 +54,7 @@ class Files
         return $this->id;
     }
 
-    /**
-     * Set tableId
-     *
-     * @param integer $tableId
-     *
-     * @return Files
-     */
-    public function setTableId($tableId)
-    {
-        $this->tableId = $tableId;
 
-        return $this;
-    }
-
-    /**
-     * Get tableId
-     *
-     * @return int
-     */
-    public function getTableId()
-    {
-        return $this->tableId;
-    }
-
-    /**
-     * Set tableName
-     *
-     * @param string $tableName
-     *
-     * @return Files
-     */
-    public function setTableName($tableName)
-    {
-        $this->tableName = $tableName;
-
-        return $this;
-    }
-
-    /**
-     * Get tableName
-     *
-     * @return string
-     */
-    public function getTableName()
-    {
-        return $this->tableName;
-    }
 
     /**
      * Set fileName
@@ -186,5 +127,26 @@ class Files
     {
         return $this->updatedAt;
     }
+
+
+    /**
+     * Triggered on insert
+     * @ORM\PrePersist
+     */
+    public function onPrePersist()
+    {
+        $this->createdAt = new \DateTime("now");
+        $this->updatedAt = new \DateTime("now");
+    }
+
+    /**
+     * Triggered on update
+     * @ORM\PreUpdate
+     */
+    public function onPreUpdate()
+    {
+        $this->updatedAt = new \DateTime("now");
+    }
+    
 }
 

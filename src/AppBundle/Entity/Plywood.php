@@ -251,6 +251,11 @@ class Plywood
      */
      private $quoteId;
     /**
+     * @ORM\Column(type="integer",name="file_id")
+     */
+    private $fileId;
+
+    /**
      * @var \DateTime
      *
      * @ORM\Column(name="created_at", type="datetime")
@@ -1113,4 +1118,20 @@ class Plywood
      {
          return $this->updatedAt;
      }
+
+    /**
+     * @return mixed
+     */
+    public function getFileId()
+    {
+        return $this->fileId;
+    }
+
+    /**
+     * @param mixed $fileId
+     */
+    public function setFileId($fileId)
+    {
+        $this->fileId = $fileId;
+    }
  }

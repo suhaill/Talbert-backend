@@ -147,6 +147,13 @@ class Veneer
      */
     private $quoteId;
 
+
+    /**
+     *
+     * @ORM\Column(name="file_id", type="integer")
+     */
+    private $fileId;
+
     /**
      * @var \DateTime
      *
@@ -603,6 +610,22 @@ class Veneer
     public function getQuoteId()
     {
         return $this->quoteId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getFileId()
+    {
+        return $this->fileId;
+    }
+
+    /**
+     * @param mixed $fileId
+     */
+    public function setFileId($fileId)
+    {
+        $this->fileId = $fileId;
     }
 
     /**
