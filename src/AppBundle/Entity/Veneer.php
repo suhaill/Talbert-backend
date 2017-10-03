@@ -45,6 +45,13 @@ class Veneer
     /**
      * @var int
      *
+     * @ORM\Column(name="flakex_figured_id", type="integer")
+     */
+     private $flakexFiguredId;
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="pattern_id", type="integer")
      */
     private $patternId;
@@ -236,6 +243,31 @@ class Veneer
     {
         return $this->grainPatternId;
     }
+
+
+    /**
+     * Set flakexFiguredId
+     *
+     * @param integer $flakexFiguredId
+     *
+     * @return Veneer
+     */
+     public function setFlakexFiguredId($flakexFiguredId)
+     {
+         $this->flakexFiguredId = $flakexFiguredId;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get flakexFiguredId
+      *
+      * @return int
+      */
+     public function getFlakexFiguredId()
+     {
+         return $this->flakexFiguredId;
+     }
 
     /**
      * Set pattern

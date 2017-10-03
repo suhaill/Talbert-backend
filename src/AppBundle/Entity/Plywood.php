@@ -45,6 +45,13 @@ class Plywood
     /**
      * @var int
      *
+     * @ORM\Column(name="flakex_figured_id", type="integer")
+     */
+     private $flakexFiguredId;
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="patternId", type="integer")
      */
     private $patternId;
@@ -237,7 +244,12 @@ class Plywood
      * @ORM\Column(name="comments", type="text")
      */
     private $comments;
-
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="quote_id", type="integer")
+     */
+     private $quoteId;
     /**
      * @var \DateTime
      *
@@ -382,6 +394,30 @@ class Plywood
     {
         return $this->grainDirectionId;
     }
+
+    /**
+     * Set flakexFiguredId
+     *
+     * @param integer $flakexFiguredId
+     *
+     * @return Veneer
+     */
+     public function setFlakexFiguredId($flakexFiguredId)
+     {
+         $this->flakexFiguredId = $flakexFiguredId;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get flakexFiguredId
+      *
+      * @return int
+      */
+     public function getFlakexFiguredId()
+     {
+         return $this->flakexFiguredId;
+     }
 
     /**
      * Set gradeId
@@ -1007,7 +1043,29 @@ class Plywood
         return $this->comments;
     }
     
-
+    /**
+     * Set quoteId
+     *
+     * @param integer $quoteId
+     *
+     * @return Veneer
+     */
+     public function setQuoteId($quoteId)
+     {
+         $this->quoteId = $quoteId;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get quoteId
+      *
+      * @return int
+      */
+     public function getQuoteId()
+     {
+         return $this->quoteId;
+     }
     /**
      * Set createdAt
      *
