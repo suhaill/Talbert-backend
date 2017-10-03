@@ -368,7 +368,6 @@ class PlywoodController extends Controller
         //$plywood->setCreatedAt($createdAt);
         $plywood->setUpdatedAt($createdAt);
 
-        //$em->persist($plywood);
         $em->flush();
     }
 
