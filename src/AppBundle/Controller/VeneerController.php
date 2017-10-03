@@ -51,6 +51,7 @@ class VeneerController extends Controller
             $sequenced = trim($getJson->get('sequenced'));
             $lumberFee = trim($getJson->get('lumberfee'));
             $comments = trim($getJson->get('comment'));
+            $fileId = trim($getJson->get('fileId'));
             //$quoteId = trim($getJson->get('quoteId'));
             $createdAt = new \DateTime('now');
             
@@ -70,7 +71,7 @@ class VeneerController extends Controller
                 $this->saveVeneerData($quantity, $speciesId, $grainPatternId, $flakexfigured, 
                 $pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize, 
                 $length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,
-                $comments,$createdAt);
+                $comments,$createdAt,$fileId);
             
             }
         }
@@ -81,7 +82,7 @@ class VeneerController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    private function saveVeneerData($quantity, $speciesId, $grainPatternId, $flakexfigured,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$createdAt) 
+    private function saveVeneerData($quantity, $speciesId, $grainPatternId, $flakexfigured,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$createdAt,$fileId)
     {
         $em = $this->getDoctrine()->getManager();
         $veneer = new Veneer();
@@ -102,7 +103,7 @@ class VeneerController extends Controller
         $veneer->setSequenced($sequenced);
         $veneer->setLumberFee($lumberFee);
         $veneer->setComments($comments);
-        
+        $veneer->setFileId($fileId);
         $veneer->setQuoteId('1');
         $veneer->setCreatedAt($createdAt);
         $veneer->setUpdatedAt($createdAt);

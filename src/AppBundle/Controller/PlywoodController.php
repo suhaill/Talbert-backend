@@ -68,7 +68,7 @@ class PlywoodController extends Controller
             $autoNumber = trim($getJson->get('autoNumber'));
             $comments = trim($getJson->get('comment'));
             $createdAt = new \DateTime('now');
-
+            $fileId = trim($getJson->get('fileId'));
             if (empty($quantity) || empty($speciesId) || empty($grainPatternId) || empty($patternId) || 
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
@@ -89,7 +89,7 @@ class PlywoodController extends Controller
                 $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
                 $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId, $sheenId,
                 $shameOnId,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,
-                $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt);
+                $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId);
             
             }
 
@@ -105,7 +105,7 @@ class PlywoodController extends Controller
     $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
     $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId, $sheenId,
     $shameOnId,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,
-    $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt) 
+    $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId)
     {
         $em = $this->getDoctrine()->getManager();
         $plywood = new Plywood();
@@ -140,6 +140,7 @@ class PlywoodController extends Controller
         $plywood->setNumberLabels($numberLabels);
         $plywood->setLumberFee($lumberFee); 
         $plywood->setAutoNumber($autoNumber);
+        $plywood->setFileId($fileId);
         
         $plywood->setComments($comments);
        //$veneer->setQuoteId('1');
