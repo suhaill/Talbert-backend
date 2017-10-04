@@ -45,6 +45,13 @@ class Plywood
     /**
      * @var int
      *
+     * @ORM\Column(name="flakex_figured_id", type="integer")
+     */
+     private $flakexFiguredId;
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="patternId", type="integer")
      */
     private $patternId;
@@ -185,7 +192,7 @@ class Plywood
     /**
      * @var array
      *
-     * @ORM\Column(name="millingDescription", type="simple_array")
+     * @ORM\Column(name="millingDescription", type="text" ,)
      */
     private $millingDescription;
 
@@ -237,7 +244,31 @@ class Plywood
      * @ORM\Column(name="comments", type="text")
      */
     private $comments;
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="quote_id", type="integer")
+     */
+     private $quoteId;
+    /**
+     * @ORM\Column(type="integer",name="file_id")
+     */
+    private $fileId;
 
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="created_at", type="datetime")
+     */
+     private $createdAt;
+     
+    /**
+    * @var \DateTime
+    *
+    * @ORM\Column(name="updated_at", type="datetime")
+    */
+    private $updatedAt;
+     
 
     /**
      * Get id
@@ -368,6 +399,30 @@ class Plywood
     {
         return $this->grainDirectionId;
     }
+
+    /**
+     * Set flakexFiguredId
+     *
+     * @param integer $flakexFiguredId
+     *
+     * @return Veneer
+     */
+     public function setFlakexFiguredId($flakexFiguredId)
+     {
+         $this->flakexFiguredId = $flakexFiguredId;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get flakexFiguredId
+      *
+      * @return int
+      */
+     public function getFlakexFiguredId()
+     {
+         return $this->flakexFiguredId;
+     }
 
     /**
      * Set gradeId
@@ -804,7 +859,7 @@ class Plywood
     /**
      * Set millingDescription
      *
-     * @param array $millingDescription
+     * @param string $millingDescription
      *
      * @return Plywood
      */
@@ -818,7 +873,7 @@ class Plywood
     /**
      * Get millingDescription
      *
-     * @return array
+     * @return string
      */
     public function getMillingDescription()
     {
@@ -992,5 +1047,91 @@ class Plywood
     {
         return $this->comments;
     }
-}
+    
+    /**
+     * Set quoteId
+     *
+     * @param integer $quoteId
+     *
+     * @return Veneer
+     */
+     public function setQuoteId($quoteId)
+     {
+         $this->quoteId = $quoteId;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get quoteId
+      *
+      * @return int
+      */
+     public function getQuoteId()
+     {
+         return $this->quoteId;
+     }
+    /**
+     * Set createdAt
+     *
+     * @param \DateTime $createdAt
+     *
+     * @return Veneer
+     */
+     public function setCreatedAt($createdAt)
+     {
+         $this->createdAt = $createdAt;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get createdAt
+      *
+      * @return \DateTime
+      */
+     public function getCreatedAt()
+     {
+         return $this->createdAt;
+     }
+ 
+     /**
+      * Set updatedAt
+      *
+      * @param \DateTime $updatedAt
+      *
+      * @return Veneer
+      */
+     public function setUpdatedAt($updatedAt)
+     {
+         $this->updatedAt = $updatedAt;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get updatedAt
+      *
+      * @return \DateTime
+      */
+     public function getUpdatedAt()
+     {
+         return $this->updatedAt;
+     }
 
+    /**
+     * @return mixed
+     */
+    public function getFileId()
+    {
+        return $this->fileId;
+    }
+
+    /**
+     * @param mixed $fileId
+     */
+    public function setFileId($fileId)
+    {
+        $this->fileId = $fileId;
+    }
+ }
