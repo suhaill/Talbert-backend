@@ -217,7 +217,6 @@ class QuoteController extends Controller
         $addArr = array();
         $addData = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findOneBy(array('userId' => $cust_id));
         if (!empty($addData)) {
-            $addArr['nickname'] = $addData->getNickname();
             $addArr['street'] = $addData->getStreet();
             $addArr['state'] = $this->getStateNamebyId($addData->getStateId());
             $addArr['city'] = $addData->getCity();
@@ -304,7 +303,7 @@ class QuoteController extends Controller
     private function getSpeciesNameById($species_id) {
         $productRecord = $this->getDoctrine()->getRepository('AppBundle:Product')->findOneById($species_id);
         if (!empty($productRecord)) {
-            return $productRecord->getDescription();
+            return $productRecord->getProductName();
         }
     }
 
