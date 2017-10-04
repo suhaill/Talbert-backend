@@ -83,7 +83,7 @@ class QuoteController extends Controller
     public function getQuotesAction() {
         $arrApi = array();
         $statusCode = 200;
-            $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findAll();
+            $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array(),array('id'=>'desc'));
             if (empty($quotes) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no quote.';
@@ -124,8 +124,8 @@ class QuoteController extends Controller
                 $arrApi['data']['id'] = $quoteData->getId();
                 $arrApi['data']['date'] = $quoteData->getEstimateDate();
                 //$arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
-                //$arrApi['data']['controlnumber'] = $quoteData->getControlNumber();
-                //$arrApi['data']['version'] = $quoteData->getVersion();
+                $arrApi['data']['controlnumber'] = $quoteData->getControlNumber();
+                $arrApi['data']['version'] = $quoteData->getVersion();
                 $arrApi['data']['customer'] = $quoteData->getCustomerId();
                 $arrApi['data']['referenceNumber'] = $quoteData->getRefNum();
                 $arrApi['data']['salesman'] = $quoteData->getSalesmanId();

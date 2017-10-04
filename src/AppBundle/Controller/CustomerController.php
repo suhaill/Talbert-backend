@@ -86,7 +86,7 @@ class CustomerController extends Controller
                                         $arrApi['message'] = 'Error while adding customer.';
                                     } else {
                                         $arrApi['status'] = 1;
-                                        $arrApi['message'] = 'Customer addedd successfully.';
+                                        $arrApi['message'] = 'Customer added successfully.';
                                         $lstPrfId = $this->saveProfileData($lastUserId, $company, $fName, $email, $phone);
                                         if (empty($lstPrfId)) {
                                             $arrApi['profileMessage'] = 'Profile Data not saved.';
