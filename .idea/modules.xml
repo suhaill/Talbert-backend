@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../Talbert-frontend/.idea/Talbert-frontend.iml" filepath="$PROJECT_DIR$/../Talbert-frontend/.idea/Talbert-frontend.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/talbert-backend.iml" filepath="$PROJECT_DIR$/.idea/talbert-backend.iml" />
     </modules>
   </component>

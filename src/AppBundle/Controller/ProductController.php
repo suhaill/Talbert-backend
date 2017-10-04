@@ -23,24 +23,32 @@ class ProductController extends Controller
      */
 
     public function getProductsAction(Request $request) {
+        
         $arrApi = [];
         $statusCode = 200;
         $i=0;
+        /* $arrApi['status'] = 1;
+        $arrApi['message'] = 'Successfully retreived the backer grades list.'; */
         $products = $this->getDoctrine()->getRepository('AppBundle:Product')->findAll();
-        foreach ($products as $product){
-            $arrApi['data'][$i]['id']= $product->getId();
-            $arrApi['data'][$i]['userId']= $product->getUserId();
-            $arrApi['data'][$i]['cost']= $product->getCost();
-            $arrApi['data'][$i]['perUnit']= $product->getPerUnit();
-            $arrApi['data'][$i]['description'] = $product->getDescription();
-            $arrApi['data'][$i]['comments'] = $product->getComments();
-            $i++;
 
+        if (empty($products) ) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'There is no backer grades.';
+        } else {
+            $arrApi['status'] = 1;
+            $arrApi['message'] = 'Successfully retreived the backer grades list.';
+            for($i=0;$i<count($products);$i++) {
+                $arrApi['data']['products'][$i]['id'] = $products[$i]->getId();
+                $arrApi['data']['products'][$i]['productname'] = $products[$i]->getProductName();
+                $arrApi['data']['products'][$i]['userId']= $products[$i]->getUserId();
+                $arrApi['data']['products'][$i]['cost']= $products[$i]->getCost();
+                $arrApi['data']['products'][$i]['perUnit']= $products[$i]->getPerUnit();
+                $arrApi['data']['products'][$i]['description'] = $products[$i]->getDescription();
+                $arrApi['data']['products'][$i]['comments'] = $products[$i]->getComments();
+                
+            }
         }
-
-        $arrApi['message'] = 'Successfully retreived products';
-        $arrApi['status']=1;
-        $statusCode = 200;
+       
         return new JsonResponse($arrApi,$statusCode);
 
     }
