@@ -65,7 +65,18 @@ class PlywoodController extends Controller
             $isLabels = trim($getJson->get('isLabels'));
             $numberLabels = trim($getJson->get('labels'));
             $lumberFee = trim($getJson->get('lumberfee'));
-            $autoNumber = trim($getJson->get('autoNumber'));
+            $autoNumberArr = $getJson->get('autoNumber');
+            $autoNumberstring = '';
+            
+            foreach($autoNumberArr as $val) {
+                
+               $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
+               
+            }
+            $autoNumberstring = rtrim($autoNumberstring,',');
+            
+           
+            $autoNumber = $autoNumberstring;
             $comments = trim($getJson->get('comment'));
             $createdAt = new \DateTime('now');
             $fileId = trim($getJson->get('fileId'));
@@ -212,7 +223,16 @@ class PlywoodController extends Controller
                             $arrApi['data']['unitMesureCostId'] = $plywood->getUnitMesureCostId();
                             $arrApi['data']['isLabels'] = $plywood->getIsLabels();
                             $arrApi['data']['numberLabels'] = $plywood->getNumberLabels();
-                            $arrApi['data']['autoNumber'] = $plywood->getAutoNumber();
+                            //echo $arrApi['data']['autoNumber'];
+                            if (!empty($plywood->getAutoNumber())) {
+                                $tags = explode(',', $plywood->getAutoNumber());
+                               
+                                for ($i=0; $i< count($tags); $i++) {
+                                    $arrApi['data']['autoNumber'][$i]['autoNumber'] = $tags[$i]; 
+                                }
+                            }
+                            //die();
+                           // $arrApi['data']['autoNumber'] = $plywood->getAutoNumber();
                             $arrApi['data']['coreType'] = $plywood->getCoreType();
                             $arrApi['data']['backerId'] = $plywood->getBackerId();
                        
@@ -285,7 +305,20 @@ class PlywoodController extends Controller
             $isLabels = trim($getJson->get('isLabels'));
             $numberLabels = trim($getJson->get('labels'));
             $lumberFee = trim($getJson->get('lumberfee'));
-            $autoNumber = trim($getJson->get('autoNumber'));
+            $autoNumberArr = $getJson->get('autoNumber');
+            $autoNumberstring = '';
+            
+            foreach($autoNumberArr as $val) {
+                
+               $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
+               
+            }
+            $autoNumberstring = rtrim($autoNumberstring,',');
+            
+           
+            $autoNumber = $autoNumberstring;
+
+            //$autoNumber = trim($getJson->get('autoNumber'));
             $comments = trim($getJson->get('comment'));
             $createdAt = new \DateTime('now');
 
