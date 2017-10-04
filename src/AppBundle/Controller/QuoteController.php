@@ -133,6 +133,7 @@ class QuoteController extends Controller
                 $arrApi['data']['job'] = $quoteData->getJobName();
                 $arrApi['data']['term'] = $quoteData->getTermId();
                 $arrApi['data']['shipMethod'] = $this->getShipMethodNamebyId($quoteData->getShipMethdId());
+                $arrApi['data']['billAdd'] = $this->getBillAddById($quoteData->getCustomerId());
                 $arrApi['data']['shipAdd'] = $this->getShippingAddById($quoteData->getShipAddId());
                 $arrApi['data']['leadTime'] = $quoteData->getLeadTime();
                 $arrApi['data']['status'] = $quoteData->getStatus();
@@ -210,6 +211,19 @@ class QuoteController extends Controller
 
     private function getQuoteDataById($qId) {
         return $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId);
+    }
+
+    private function getBillAddById($cust_id) {
+        $addArr = array();
+        $addData = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findOneBy(array('userId' => $cust_id));
+        if (!empty($addData)) {
+            $addArr['nickname'] = $addData->getNickname();
+            $addArr['street'] = $addData->getStreet();
+            $addArr['state'] = $this->getStateNamebyId($addData->getStateId());
+            $addArr['city'] = $addData->getCity();
+            $addArr['zip'] = $addData->getZip();
+            return $addArr;
+        }
     }
 
     private function getShippingAddById($add_id) {
