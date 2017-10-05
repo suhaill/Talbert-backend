@@ -183,6 +183,69 @@ class Plywood
     private $edgeFinishSpeciesId;
 
     /**
+     * @var int
+     *
+     * @ORM\Column(name="bottomEdge", type="integer")
+     */
+    private $bottomEdge;
+     
+    /**
+    * @var int
+    *
+    * @ORM\Column(name="bedgeMaterialId", type="integer")
+    */
+    private $bedgeMaterialId;
+
+    /**
+    * @var int
+    *
+    * @ORM\Column(name="bedgeFinishSpeciesId", type="integer")
+    */
+    private $bedgeFinishSpeciesId;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="rightEdge", type="integer")
+     */
+     private $rightEdge;
+     
+    /**
+    * @var int
+    *
+    * @ORM\Column(name="redgeMaterialId", type="integer")
+    */
+    private $redgeMaterialId;
+
+    /**
+    * @var int
+    *
+    * @ORM\Column(name="redgeFinishSpeciesId", type="integer")
+    */
+    private $redgeFinishSpeciesId;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="leftEdge", type="integer")
+     */
+     private $leftEdge;
+     
+    /**
+    * @var int
+    *
+    * @ORM\Column(name="ledgeMaterialId", type="integer")
+    */
+    private $ledgeMaterialId;
+
+    /**
+    * @var int
+    *
+    * @ORM\Column(name="ledgeFinishSpeciesId", type="integer")
+    */
+    private $ledgeFinishSpeciesId;
+
+    /**
      * @var bool
      *
      * @ORM\Column(name="milling", type="boolean")
@@ -785,6 +848,78 @@ class Plywood
     }
 
     /**
+     * Set bottomEdge
+     *
+     * @param integer $bottomEdge
+     *
+     * @return Plywood
+     */
+     public function setBottomEdge($bottomEdge)
+     {
+         $this->bottomEdge = $bottomEdge;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get bottomEdge
+      *
+      * @return int
+      */
+     public function getBottomEdge()
+     {
+         return $this->bottomEdge;
+     }
+
+     /**
+     * Set rightEdge
+     *
+     * @param integer $rightEdge
+     *
+     * @return Plywood
+     */
+    public function setRightEdge($rightEdge)
+    {
+        $this->rightEdge = $rightEdge;
+
+        return $this;
+    }
+
+    /**
+     * Get rightEdge
+     *
+     * @return int
+     */
+    public function getRightEdge()
+    {
+        return $this->rightEdge;
+    }
+
+    /**
+     * Set leftEdge
+     *
+     * @param integer $leftEdge
+     *
+     * @return Plywood
+     */
+     public function setLeftEdge($leftEdge)
+     {
+         $this->leftEdge = $leftEdge;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get leftEdge
+      *
+      * @return int
+      */
+     public function getLeftEdge()
+     {
+         return $this->leftEdge;
+     }
+
+    /**
      * Set edgeMaterialId
      *
      * @param integer $edgeMaterialId
@@ -809,6 +944,78 @@ class Plywood
     }
 
     /**
+     * Set bedgeMaterialId
+     *
+     * @param integer $bedgeMaterialId
+     *
+     * @return Plywood
+     */
+     public function setBedgeMaterialId($bedgeMaterialId)
+     {
+         $this->bedgeMaterialId = $bedgeMaterialId;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get bedgeMaterialId
+      *
+      * @return int
+      */
+     public function getBedgeMaterialId()
+     {
+         return $this->bedgeMaterialId;
+     }
+
+     /**
+     * Set redgeMaterialId
+     *
+     * @param integer $redgeMaterialId
+     *
+     * @return Plywood
+     */
+    public function setRedgeMaterialId($redgeMaterialId)
+    {
+        $this->redgeMaterialId = $redgeMaterialId;
+
+        return $this;
+    }
+
+    /**
+     * Get redgeMaterialId
+     *
+     * @return int
+     */
+    public function getRedgeMaterialId()
+    {
+        return $this->redgeMaterialId;
+    }
+
+    /**
+     * Set ledgeMaterialId
+     *
+     * @param integer $ledgeMaterialId
+     *
+     * @return Plywood
+     */
+     public function setLedgeMaterialId($ledgeMaterialId)
+     {
+         $this->ledgeMaterialId = $ledgeMaterialId;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get ledgeMaterialId
+      *
+      * @return int
+      */
+     public function getLedgeMaterialId()
+     {
+         return $this->ledgeMaterialId;
+     }
+
+    /**
      * Set edgeFinishSpeciesId
      *
      * @param integer $edgeFinishSpeciesId
@@ -831,6 +1038,78 @@ class Plywood
     {
         return $this->edgeFinishSpeciesId;
     }
+
+    /**
+     * Set bedgeFinishSpeciesId
+     *
+     * @param integer $bedgeFinishSpeciesId
+     *
+     * @return Plywood
+     */
+     public function setBedgeFinishSpeciesId($bedgeFinishSpeciesId)
+     {
+         $this->bedgeFinishSpeciesId = $bedgeFinishSpeciesId;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get bedgeFinishSpeciesId
+      *
+      * @return int
+      */
+     public function getBedgeFinishSpeciesId()
+     {
+         return $this->bedgeFinishSpeciesId;
+     }
+
+     /**
+     * Set redgeFinishSpeciesId
+     *
+     * @param integer $redgeFinishSpeciesId
+     *
+     * @return Plywood
+     */
+    public function setRedgeFinishSpeciesId($redgeFinishSpeciesId)
+    {
+        $this->redgeFinishSpeciesId = $redgeFinishSpeciesId;
+
+        return $this;
+    }
+
+    /**
+     * Get redgeFinishSpeciesId
+     *
+     * @return int
+     */
+    public function getRedgeFinishSpeciesId()
+    {
+        return $this->redgeFinishSpeciesId;
+    }
+
+    /**
+     * Set ledgeFinishSpeciesId
+     *
+     * @param integer $ledgeFinishSpeciesId
+     *
+     * @return Plywood
+     */
+     public function setLedgeFinishSpeciesId($ledgeFinishSpeciesId)
+     {
+         $this->ledgeFinishSpeciesId = $ledgeFinishSpeciesId;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get ledgeFinishSpeciesId
+      *
+      * @return int
+      */
+     public function getLedgeFinishSpeciesId()
+     {
+         return $this->ledgeFinishSpeciesId;
+     }
 
     /**
      * Set milling
