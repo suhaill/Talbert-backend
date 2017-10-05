@@ -65,7 +65,7 @@ class QuoteController extends Controller
                     $arrApi['status'] = 1;
                     $arrApi['message'] = 'Successfully saved quote';
                     $statusCode = 200;
-                    $this->saveQuoteData($qDate, $quoteAddedby, $ctrlNo, $ver, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime);
+                    $arrApi['data']['lastInsertId'] = $this->saveQuoteData($qDate, $quoteAddedby, $ctrlNo, $ver, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime);
                 }
             }
         }
@@ -178,6 +178,7 @@ class QuoteController extends Controller
         $quote->setUpdatedAt($datime);
         $em->persist($quote);
         $em->flush();
+        return $quote->getId();
     }
 
     private function getCustomerNameById($customer_id) {
@@ -262,6 +263,7 @@ class QuoteController extends Controller
                 foreach ($plywoodRecords as $p) {
                     $lineItem[$i]['id'] = $p->getId();
                     $lineItem[$i]['type'] = 'plywood';
+                    $lineItem[$i]['url'] = 'edit-plywood';
                     $lineItem[$i]['quantity'] = $p->getQuantity();
                     $lineItem[$i]['species'] = $this->getSpeciesNameById($p->getSpeciesId());
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($p->getPatternId());
@@ -281,6 +283,7 @@ class QuoteController extends Controller
                 foreach ($veneerRecords as $v) {
                     $lineItem[$i]['id'] = $v->getId();
                     $lineItem[$i]['type'] = 'veneer';
+                    $lineItem[$i]['url'] = 'edit-veneer';
                     $lineItem[$i]['quantity'] = $v->getQuantity();
                     $lineItem[$i]['species'] = $this->getSpeciesNameById($v->getSpeciesId());
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($v->getPatternId());
