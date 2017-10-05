@@ -121,6 +121,9 @@ class VeneerController extends Controller
 
      public function getVeneerDataAction(Request $request) {
         if ($request->getMethod() == 'POST') {
+
+            $uploadDirectory = $this->container->getParameter('upload_file_destination');
+
             $_DATA = file_get_contents('php://input');
             $_DATA = json_decode($_DATA, true);
             $arrApi = array();
@@ -164,8 +167,11 @@ class VeneerController extends Controller
                             $arrApi['data']['lumberFee'] = $veneer->getLumberFee();
                             $arrApi['data']['comments'] = $veneer->getComments();
                             $arrApi['data']['quoteId'] = $veneer->getQuoteId();
-                           
+                            $arrApi['data']['fileId'] = $veneer->getFileId();
                             
+                            $arrApi['data']['fileLink'] = $this->getFileUrl( $veneer->getFileId(),$request );
+
+                          
                         }
                     }
                 }
@@ -217,6 +223,7 @@ class VeneerController extends Controller
             $sequenced = trim($getJson->get('sequenced'));
             $lumberFee = trim($getJson->get('lumberfee'));
             $comments = trim($getJson->get('comment'));
+            $fileId = trim($getJson->get('fileId'));
             //$quoteId = trim($getJson->get('quoteId'));
             $createdAt = new \DateTime('now');
             
@@ -224,7 +231,7 @@ class VeneerController extends Controller
             if (empty($id) || empty($quantity) || empty($speciesId) || empty($grainPatternId) 
             || empty($pattern) || empty($grainDirectionId) || empty($gradeId) || 
             empty($thicknessId) || empty($width) || empty($length) || empty($coreTypeId) 
-            || empty($backer) || empty($lumberFee) || empty($comments )) {
+            || empty($backer) || empty($lumberFee) || empty($comments) || empty($fileId)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
@@ -236,7 +243,7 @@ class VeneerController extends Controller
                 $this->editVeneerData($id,$quantity, $speciesId, $grainPatternId, $flakexfigured, 
                 $pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize, 
                 $length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,
-                $comments,$createdAt);
+                $comments,$fileId,$createdAt);
             
             }
         }
@@ -247,7 +254,7 @@ class VeneerController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    private function editVeneerData($id,$quantity, $speciesId, $grainPatternId, $flakexfigured,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$createdAt) 
+    private function editVeneerData($id,$quantity, $speciesId, $grainPatternId, $flakexfigured,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$fileId,$createdAt) 
     {
         $em = $this->getDoctrine()->getManager();
         $veneer =  $this->getDoctrine()->getRepository('AppBundle:Veneer')->find($id);
@@ -270,12 +277,23 @@ class VeneerController extends Controller
         $veneer->setSequenced($sequenced);
         $veneer->setLumberFee($lumberFee);
         $veneer->setComments($comments);
-        
+        $veneer->setFileId($fileId);
         $veneer->setQuoteId('1');
         //$veneer->setCreatedAt($createdAt);
         $veneer->setUpdatedAt($createdAt);
 
         $em->flush();
+    }
+
+    function getFileUrl($fileId,$request)
+    {
+        
+        $files = $this->getDoctrine()->getRepository('AppBundle:Files')->findOneById($fileId);
+        
+        $baseurl = $request->getScheme() . '://' . $request->getHttpHost() . $request->getBasePath();
+       
+        return $baseurl.'/uploads/'.$files->getFileName();
+
     }
 
 }
