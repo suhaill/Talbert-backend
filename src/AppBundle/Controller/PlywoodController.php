@@ -36,8 +36,8 @@ class PlywoodController extends Controller
 
             $quantity = trim($getJson->get('quantity'));
             $speciesId = trim($getJson->get('species'));
-            $grainPatternId = trim($getJson->get('grainpattern'));
-            $flakexfigured = trim($getJson->get('flakexfigured'));
+            //$grainPatternId = trim($getJson->get('grainpattern'));
+            //$flakexfigured = trim($getJson->get('flakexfigured'));
             $patternId = trim($getJson->get('pattern'));
             $grainDirectionId = trim($getJson->get('graindirection'));
             $gradeId = trim($getJson->get('facegrade'));
@@ -94,7 +94,9 @@ class PlywoodController extends Controller
             $comments = trim($getJson->get('comment'));
             $createdAt = new \DateTime('now');
             $fileId = trim($getJson->get('fileId'));
-            if (empty($quantity) || empty($speciesId) || empty($grainPatternId) || empty($patternId) || 
+            $quoteId = trim($getJson->get('quoteId'));
+
+            if (empty($quantity) || empty($speciesId) || empty($patternId) || 
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
             || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId)
@@ -109,12 +111,12 @@ class PlywoodController extends Controller
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully saved plywood data.';
                 $statusCode = 200;
-                $this->savePlywoodData($quantity, $speciesId, $grainPatternId, $flakexfigured, 
+                $this->savePlywoodData($quantity, $speciesId, 
                 $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
                 $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId, $sheenId,
                 $shameOnId,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
                 $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
-                $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId);
+                $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId);
             
             }
 
@@ -126,19 +128,19 @@ class PlywoodController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    private function savePlywoodData($quantity, $speciesId, $grainPatternId, $flakexfigured, 
+    private function savePlywoodData($quantity, $speciesId, 
     $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
     $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId, $sheenId,
     $shameOnId,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
     $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
-    $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId)
+    $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId)
     {
         $em = $this->getDoctrine()->getManager();
         $plywood = new Plywood();
         $plywood->setQuantity($quantity);
         $plywood->setSpeciesId($speciesId);
-        $plywood->setGrainPatternId($grainPatternId);
-        $plywood->setFlakexFiguredId($flakexfigured);
+        $plywood->setGrainPatternId('');
+        $plywood->setFlakexFiguredId('');
         $plywood->setPatternId($patternId);
         $plywood->setGrainDirectionId($grainDirectionId);
         $plywood->setGradeId($gradeId);
@@ -180,11 +182,11 @@ class PlywoodController extends Controller
         $plywood->setNumberLabels($numberLabels);
         $plywood->setLumberFee($lumberFee); 
         $plywood->setAutoNumber($autoNumber);
-        $plywood->setQuoteId('1');
+        //$plywood->setQuoteId('1');
         $plywood->setFileId($fileId);
         
         $plywood->setComments($comments);
-       //$veneer->setQuoteId('1');
+        $plywood->setQuoteId($quoteId);
         $plywood->setCreatedAt($createdAt);
         $plywood->setUpdatedAt($createdAt);
 
@@ -323,8 +325,8 @@ class PlywoodController extends Controller
             $id = trim($getJson->get('id'));
             $quantity = trim($getJson->get('quantity'));
             $speciesId = trim($getJson->get('species'));
-            $grainPatternId = trim($getJson->get('grainpattern'));
-            $flakexfigured = trim($getJson->get('flakexfigured'));
+            //$grainPatternId = trim($getJson->get('grainpattern'));
+            //$flakexfigured = trim($getJson->get('flakexfigured'));
             $patternId = trim($getJson->get('pattern'));
             $grainDirectionId = trim($getJson->get('graindirection'));
             $gradeId = trim($getJson->get('facegrade'));
@@ -383,7 +385,7 @@ class PlywoodController extends Controller
             $createdAt = new \DateTime('now');
             $fileId = trim($getJson->get('fileId'));
 
-            if (empty($id) || empty($quantity) || empty($speciesId) || empty($grainPatternId) || empty($patternId) || 
+            if (empty($id) || empty($quantity) || empty($speciesId) || empty($patternId) || 
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
             || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId) || empty($topEdge) || empty($edgeMaterialId) 
@@ -398,7 +400,7 @@ class PlywoodController extends Controller
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully saved plywood data.';
                 $statusCode = 200;
-                $this->editPlywoodData($id,$quantity, $speciesId, $grainPatternId, $flakexfigured, 
+                $this->editPlywoodData($id,$quantity, $speciesId, 
                 $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
                 $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId, $sheenId,
                 $shameOnId,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
@@ -415,7 +417,7 @@ class PlywoodController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    private function editPlywoodData($id,$quantity, $speciesId, $grainPatternId, $flakexfigured, 
+    private function editPlywoodData($id,$quantity, $speciesId, 
     $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
     $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId, $sheenId,
     $shameOnId,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
@@ -429,8 +431,8 @@ class PlywoodController extends Controller
         //$plywood = new Plywood();
         $plywood->setQuantity($quantity);
         $plywood->setSpeciesId($speciesId);
-        $plywood->setGrainPatternId($grainPatternId);
-        $plywood->setFlakexFiguredId($flakexfigured);
+        $plywood->setGrainPatternId('');
+        $plywood->setFlakexFiguredId('');
         $plywood->setPatternId($patternId);
         $plywood->setGrainDirectionId($grainDirectionId);
         $plywood->setGradeId($gradeId);
