@@ -22,6 +22,29 @@ class Quotes
     private $id;
 
     /**
+     * @var int
+     *
+     * @ORM\Column(name="ref_id", type="integer", nullable=true)
+     */
+    private $refid;
+
+    /**
+     * @return int
+     */
+    public function getRefid()
+    {
+        return $this->refid;
+    }
+
+    /**
+     * @param int $refid
+     */
+    public function setRefid($refid)
+    {
+        $this->refid = $refid;
+    }
+
+    /**
      * @var string
      *
      * @ORM\Column(name="estimate_date", type="string", length=30, nullable=true)
