@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Plywood;
 use AppBundle\Service\JsonToArrayGenerator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -146,7 +147,154 @@ class QuoteController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    /**
+     * @Route("/api/quote/cloneQuote")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("GET")
+     * params: None
+     */
+    public function cloneQuoteWithLineItemsAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        try {
+            $quoteId = $request->query->get('id');
+            $datime = new \DateTime('now');
+            $quoteData = $this->getQuoteDataById($quoteId);
+            if (empty($quoteData)) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'This quote does not exists';
+                $statusCode = 422;
+            } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully cloned quote';
+                $clonedQuoteId = $this->cloneQuoteData($quoteData, $datime);
+                //$clonedQuoteId = 99;
+                $this->clonePlywoodData($quoteId, $clonedQuoteId, $datime);
+                $this->cloneVeneerData($quoteId, $clonedQuoteId, $datime);
+            }
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
     //Reusable codes
+
+    private function cloneVeneerData($quoteId, $clonedQuoteId, $datime) {
+        $veneeerData = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId'=>$quoteId));
+        if (!empty($veneeerData)) {
+            $em = $this->getDoctrine()->getManager();
+            for ($i=0; $i< count($veneeerData); $i++) {
+                $veneer = new Veneer();
+                $veneer->setQuantity($veneeerData[$i]->getQuantity());
+                $veneer->setSpeciesId($veneeerData[$i]->getSpeciesId());
+                $veneer->setGrainPatternId($veneeerData[$i]->getGrainPatternId());
+                $veneer->setFlakexFiguredId($veneeerData[$i]->getFlakexFiguredId());
+                $veneer->setPatternId($veneeerData[$i]->getPatternId());
+                $veneer->setGrainDirectionId($veneeerData[$i]->getGrainDirectionId());
+                $veneer->setGradeId($veneeerData[$i]->getGradeId());
+                $veneer->setThicknessId($veneeerData[$i]->getThicknessId());
+                $veneer->setWidth($veneeerData[$i]->getWidth());
+                $veneer->setIsNetSize($veneeerData[$i]->getIsNetSize());
+                $veneer->setLength($veneeerData[$i]->getLength());
+                $veneer->setCoreTypeId($veneeerData[$i]->getCoreTypeId());
+                $veneer->setBacker($veneeerData[$i]->getBacker());
+                $veneer->setIsFlexSanded($veneeerData[$i]->getIsFlexSanded());
+                $veneer->setSequenced($veneeerData[$i]->getSequenced());
+                $veneer->setLumberFee($veneeerData[$i]->getLumberFee());
+                $veneer->setComments($veneeerData[$i]->getComments());
+                $veneer->setQuoteId($clonedQuoteId);
+                $veneer->setFileId($veneeerData[$i]->getFileId());
+                $veneer->setCreatedAt($datime);
+                $veneer->setUpdatedAt($datime);
+                $em->persist($veneer);
+                $em->flush();
+            }
+        }
+    }
+
+    private function clonePlywoodData($quoteId, $clonedQuoteId, $datime) {
+        $ply = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId'=>$quoteId));
+        if (!empty($ply)) {
+            $em = $this->getDoctrine()->getManager();
+            for ($i=0; $i< count($ply); $i++) {
+                $plywd = new Plywood();
+                $plywd->setQuantity($ply[$i]->getQuantity());
+                $plywd->setSpeciesId($ply[$i]->getSpeciesId());
+                $plywd->setGrainPatternId($ply[$i]->getGrainPatternId());
+                $plywd->setPatternId($ply[$i]->getPatternId());
+                $plywd->setGrainDirectionId($ply[$i]->getGrainDirectionId());
+                $plywd->setFlakexFiguredId($ply[$i]->getFlakexFiguredId());
+                $plywd->setGradeId($ply[$i]->getGradeId());
+                $plywd->setThicknessId($ply[$i]->getThicknessId());
+                $plywd->setPlywoodWidth($ply[$i]->getPlywoodWidth());
+                $plywd->setPlywoodLength($ply[$i]->getPlywoodLength());
+                $plywd->setFinishThickId($ply[$i]->getFinishThickId());
+                $plywd->setBackerId($ply[$i]->getBackerId());
+                $plywd->setIsSequenced($ply[$i]->getIsSequenced());
+                $plywd->setCoreType($ply[$i]->getCoreType());
+                $plywd->setThickness($ply[$i]->getThickness());
+                $plywd->setFinish($ply[$i]->getFinish());
+                $plywd->setUvCuredId($ply[$i]->getUvCuredId());
+                $plywd->setSheenId($ply[$i]->getSheenId());
+                $plywd->setShameOnId($ply[$i]->getShameOnId());
+                $plywd->setEdgeDetail($ply[$i]->getEdgeDetail());
+                $plywd->setTopEdge($ply[$i]->getTopEdge());
+                $plywd->setBottomEdge($ply[$i]->getBottomEdge());
+                $plywd->setRightEdge($ply[$i]->getRightEdge());
+                $plywd->setLeftEdge($ply[$i]->getLeftEdge());
+                $plywd->setEdgeMaterialId($ply[$i]->getEdgeMaterialId());
+                $plywd->setBedgeMaterialId($ply[$i]->getBedgeMaterialId());
+                $plywd->setRedgeMaterialId($ply[$i]->getRedgeMaterialId());
+                $plywd->setLedgeMaterialId($ply[$i]->getLedgeMaterialId());
+                $plywd->setEdgeFinishSpeciesId($ply[$i]->getEdgeFinishSpeciesId());
+                $plywd->setBedgeFinishSpeciesId($ply[$i]->getBedgeFinishSpeciesId());
+                $plywd->setRedgeFinishSpeciesId($ply[$i]->getRedgeFinishSpeciesId());
+                $plywd->setLedgeFinishSpeciesId($ply[$i]->getLedgeFinishSpeciesId());
+                $plywd->setMilling($ply[$i]->getMilling());
+                $plywd->setMillingDescription($ply[$i]->getMillingDescription());
+                $plywd->setCost($ply[$i]->getCost());
+                $plywd->setUnitMesureCostId($ply[$i]->getUnitMesureCostId());
+                $plywd->setIsLabels($ply[$i]->getIsLabels());
+                $plywd->setNumberLabels($ply[$i]->getNumberLabels());
+                $plywd->setAutoNumber($ply[$i]->getAutoNumber());
+                $plywd->setLumberFee($ply[$i]->getLumberFee());
+                $plywd->setComments($ply[$i]->getComments());
+                $plywd->setQuoteId($clonedQuoteId);
+                $plywd->setCreatedAt($datime);
+                $plywd->setUpdatedAt($datime);
+                $plywd->setFileId($ply[$i]->getFileId());
+                $em->persist($plywd);
+                $em->flush();
+            }
+        }
+    }
+
+    private function cloneQuoteData($qData, $datime) {
+        $em = $this->getDoctrine()->getManager();
+        $quote = new Quotes();
+        $quote->setRefid($qData->getId());
+        $quote->setEstimatedate($qData->getEstimatedate());
+        $quote->setEstimatorId($qData->getEstimatorId());
+        $quote->setControlNumber($qData->getControlNumber());
+        $quote->setVersion($qData->getVersion());
+        $quote->setCustomerId($qData->getCustomerId());
+        $quote->setRefNum($qData->getRefNum());
+        $quote->setSalesmanId($qData->getSalesmanId());
+        $quote->setJobName($qData->getJobName());
+        $quote->setTermId($qData->getTermId());
+        $quote->setShipMethdId($qData->getShipMethdId());
+        $quote->setShipAddId($qData->getShipAddId());
+        $quote->setLeadTime($qData->getLeadTime());
+        $quote->setStatus($qData->getStatus());
+        $quote->setCreatedAt($datime);
+        $quote->setUpdatedAt($datime);
+        $em->persist($quote);
+        $em->flush();
+        return $quote->getId();
+    }
+
     private function getLastControlNumber() {
         $lastQuote = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneBy(array(),array('id'=>'desc'));
         if (!empty($lastQuote)) {
