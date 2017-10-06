@@ -452,9 +452,9 @@ class QuoteController extends Controller
     }
 
     private function getSpeciesNameById($species_id) {
-        $productRecord = $this->getDoctrine()->getRepository('AppBundle:Product')->findOneById($species_id);
+        $productRecord = $this->getDoctrine()->getRepository('AppBundle:Species')->findOneById($species_id);
         if (!empty($productRecord)) {
-            return $productRecord->getProductName();
+            return $productRecord->getName();
         }
     }
 
