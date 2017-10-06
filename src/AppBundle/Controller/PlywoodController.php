@@ -473,7 +473,7 @@ class PlywoodController extends Controller
         $plywood->setNumberLabels($numberLabels);
         $plywood->setLumberFee($lumberFee); 
         $plywood->setAutoNumber($autoNumber);
-        $plywood->setQuoteId('1');
+        //$plywood->setQuoteId('1');
         $plywood->setComments($comments);
         $plywood->setFileId($fileId);
        //$veneer->setQuoteId('1');
