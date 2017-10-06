@@ -411,7 +411,7 @@ class QuoteController extends Controller
                 foreach ($plywoodRecords as $p) {
                     $lineItem[$i]['id'] = $p->getId();
                     $lineItem[$i]['type'] = 'plywood';
-                    $lineItem[$i]['url'] = 'edit-plywood';
+                    $lineItem[$i]['url'] = 'line-item/edit-plywood';
                     $lineItem[$i]['quantity'] = $p->getQuantity();
                     $lineItem[$i]['species'] = $this->getSpeciesNameById($p->getSpeciesId());
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($p->getPatternId());
@@ -431,7 +431,7 @@ class QuoteController extends Controller
                 foreach ($veneerRecords as $v) {
                     $lineItem[$i]['id'] = $v->getId();
                     $lineItem[$i]['type'] = 'veneer';
-                    $lineItem[$i]['url'] = 'edit-veneer';
+                    $lineItem[$i]['url'] = 'line-item/edit-veneer';
                     $lineItem[$i]['quantity'] = $v->getQuantity();
                     $lineItem[$i]['species'] = $this->getSpeciesNameById($v->getSpeciesId());
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($v->getPatternId());
