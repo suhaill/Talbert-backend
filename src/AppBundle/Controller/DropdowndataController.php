@@ -490,5 +490,71 @@ class DropdowndataController extends Controller
         
     }
 
+    /**
+     * @Route("/api/dropdowndata/getSpecies" , name="get_species")
+     * @Method("GET")
+     */
+
+     public function getspeciesAction(Request $request)
+     {
+         
+         
+         $arrApi = array();
+ 
+         $statusCode = 200;
+ 
+         $species = $this->getDoctrine()->getRepository('AppBundle:Species')->findAll();
+ 
+         if (empty($species) ) {
+             $arrApi['status'] = 0;
+             $arrApi['message'] = 'There is no species.';
+         } else {
+             $arrApi['status'] = 1;
+             $arrApi['message'] = 'Successfully retreived the species list.';
+             for($i=0;$i<count($species);$i++) {
+                 $arrApi['data']['species'][$i]['id'] = $species[$i]->getId();
+                 $arrApi['data']['species'][$i]['name'] = $species[$i]->getName();
+             }
+         }
+ 
+         return new JsonResponse($arrApi,$statusCode);
+         
+     }
+
+     /**
+     * @Route("/api/dropdowndata/getSubSpecies/{id}" , defaults={"id" = 0}, name="get_subspecies")
+     * @Method("GET")
+     */
+
+     public function getsubspeciesAction($id,Request $request)
+     {
+         
+        if($id)
+        {
+           $subspecies = $this->getDoctrine()->getRepository('AppBundle:Subspecies')->findBy(array('speciesId' => $id));
+        }
+        else
+        {   
+            $subspecies = $this->getDoctrine()->getRepository('AppBundle:Subspecies')->findAll();
+        }
+
+        $arrApi = array();
+        $statusCode = 200;
+        
+        if (empty($subspecies) ) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'There is no sub species.';
+        } else {
+            $arrApi['status'] = 1;
+            $arrApi['message'] = 'Successfully retreived the sub species list.';
+            for($i=0;$i<count($subspecies);$i++) {
+                $arrApi['data']['subspecies'][$i]['id'] = $subspecies[$i]->getId();
+                $arrApi['data']['subspecies'][$i]['name'] = $subspecies[$i]->getName();
+            }
+        }
+        return new JsonResponse($arrApi,$statusCode);
+         
+     }
+
 
 }
