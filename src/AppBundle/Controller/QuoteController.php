@@ -255,7 +255,7 @@ class QuoteController extends Controller
 
     private function getVeneerslistbyQuoteId($qId) {
         $lineItem = array();
-        $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findAll();
+        $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $qId));
         $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId));
         $i=0;
         if (!empty($plywoodRecords) || !empty($veneerRecords)) {
