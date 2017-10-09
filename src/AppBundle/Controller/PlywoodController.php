@@ -100,9 +100,8 @@ class PlywoodController extends Controller
             if (empty($quantity) || empty($speciesId) || empty($patternId) || 
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
-            || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId)
-              || empty($millingDescription)  || empty($cost) || empty($unitMesureCostId) || 
-              empty($numberLabels)  || empty($autoNumber) || empty($lumberFee) ) {
+            || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId) || empty($cost) 
+            || empty($unitMesureCostId) || empty($lumberFee) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
@@ -393,9 +392,7 @@ class PlywoodController extends Controller
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
             || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId) || empty($topEdge) || empty($edgeMaterialId) 
-             || empty($millingDescription)  || empty($cost) || 
-            empty($unitMesureCostId) || empty($numberLabels) 
-            || empty($autoNumber) || empty($lumberFee) || empty($fileId )) {
+            || empty($cost) || empty($unitMesureCostId) || empty($lumberFee) || empty($fileId )) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
