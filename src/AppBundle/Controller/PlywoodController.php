@@ -155,6 +155,7 @@ class PlywoodController extends Controller
         $plywood->setThickness($thickness);
         $plywood->setFinish($finish);
         $plywood->setUvCuredId($uvCuredId);
+        
         $plywood->setUvColorId($uvColorId); 
         $plywood->setSheenId($sheenId);
         $plywood->setShameOnId($shameOnId);

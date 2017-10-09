@@ -139,6 +139,7 @@ class Plywood
      * @ORM\Column(name="uvCuredId", type="integer")
      */
     private $uvCuredId;
+    
 
     /**
      * @var int
