@@ -60,7 +60,7 @@ class VeneerController extends Controller
             if (empty($quantity) || empty($speciesId) || empty($pattern) || 
             empty($grainDirectionId) || empty($gradeId) || 
             empty($thicknessId) || empty($width) || empty($length) || empty($coreTypeId) 
-            || empty($backer) || empty($lumberFee) || empty($comments )) {
+            || empty($backer) || empty($lumberFee)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
@@ -231,7 +231,7 @@ class VeneerController extends Controller
             if (empty($id) || empty($quantity) || empty($speciesId)
             || empty($pattern) || empty($grainDirectionId) || empty($gradeId) || 
             empty($thicknessId) || empty($width) || empty($length) || empty($coreTypeId) 
-            || empty($backer) || empty($lumberFee) || empty($comments) || empty($fileId)) {
+            || empty($backer) || empty($lumberFee) || empty($fileId)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
