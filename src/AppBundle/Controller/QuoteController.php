@@ -48,7 +48,7 @@ class QuoteController extends Controller
             $datime = new \DateTime('now');
             if (empty($qDate) || empty($quoteAddedby) || empty($custId) || empty($refNo) || empty($salsManId) || empty($job) || empty($termId) || empty($shipMethod) || empty($shipAddId) || empty($leadTime) || empty($status) || empty($datime)) {
                 $arrApi['status'] = 0;
-                $arrApi['message'] = 'Please fill all the fields';
+                $arrApi['message'] = 'Please fill all the details';
                 $statusCode = 422;
             } else {
                 $lastCtrlNo = $this->getLastControlNumber();
@@ -198,7 +198,7 @@ class QuoteController extends Controller
             } else {
                 $custName = $this->getCustomerNameByQuote($quoteId);
                 $arrApi['status'] = 1;
-                $arrApi['message'] = 'Successfully retreived customer name';
+                $arrApi['message'] = 'Successfully cloned quote';
                 $arrApi['data']['customerName'] = $custName;
             }
         }
