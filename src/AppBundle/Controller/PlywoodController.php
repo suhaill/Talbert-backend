@@ -102,8 +102,7 @@ class PlywoodController extends Controller
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
             || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId)
               || empty($millingDescription)  || empty($cost) || empty($unitMesureCostId) || 
-              empty($numberLabels)  || empty($autoNumber) || empty($lumberFee) || 
-              empty($comments )) {
+              empty($numberLabels)  || empty($autoNumber) || empty($lumberFee) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
@@ -155,7 +154,7 @@ class PlywoodController extends Controller
         $plywood->setThickness($thickness);
         $plywood->setFinish($finish);
         $plywood->setUvCuredId($uvCuredId);
-        
+
         $plywood->setUvColorId($uvColorId); 
         $plywood->setSheenId($sheenId);
         $plywood->setShameOnId($shameOnId);
@@ -396,7 +395,7 @@ class PlywoodController extends Controller
             || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId) || empty($topEdge) || empty($edgeMaterialId) 
              || empty($millingDescription)  || empty($cost) || 
             empty($unitMesureCostId) || empty($numberLabels) 
-            || empty($autoNumber) || empty($lumberFee) || empty($comments ) || empty($fileId )) {
+            || empty($autoNumber) || empty($lumberFee) || empty($fileId )) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
