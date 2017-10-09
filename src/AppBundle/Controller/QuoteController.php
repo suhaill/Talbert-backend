@@ -179,6 +179,36 @@ class QuoteController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    /**
+     * @Route("/api/quote/getCustomerNameByQuoteId")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("GET")
+     * params: None
+     */
+    public function getCustomerNameByQuoteIdAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        try {
+            $quoteId = $request->query->get('id');
+            $quoteData = $this->getQuoteDataById($quoteId);
+            if (empty($quoteData)) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'This quote does not exists';
+                $statusCode = 422;
+            } else {
+                $custName = $this->getCustomerNameByQuote($quoteId);
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived customer name';
+                $arrApi['data']['customerName'] = $custName;
+            }
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
+
     //Reusable codes
 
     private function cloneVeneerData($quoteId, $clonedQuoteId, $datime) {
@@ -498,5 +528,12 @@ class QuoteController extends Controller
         if (!empty($eFinishRecord)) {
             return $eFinishRecord->getName();
         }
+    }
+
+    private function getCustomerNameByQuote($quoteId) {
+        $quoteRecord = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($quoteId);
+        $custId = $quoteRecord->getCustomerId();
+        return $this->getCustomerNameById($custId);
+
     }
 }
