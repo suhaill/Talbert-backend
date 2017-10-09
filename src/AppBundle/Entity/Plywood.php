@@ -143,6 +143,13 @@ class Plywood
     /**
      * @var int
      *
+     * @ORM\Column(name="uvColorId", type="integer")
+     */
+     private $uvColorId;
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="sheenId", type="integer")
      */
     private $sheenId;
@@ -750,6 +757,30 @@ class Plywood
     {
         return $this->uvCuredId;
     }
+
+    /**
+     * Set uvColorId
+     *
+     * @param integer $uvColorId
+     *
+     * @return Plywood
+     */
+     public function setUvColorId($uvColorId)
+     {
+         $this->uvColorId = $uvColorId;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get uvColorId
+      *
+      * @return int
+      */
+     public function getUvColorId()
+     {
+         return $this->uvColorId;
+     }
 
     /**
      * Set sheenId
