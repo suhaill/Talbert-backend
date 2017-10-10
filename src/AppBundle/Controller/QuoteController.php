@@ -48,7 +48,7 @@ class QuoteController extends Controller
             $datime = new \DateTime('now');
             if (empty($qDate) || empty($quoteAddedby) || empty($custId) || empty($refNo) || empty($salsManId) || empty($job) || empty($termId) || empty($shipMethod) || empty($shipAddId) || empty($leadTime) || empty($status) || empty($datime)) {
                 $arrApi['status'] = 0;
-                $arrApi['message'] = 'Please fill all the fields';
+                $arrApi['message'] = 'Please fill all the details';
                 $statusCode = 422;
             } else {
                 $lastCtrlNo = $this->getLastControlNumber();
@@ -115,6 +115,12 @@ class QuoteController extends Controller
         $statusCode = 200;
         try {
             $quoteId = $request->query->get('id');
+            if (empty($quoteId)) {
+                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array(),array('id'=>'desc'));
+                if (!empty($quotes)) {
+                    $quoteId = $quotes[0]->getId();
+                }
+            }
             $quoteData = $this->getQuoteDataById($quoteId);
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
@@ -129,13 +135,17 @@ class QuoteController extends Controller
                 $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
                 $arrApi['data']['version'] = $quoteData->getVersion();
                 $arrApi['data']['customer'] = $this->getCustomerNameById($quoteData->getCustomerId());
+                $arrApi['data']['customerId'] = $quoteData->getCustomerId();
                 $arrApi['data']['referenceNumber'] = $quoteData->getRefNum();
                 $arrApi['data']['salesman'] = $this->getSalesmanNameById($quoteData->getSalesmanId());
+                $arrApi['data']['salesmanId'] = $quoteData->getSalesmanId();
                 $arrApi['data']['job'] = $quoteData->getJobName();
                 $arrApi['data']['term'] = $quoteData->getTermId();
                 $arrApi['data']['shipMethod'] = $this->getShipMethodNamebyId($quoteData->getShipMethdId());
+                $arrApi['data']['shipMethodId'] = $quoteData->getShipMethdId();
                 $arrApi['data']['billAdd'] = $this->getBillAddById($quoteData->getCustomerId());
                 $arrApi['data']['shipAdd'] = $this->getShippingAddById($quoteData->getShipAddId());
+                $arrApi['data']['shipAddId'] = $quoteData->getShipAddId();
                 $arrApi['data']['leadTime'] = $quoteData->getLeadTime();
                 $arrApi['data']['status'] = $quoteData->getStatus();
                 $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
@@ -198,7 +208,7 @@ class QuoteController extends Controller
             } else {
                 $custName = $this->getCustomerNameByQuote($quoteId);
                 $arrApi['status'] = 1;
-                $arrApi['message'] = 'Successfully retreived customer name';
+                $arrApi['message'] = 'Successfully cloned quote';
                 $arrApi['data']['customerName'] = $custName;
             }
         }
