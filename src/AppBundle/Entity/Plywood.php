@@ -94,7 +94,7 @@ class Plywood
     /**
      * @var int
      *
-     * @ORM\Column(name="finishThickId", type="integer")
+     * @ORM\Column(name="finishThickId", type="float")
      */
     private $finishThickId;
 
