@@ -29,6 +29,14 @@ class BackerGrade
     private $name;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="backerThickness", type="float")
+     */
+     private $backerThickness;
+
+    
+    /**
      * @var \DateTime
      *
      * @ORM\Column(name="createdAt", type="datetime")
@@ -93,5 +101,39 @@ class BackerGrade
     {
         return $this->createdAt;
     }
+
+    /**
+     * Get backerId
+     *
+     * @return int
+     */
+     public function getBackerId()
+     {
+         return $this->backerId;
+     }
+ 
+     /**
+      * Set backerThickness
+      *
+      * @param integer $backerThickness
+      *
+      * @return Plywood
+      */
+      public function setBackerThickness($backerThickness)
+      {
+          $this->backerThickness = $backerThickness;
+  
+          return $this;
+      }
+  
+      /**
+       * Get backerThickness
+       *
+       * @return int
+       */
+      public function getBackerThickness()
+      {
+          return $this->backerThickness;
+      }
 }
 

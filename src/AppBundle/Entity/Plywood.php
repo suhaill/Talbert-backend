@@ -158,10 +158,37 @@ class Plywood
     /**
      * @var int
      *
-     * @ORM\Column(name="shameOnId", type="integer")
+     * @ORM\Column(name="shameOnId", type="integer", options={"default":0})
      */
     private $shameOnId;
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="coreSameOnbe", type="integer", options={"default":0})
+     */
+     private $coreSameOnbe;
 
+     /**
+     * @var int
+     *
+     * @ORM\Column(name="coreSameOnte", type="integer", options={"default":0})
+     */
+    private $coreSameOnte;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="coreSameOnre", type="integer", options={"default":0})
+     */
+     private $coreSameOnre;
+
+     /**
+     * @var int
+     *
+     * @ORM\Column(name="coreSameOnle", type="integer", options={"default":0})
+     */
+    private $coreSameOnle;
     /**
      * @var bool
      *
@@ -822,13 +849,110 @@ class Plywood
     }
 
     /**
-     * Get shameOnId
+      * Get shameOnId
+      *
+      * @return int
+      */
+      public function getShameOnId()
+      {
+          return $this->shameOnId;
+      }
+
+      /**
+     * Set coreSameOnbe
+     *
+     * @param integer $coreSameOnbe
+     *
+     * @return Plywood
+     */
+     public function setCoreSameOnbe($coreSameOnbe)
+     {
+         $this->coreSameOnbe = $coreSameOnbe;
+ 
+         return $this;
+     }
+
+    /**
+     * Get coreSameOnbe
      *
      * @return int
      */
-    public function getShameOnId()
+    public function getCoreSameOnbe()
     {
-        return $this->shameOnId;
+        return $this->coreSameOnbe;
+    }
+
+    
+    /**
+     * Set coreSameOnte
+     *
+     * @param integer $coreSameOnte
+     *
+     * @return Plywood
+     */
+     public function setCoreSameOnte($coreSameOnte)
+     {
+         $this->coreSameOnte = $coreSameOnte;
+ 
+         return $this;
+     }
+ 
+     /**
+      * Get coreSameOnte
+      *
+      * @return int
+      */
+     public function getCoreSameOnte()
+     {
+         return $this->coreSameOnte;
+     }
+
+     /**
+     * Set coreSameOnre
+     *
+     * @param integer $coreSameOnre
+     *
+     * @return Plywood
+     */
+     public function setCoreSameOnre($coreSameOnre)
+     {
+         $this->coreSameOnre = $coreSameOnre;
+ 
+         return $this;
+     }
+
+    /**
+     * Get coreSameOnre
+     *
+     * @return int
+     */
+    public function getCoreSameOnre()
+    {
+        return $this->coreSameOnre;
+    }
+
+
+     /**
+     * Set coreSameOnle
+     *
+     * @param integer $coreSameOnle
+     *
+     * @return Plywood
+     */
+    public function setCoreSameOnle($coreSameOnle)
+    {
+        $this->coreSameOnle = $coreSameOnle;
+        return $this;
+    }
+
+    /**
+     * Get coreSameOnle
+     *
+     * @return int
+     */
+    public function getCoreSameOnle()
+    {
+        return $this->coreSameOnle;
     }
 
     /**
