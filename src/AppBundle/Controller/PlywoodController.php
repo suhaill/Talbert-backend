@@ -54,6 +54,12 @@ class PlywoodController extends Controller
             $uvColorId = trim($getJson->get('uvcolor'));
             $sheenId = trim($getJson->get('sheen'));
             $shameOnId = trim($getJson->get('coresameon'));
+
+            $coreSameOnbe = trim($getJson->get('coresameonbe'));
+            $coreSameOnte = trim($getJson->get('coresameonte'));
+            $coreSameOnre = trim($getJson->get('coresameonre'));
+            $coreSameOnle = trim($getJson->get('coresameonle'));
+
             $backerId = trim($getJson->get('backergrade'));
             $edgeDetail = trim($getJson->get('egdedetail'));
             
@@ -82,13 +88,16 @@ class PlywoodController extends Controller
             $lumberFee = trim($getJson->get('lumberfee'));
             $autoNumberArr = $getJson->get('autoNumber');
             $autoNumberstring = '';
-            
-            foreach($autoNumberArr as $val) {
-                
-               $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
-               
+            if($autoNumberArr)
+            {
+                foreach($autoNumberArr as $val) {
+                    
+                   $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
+                   
+                }
+                $autoNumberstring = rtrim($autoNumberstring,',');
             }
-            $autoNumberstring = rtrim($autoNumberstring,',');
+            
             
            
             $autoNumber = $autoNumberstring;
@@ -113,7 +122,7 @@ class PlywoodController extends Controller
                 $this->savePlywoodData($quantity, $speciesId, 
                 $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
                 $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId,$uvColorId, $sheenId,
-                $shameOnId,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
+                $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
                 $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
                 $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId);
             
@@ -130,7 +139,7 @@ class PlywoodController extends Controller
     private function savePlywoodData($quantity, $speciesId, 
     $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
     $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId,$uvColorId, $sheenId,
-    $shameOnId,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
+    $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
     $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
     $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId)
     {
@@ -157,6 +166,12 @@ class PlywoodController extends Controller
         $plywood->setUvColorId($uvColorId); 
         $plywood->setSheenId($sheenId);
         $plywood->setShameOnId($shameOnId);
+
+        $plywood->setCoreSameOnbe($coreSameOnbe);
+        $plywood->setCoreSameonte($coreSameOnte);
+        $plywood->setCoreSameOnre($coreSameOnre);
+        $plywood->setCoreSameOnle($coreSameOnle);
+
         $plywood->setEdgeDetail($edgeDetail);
         
         $plywood->setTopEdge($topEdge);
@@ -246,7 +261,14 @@ class PlywoodController extends Controller
                             $arrApi['data']['uvCuredId'] = $plywood->getUvCuredId();
                             $arrApi['data']['uvColorId'] = $plywood->getUvColorId();
                             $arrApi['data']['sheenId'] = $plywood->getSheenId();
+
                             $arrApi['data']['shameOnId'] = $plywood-> getShameOnId();
+
+                            $arrApi['data']['coreSameOnbe'] = $plywood-> getCoreSameOnbe();
+                            $arrApi['data']['coreSameOnte'] = $plywood-> getCoreSameonte();
+                            $arrApi['data']['coreSameOnre'] = $plywood-> getCoreSameOnre();
+                            $arrApi['data']['coreSameOnle'] = $plywood-> getCoreSameOnle();
+
                             $arrApi['data']['edgeDetail'] = $plywood->getEdgeDetail();
                             
                             $arrApi['data']['topEdge'] = $plywood->getTopEdge();
@@ -344,7 +366,13 @@ class PlywoodController extends Controller
             $uvCuredId = trim($getJson->get('uvcured'));
             $uvColorId = trim($getJson->get('uvcolor'));
             $sheenId = trim($getJson->get('sheen'));
+
             $shameOnId = trim($getJson->get('coresameon'));
+            $coreSameOnbe = trim($getJson->get('coresameonbe'));
+            $coreSameOnte = trim($getJson->get('coresameonte'));
+            $coreSameOnre = trim($getJson->get('coresameonre'));
+            $coreSameOnle = trim($getJson->get('coresameonle'));
+
             $backerId = trim($getJson->get('backergrade'));
             $edgeDetail = trim($getJson->get('egdedetail'));
             $topEdge = trim($getJson->get('edgefinish'));
@@ -404,7 +432,7 @@ class PlywoodController extends Controller
                 $this->editPlywoodData($id,$quantity, $speciesId, 
                 $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
                 $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId,$uvColorId, $sheenId,
-                $shameOnId,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
+                $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
                 $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
                 $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$fileId,$createdAt);
             
@@ -421,7 +449,7 @@ class PlywoodController extends Controller
     private function editPlywoodData($id,$quantity, $speciesId, 
     $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
     $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId,$uvColorId, $sheenId,
-    $shameOnId,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
+    $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
     $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
     $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$fileId,$createdAt) 
     {
@@ -450,6 +478,10 @@ class PlywoodController extends Controller
         $plywood->setUvColorId($uvColorId);
         $plywood->setSheenId($sheenId);
         $plywood->setShameOnId($shameOnId);
+        $plywood->setCoreSameOnbe($coreSameOnbe);
+        $plywood->setCoreSameonte($coreSameOnte);
+        $plywood->setCoreSameOnre($coreSameOnre);
+        $plywood->setCoreSameOnle($coreSameOnle);
         $plywood->setEdgeDetail($edgeDetail);
         $plywood->setTopEdge($topEdge);
         $plywood->setEdgeMaterialId($edgeMaterialId);

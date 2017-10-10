@@ -484,6 +484,7 @@ class DropdowndataController extends Controller
             for($i=0;$i<count($backergrade);$i++) {
                 $arrApi['data']['backergrade'][$i]['id'] = $backergrade[$i]->getId();
                 $arrApi['data']['backergrade'][$i]['name'] = $backergrade[$i]->getName();
+                $arrApi['data']['backergrade'][$i]['thickness'] = $backergrade[$i]->getBackerThickness();
             }
         }
         return new JsonResponse($arrApi,$statusCode);
