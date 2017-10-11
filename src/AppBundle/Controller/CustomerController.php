@@ -139,7 +139,7 @@ class CustomerController extends Controller
 
     /**
      * @Route("/api/customer/getCustomerDetails")
-
+     * @Security("is_granted('ROLE_USER')")
      * @Method("POST")
      * params: customer_id (user_id), current_user_id
      */
@@ -177,7 +177,7 @@ class CustomerController extends Controller
 
     /**
      * @Route("/api/customer/updateCustomerDetails")
-
+     * @Security("is_granted('ROLE_USER')")
      * @Method("PUT")
      * params: All customer details with customer_id (user_id), current_user_id
      */
@@ -205,7 +205,6 @@ class CustomerController extends Controller
                 $prdArr = $data->get('products');
                 $shipArr = $data->get('shipp');
                 $datime = new \DateTime('now');
-
                 if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'You are not allowed to update customers';
@@ -246,6 +245,57 @@ class CustomerController extends Controller
         }
     }
 
+    /**
+     * @Route("/api/customer/paginateCustomers")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     */
+    public function paginateCustomersAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        try {
+            $jsontoarraygenerator = new JsonToArrayGenerator();
+            $data = $jsontoarraygenerator->getJson($request);
+            $pageNo = $data->get('current_page');
+            $limit = $data->get('limit');
+            $custName = $data->get('customer_name');
+            $sortBy = $data->get('sort_by');
+            $order = $data->get('order');
+            $offset = ($pageNo - 1)  * $limit;
+            if (empty($pageNo) || empty($limit)) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Please post complete data';
+                $statusCode = 422;
+            } else {
+                if (empty($custName) && empty($sortBy) && empty($order)) {
+                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'), $limit);
+                } else if (!empty($custName) && empty($sortBy) && empty($order)) {
+                    $custIds = $this->getCustomerIdsByName($custName);
+                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds),array('id' => 'DESC'), $limit, $offset);
+                } else if (empty($custName) && !empty($sortBy) && !empty($order)) {
+                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array($sortBy => $order), $limit, $offset);
+                } else if (!empty($custName) && !empty($sortBy) && !empty($order)) {
+                    $custIds = $this->getCustomerIdsByName($custName);
+                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), array($sortBy => $order), $limit, $offset);
+                }
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived customers list';
+                for ($i=0; $i<count($custData); $i++) {
+                    $userId = $custData[$i]->getId();
+                    if (!empty($userId)) {
+                        $arrApi['data']['customers'][$i]['id'] = $custData[$i]->getId();
+                        $arrApi['data']['customers'][$i]['fname'] = $this->getFnameById($userId);
+                        $arrApi['data']['customers'][$i]['comapny'] = $this->getCompanyById($userId);
+                        $arrApi['data']['customers'][$i]['createdDate'] = $this->getCreatedDateById($userId);
+                    }
+                }
+            }
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
 
     // Reusable methods
 
@@ -623,5 +673,12 @@ class CustomerController extends Controller
         return $addressId;
     }
 
-
+    private function getCustomerIdsByName($custName) {
+        $data = $this->getDoctrine()->getRepository('AppBundle:Profile')->findBy(array('fname' => $custName));
+        $ids = array();
+        foreach ($data as $d) {
+            $ids[] = $d->getUserId();
+        }
+        return $ids;
+    }
 }
