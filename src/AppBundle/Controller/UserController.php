@@ -17,6 +17,7 @@ use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
+
 class UserController extends Controller
 {
 
@@ -567,6 +568,68 @@ class UserController extends Controller
             return $profileData;
         }
 
+    }
+
+    /**
+     * @Route("api/user/getUsersListPage")
+     * @Method("GET")
+     * @Security("is_granted('ROLE_USER')")
+     * parameters: None
+     * url: http://localhost/Talbert/backend/web/app_dev.php/api/user/getUsersListPage
+     */
+
+     public function getUsersListPageAction(Request $request) {
+        
+        //$currentPage = 1;
+
+        $currentPage = $request->query->get('currentPage');
+
+        $column = $request->query->get('column');
+
+        $parameter = $request->query->get('parameter');
+
+        //$currentPage = $request->query->get('orderby');
+
+        $ordertype = $request->query->get('ordertype');
+
+        $limit = $request->query->get('limit');
+        
+        //$limit = 4;
+        
+        $em = $this->getDoctrine()->getManager();
+        
+        $users = $em->getRepository('AppBundle:User')->findAllMyPagination($currentPage,$column,$parameter,$ordertype, $limit);
+        
+        //$totalData = $em->getRepository('AppBundle:User')->countAllData();
+        
+        //$allSpecificItems = $em->getRepository('AppBundle:User')->findAllItemsCustom();
+
+        //$maxPages = ceil($totalAds/$limit);
+        
+        //$thisPage = $currentPage;
+        
+        /* print_r($users);
+
+        die(); */
+        
+        if ( empty($users) ) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'There is no user.';
+        } else {
+            $arrApi['status'] = 1;
+            $arrApi['message'] = 'Successfully retreived the users list.';
+            for ($i=0; $i<count($users); $i++) {
+                $userId = $users[$i]['id'];
+                if (!empty($userId)) {
+                    $arrApi['data']['users'][$i]['id'] = $userId;
+                    $arrApi['data']['users'][$i]['fname'] = $this->getFnameById($userId);
+                    $arrApi['data']['users'][$i]['lname'] = $this->getLnameById($userId);
+                    $arrApi['data']['users'][$i]['email'] = $this->getEmailById($userId);
+                }
+            }
+        }
+        return new JsonResponse($arrApi);
+        
     }
 
 }

@@ -26,4 +26,54 @@ class UserRepository extends \Doctrine\ORM\EntityRepository
     public function checkUser($username){
        // SELECT p.id profile_id,u.id user_id FROM profiles p LEFT JOIN users u ON p.user_id = u.id WHERE u.username = 'rajesh@gmail.com' OR p.email = 'rajesh@gmail.com'
     }
+
+    public function findAllMyPagination($currentPage=1,$column,$parameter,$ordertype, $limit)
+    {
+        
+        /* $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select('r')
+        ->from('AppBundle:User', 'r')
+        ->innerJoin('r.id','rg')
+        ->innerJoin('p.users','u')
+        ->where('u.id = :user_id')
+        ->setParameter('user_id', $user->getId())
+        ->getQuery()
+        ->getResult(); */
+
+        if($parameter)
+        {
+            $query =  $this->createQueryBuilder('users')
+            ->select('users.id')
+            ->innerJoin('AppBundle:Profile', 'co', 'WITH', 'co.userId = users.id')
+            ->where('co.'.$column.' LIKE :email')
+            ->setParameter('email', '%'.$parameter.'%')
+            ->orderBy('users.id', $ordertype)        
+            ->getQuery();
+        }
+        else
+        {
+            $query =  $this->createQueryBuilder('users')
+            ->orderBy('users.id', $ordertype)        
+            ->getQuery();
+        }
+
+        var_dump($query->getSql());
+
+        $query->setFirstResult($limit * ($currentPage - 1)) // Offset
+            ->setMaxResults($limit); // Limit
+        
+        $result = $query->getResult();
+        return $result;
+    }
+
+    public function countAllData()
+    {
+        $query= $this->getEntityManager()
+            ->createQuery( 'SELECT  count(a.id) FROM AppBundle:User a' );
+           
+        $count = $query->getSingleScalarResult();;
+        return $count;
+    }
+
 }
