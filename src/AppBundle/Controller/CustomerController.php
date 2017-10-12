@@ -116,7 +116,7 @@ class CustomerController extends Controller
     public function getCustomersAction(Request $request){
         if ($request->getMethod() == 'GET') {
             $arrApi = array();
-            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'));
+            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'),5);
             if ( empty($users) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no user.';
@@ -268,15 +268,27 @@ class CustomerController extends Controller
                 $statusCode = 422;
             } else {
                 if (empty($custName) && empty($sortBy) && empty($order)) {
-                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'), $limit);
+                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'), $limit, $offset);
                 } else if (!empty($custName) && empty($sortBy) && empty($order)) {
                     $custIds = $this->getCustomerIdsByName($custName);
                     $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds),array('id' => 'DESC'), $limit, $offset);
                 } else if (empty($custName) && !empty($sortBy) && !empty($order)) {
-                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array($sortBy => $order), $limit, $offset);
+                    if ($sortBy == 'id' || $sortBy == 'createdAt') {
+                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array($sortBy => $order), $limit, $offset);
+                    } else {
+                        $custIds =  $this->getCustomersIdsOnSortedData($sortBy, $order);
+                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds), array(),$limit, $offset);
+                    }
                 } else if (!empty($custName) && !empty($sortBy) && !empty($order)) {
-                    $custIds = $this->getCustomerIdsByName($custName);
-                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), array($sortBy => $order), $limit, $offset);
+                    if ($sortBy == 'id' || $sortBy == 'createdAt') {
+                        $custIds = $this->getCustomerIdsByName($custName);
+                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), array($sortBy => $order), $limit, $offset);
+                    } else {
+                        $custIds = $this->getSortedCustomerIds($custName, $sortBy, $order);
+                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), $limit, $offset);
+                    }
+                } else {
+                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'), $limit, $offset);
                 }
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived customers list';
@@ -680,5 +692,29 @@ class CustomerController extends Controller
             $ids[] = $d->getUserId();
         }
         return $ids;
+    }
+
+    private function getSortedCustomerIds($custName, $sortBy, $order) {
+        $data = $this->getDoctrine()->getRepository('AppBundle:Profile')->findBy(array('fname' => $custName), array($sortBy => $order));
+        $ids = array();
+        foreach ($data as $d) {
+            $ids[] = $d->getUserId();
+        }
+        return $ids;
+    }
+
+    private function getCustomersIdsOnSortedData($sortBy, $order) {
+        $data = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'), array('id' => 'desc'),5);
+        $ids = array();
+        $cIds = array();
+        foreach ($data as $d) {
+            $ids[] = $d->getId();
+        }
+        //print_r($ids);die;
+        $pData = $this->getDoctrine()->getRepository('AppBundle:Profile')->findBy(array('userId' => $ids), array($sortBy => $order));
+        foreach ($pData as $pD) {
+            $cIds[] = $pD->getUserId();
+        }
+        return $cIds;
     }
 }
