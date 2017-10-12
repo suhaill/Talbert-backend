@@ -41,24 +41,26 @@ class UserRepository extends \Doctrine\ORM\EntityRepository
         ->getQuery()
         ->getResult(); */
 
-        if($parameter)
+        if($parameter != '' || $column != '')
         {
             $query =  $this->createQueryBuilder('users')
             ->select('users.id')
             ->innerJoin('AppBundle:Profile', 'co', 'WITH', 'co.userId = users.id')
-            ->where('co.'.$column.' LIKE :email')
-            ->setParameter('email', '%'.$parameter.'%')
-            ->orderBy('users.id', $ordertype)        
+            ->where('co.fname LIKE :parameter OR co.email LIKE :parameter')
+            ->setParameter('parameter', '%'.$parameter.'%')
+            ->orderBy('co.'.$column, $ordertype)        
             ->getQuery();
         }
         else
         {
             $query =  $this->createQueryBuilder('users')
-            ->orderBy('users.id', $ordertype)        
+            ->select('users.id')
+            ->innerJoin('AppBundle:Profile', 'co', 'WITH', 'co.userId = users.id')
+            ->orderBy('co.fname', $ordertype)        
             ->getQuery();
         }
 
-        var_dump($query->getSql());
+        //var_dump($query->getSql());
 
         $query->setFirstResult($limit * ($currentPage - 1)) // Offset
             ->setMaxResults($limit); // Limit
