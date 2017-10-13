@@ -620,7 +620,7 @@ class UserController extends Controller
         
         if ( empty($users) ) {
             $arrApi['status'] = 0;
-            $arrApi['message'] = 'There is no user.';
+            $arrApi['message'] = 'There is no user data.';
         } else {
             $arrApi['status'] = 1;
             $arrApi['message'] = 'Successfully retreived the users list.';
