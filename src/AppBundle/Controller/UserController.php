@@ -572,27 +572,33 @@ class UserController extends Controller
 
     /**
      * @Route("api/user/getUsersListPage")
-     * @Method("GET")
+     * @Method("POST")
      * @Security("is_granted('ROLE_USER')")
      * parameters: None
      * url: http://localhost/Talbert/backend/web/app_dev.php/api/user/getUsersListPage
      */
 
      public function getUsersListPageAction(Request $request) {
+
+        $_DATA = file_get_contents('php://input');
+
+        $_DATA = json_decode($_DATA, true);
         
+       /*  print_r($_DATA);
+        die(); */
         //$currentPage = 1;
 
-        $currentPage = $request->query->get('currentPage');
+        $currentPage = trim($_DATA['currentPage']);
 
-        $column = $request->query->get('column');
+        $column = trim($_DATA['column']);
 
-        $parameter = $request->query->get('parameter');
+        $parameter = trim($_DATA['parameter']);
 
         //$currentPage = $request->query->get('orderby');
 
-        $ordertype = $request->query->get('ordertype');
+        $ordertype = trim($_DATA['ordertype']);
 
-        $limit = $request->query->get('limit');
+        $limit = trim($_DATA['limit']);
         
         //$limit = 4;
         
@@ -614,7 +620,7 @@ class UserController extends Controller
         
         if ( empty($users) ) {
             $arrApi['status'] = 0;
-            $arrApi['message'] = 'There is no user.';
+            $arrApi['message'] = 'There is no user data.';
         } else {
             $arrApi['status'] = 1;
             $arrApi['message'] = 'Successfully retreived the users list.';

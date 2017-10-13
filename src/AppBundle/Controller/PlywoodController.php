@@ -205,7 +205,7 @@ class PlywoodController extends Controller
         $plywood->setQuoteId($quoteId);
         $plywood->setCreatedAt($createdAt);
         $plywood->setUpdatedAt($createdAt);
-
+        $plywood->setIsActive(1);
         $em->persist($plywood);
         $em->flush();
     }
@@ -311,10 +311,13 @@ class PlywoodController extends Controller
                             $arrApi['data']['comments'] = $plywood->getComments();
                             $arrApi['data']['quoteId'] = $plywood->getQuoteId();
                             $arrApi['data']['fileId'] = $plywood->getFileId();
+                            $arrApi['data']['isactive'] = $plywood->getIsActive();
                             
-                            $arrApi['data']['fileLink'] = $this->getFileUrl( $plywood->getFileId(),$request );
-
-                            
+                            if(!empty($plywood->getFileId()))
+                            {
+                                $arrApi['data']['fileLink'] = $this->getFileUrl( $plywood->getFileId(),$request );
+                            }
+        
                         }
                     }
                 }
@@ -420,7 +423,7 @@ class PlywoodController extends Controller
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
             || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId) || empty($topEdge) || empty($edgeMaterialId) 
-            || empty($cost) || empty($unitMesureCostId) || empty($lumberFee) || empty($fileId )) {
+            || empty($cost) || empty($unitMesureCostId) || empty($lumberFee)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;

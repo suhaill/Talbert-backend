@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use AppBundle\Entity\Veneer;
+use AppBundle\Entity\Plywood;
 use AppBundle\Entity\User;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
@@ -108,6 +109,7 @@ class VeneerController extends Controller
         $veneer->setQuoteId($quoteId);
         $veneer->setCreatedAt($createdAt);
         $veneer->setUpdatedAt($createdAt);
+        $veneer->setIsActive(1);
 
         $em->persist($veneer);
         $em->flush();
@@ -168,10 +170,12 @@ class VeneerController extends Controller
                             $arrApi['data']['comments'] = $veneer->getComments();
                             $arrApi['data']['quoteId'] = $veneer->getQuoteId();
                             $arrApi['data']['fileId'] = $veneer->getFileId();
-                            
-                            $arrApi['data']['fileLink'] = $this->getFileUrl( $veneer->getFileId(),$request );
-
-                          
+                            $arrApi['data']['isactive'] = $veneer->getIsActive();
+                            if(!empty($veneer->getFileId()))
+                            {
+                                $arrApi['data']['fileLink'] = $this->getFileUrl( $veneer->getFileId(),$request );
+                            }
+                                
                         }
                     }
                 }
@@ -231,7 +235,7 @@ class VeneerController extends Controller
             if (empty($id) || empty($quantity) || empty($speciesId)
             || empty($pattern) || empty($grainDirectionId) || empty($gradeId) || 
             empty($thicknessId) || empty($width) || empty($length) || empty($coreTypeId) 
-            || empty($backer) || empty($lumberFee) || empty($fileId)) {
+            || empty($backer) || empty($lumberFee)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
@@ -296,4 +300,50 @@ class VeneerController extends Controller
 
     }
 
+    
+    /**
+     * @Route("api/veneer/softDeleteVeneer")
+     * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
+     */
+
+     public function softDeleteVeneerAction(Request $request) {
+        
+        $_DATA = file_get_contents('php://input');
+        $_DATA = json_decode($_DATA, true);
+        $arrApi = array();
+        $id = $_DATA['id'];
+        $type = $_DATA['type'];
+        $createdAt = new \DateTime('now');
+
+        $em = $this->getDoctrine()->getManager();
+        
+        if($type == 'veneer')
+        {
+            $veneer =  $this->getDoctrine()->getRepository('AppBundle:Veneer')->find($id);
+            $veneer->setIsActive(0);
+            $veneer->setUpdatedAt($createdAt);
+            
+        }
+        elseif($type == 'plywood')
+        {
+            $plywood =  $this->getDoctrine()->getRepository('AppBundle:Plywood')->find($id);
+            $plywood->setIsActive(0);
+            $plywood->setUpdatedAt($createdAt);
+            
+        }
+
+        try{
+            $em->flush();
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+
+        $statusCode = 200;
+        $arrApi['status'] = 1;
+        $arrApi['message'] = 'Line Item deleted Successfully.';
+            
+        return new JsonResponse($arrApi,$statusCode);
+    }
 }
