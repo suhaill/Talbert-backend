@@ -147,7 +147,6 @@ class Veneer
      */
     private $quoteId;
 
-
     /**
      *
      * @ORM\Column(name="file_id", type="integer")
@@ -168,6 +167,10 @@ class Veneer
      */
     private $updatedAt;
 
+    /**
+     * @ORM\Column(type="boolean", nullable=false)
+     */
+     private $isActive=true;
 
     /**
      * Get id
@@ -675,5 +678,21 @@ class Veneer
     {
         return $this->updatedAt;
     }
+
+    /**
+     * @return mixed
+     */
+     public function getIsActive()
+     {
+         return $this->isActive;
+     }
+ 
+     /**
+      * @param mixed $isActive
+      */
+     public function setIsActive($isActive)
+     {
+         $this->isActive = $isActive;
+     }
 }
 

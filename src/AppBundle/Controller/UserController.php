@@ -588,17 +588,17 @@ class UserController extends Controller
         die(); */
         //$currentPage = 1;
 
-        $currentPage = $_DATA['currentPage'];
+        $currentPage = trim($_DATA['currentPage']);
 
-        $column = $_DATA['column'];
+        $column = trim($_DATA['column']);
 
-        $parameter = $_DATA['parameter'];
+        $parameter = trim($_DATA['parameter']);
 
         //$currentPage = $request->query->get('orderby');
 
-        $ordertype = $_DATA['ordertype'];
+        $ordertype = trim($_DATA['ordertype']);
 
-        $limit = $_DATA['limit'];
+        $limit = trim($_DATA['limit']);
         
         //$limit = 4;
         

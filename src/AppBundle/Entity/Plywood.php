@@ -367,7 +367,11 @@ class Plywood
     */
     private $updatedAt;
      
-
+    /**
+     * @ORM\Column(type="boolean", nullable=false)
+     */
+     private $isActive=true;
+     
     /**
      * Get id
      *
@@ -1569,4 +1573,20 @@ class Plywood
     {
         $this->fileId = $fileId;
     }
+
+    /**
+     * @return mixed
+     */
+     public function getIsActive()
+     {
+         return $this->isActive;
+     }
+ 
+     /**
+      * @param mixed $isActive
+      */
+     public function setIsActive($isActive)
+     {
+         $this->isActive = $isActive;
+     }
  }
