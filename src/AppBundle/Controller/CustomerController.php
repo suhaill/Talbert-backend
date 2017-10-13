@@ -276,8 +276,10 @@ class CustomerController extends Controller
                     if ($sortBy == 'id' || $sortBy == 'createdAt') {
                         $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array($sortBy => $order), $limit, $offset);
                     } else {
-                        $custIds =  $this->getCustomersIdsOnSortedData($sortBy, $order);
-                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds), array(),$limit, $offset);
+                        $arrApi['data']['customers'] =  $this->getCustomersIdsOnSortedData($sortBy, $order);
+                        return new JsonResponse($arrApi, $statusCode);
+                        die;
+                        //$custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds));
                     }
                 } else if (!empty($custName) && !empty($sortBy) && !empty($order)) {
                     if ($sortBy == 'id' || $sortBy == 'createdAt') {
@@ -704,17 +706,30 @@ class CustomerController extends Controller
     }
 
     private function getCustomersIdsOnSortedData($sortBy, $order) {
-        $data = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'), array('id' => 'desc'),5);
-        $ids = array();
-        $cIds = array();
-        foreach ($data as $d) {
-            $ids[] = $d->getId();
+        $conn = $this->getDoctrine()->getConnection('default');
+        $SQL="select u.id, p.fname, p.company, u.created_at from users u inner join profiles p WHERE u.id = p.user_id AND u.user_type='customer' order by p.$sortBy $order limit 5";
+        $stmt=$conn->prepare($SQL);
+        $stmt->execute();
+        $result = $stmt->fetchAll();
+        $data = array();
+        $i=0;
+        foreach ($result as $pD) {
+            $data[$i]['id'] = $pD['id'];
+            $data[$i]['fname'] = $pD['fname'];
+            $data[$i]['comapny'] = $pD['company'];
+            $data[$i]['createdDate'] = $this->formateDate($pD['created_at']);
+            $i++;
         }
-        //print_r($ids);die;
-        $pData = $this->getDoctrine()->getRepository('AppBundle:Profile')->findBy(array('userId' => $ids), array($sortBy => $order));
-        foreach ($pData as $pD) {
-            $cIds[] = $pD->getUserId();
-        }
-        return $cIds;
+        return $data;
+//        $cIds = array();
+//        foreach ($result as $pD) {
+//            $cIds[] = $pD['id'];
+//        }
+//        return $cIds;
+    }
+    private function formateDate($date) {
+        $expDate = explode(' ', $date)[0];
+        $expDate1 = explode('-',$expDate);
+        return $expDate1[1].'/'.$expDate1[2].'/'.$expDate1[0];
     }
 }
