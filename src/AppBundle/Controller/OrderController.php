@@ -49,4 +49,55 @@ class OrderController extends Controller
         }
     }
 
+    /**
+     * @Route("/api/order/searchOrders")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("GET")
+     */
+    public function searchOrdersAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        try{
+            $estNo = $request->query->get('est');
+            $orderRecords = $this->getRecordsBasedOnEstimateNo($estNo);
+            if (empty($orderRecords)) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'There is no such order';
+                $statusCode = 422;
+            } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived orders list';
+                $i=0;
+                foreach ($orderRecords as $orDat) {
+                    $arrApi['data']['orders'][$i]['id'] = $orDat['id'];
+                    $arrApi['data']['orders'][$i]['estNumber'] = $orDat['est_number'];
+                    $arrApi['data']['orders'][$i]['orderDate'] = $this->formateDate($orDat['order_date']);
+                    $arrApi['data']['orders'][$i]['productname'] = $orDat['product_name'];
+                    $arrApi['data']['orders'][$i]['poNumber'] = $orDat['po_number'];
+                    $arrApi['data']['orders'][$i]['shipDate'] = $this->formateDate($orDat['ship_date']);
+                    $i++;
+                }
+            }
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function getRecordsBasedOnEstimateNo($estNo) {
+        $conn = $this->getDoctrine()->getConnection('default');
+        $SQL="select * from orders WHERE est_number like '$estNo%' order by id desc";
+        $stmt=$conn->prepare($SQL);
+        //$stmt->bindParam(':est',$estNo,PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    private function formateDate($date) {
+        $expDate = explode(' ', $date)[0];
+        $expDate1 = explode('-',$expDate);
+        return $expDate1[1].'/'.$expDate1[2].'/'.$expDate1[0];
+    }
+
 }
