@@ -73,12 +73,12 @@ class CustomerController extends Controller
                             $phoneCount = $this->checkIfPhoneExists($phone);
                             if ($phoneCount) {
                                 $arrApi['status'] = 0;
-                                $arrApi['message'] = 'This Phone already exists in the database.';
+                                $arrApi['message'] = 'Entered Phone number already exists.';
                             } else {
                                 $emailCount = $this->checkIfEmailExists($email);
                                 if ($emailCount) {
                                     $arrApi['status'] = 0;
-                                    $arrApi['message'] = 'This Email address already exists in the database.';
+                                    $arrApi['message'] = 'Entered Email already exists.';
                                 } else {
                                     $lastUserId = $this->saveCustomerData($usrname, $passwd, $roleId, $isActive, $datime, $usrType);
                                     if (empty($lastUserId)) {
@@ -86,7 +86,7 @@ class CustomerController extends Controller
                                         $arrApi['message'] = 'Error while adding customer.';
                                     } else {
                                         $arrApi['status'] = 1;
-                                        $arrApi['message'] = 'Customer added successfully.';
+                                        $arrApi['message'] = 'Customer Added Successfully.';
                                         $lstPrfId = $this->saveProfileData($lastUserId, $company, $fName, $email, $phone);
                                         if (empty($lstPrfId)) {
                                             $arrApi['profileMessage'] = 'Profile Data not saved.';
