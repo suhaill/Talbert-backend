@@ -218,8 +218,79 @@ class QuoteController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    /**
+     * @Route("/api/quote/updateQuote")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     */
+    public function updateQuoteAction(Request $request)
+    {
+        $arrApi = array();
+        $statusCode = 200;
+        try {
+            $jsontoarraygenerator = new JsonToArrayGenerator();
+            $data = $jsontoarraygenerator->getJson($request);
+            $qId = $data->get('id');
+            $qDate = trim($data->get('date'));
+            $quoteAddedby = trim($data->get('current_user_id'));
+            $ver = 1;
+            $custId = trim($data->get('customer_id'));
+            $refNo = trim($data->get('reference_no'));
+            $salsManId = trim($data->get('salesman'));
+            $job = trim($data->get('job'));
+            $termId = trim($data->get('term_id'));
+            $shipMethod = trim($data->get('ship_method'));
+            $shipAddId = trim($data->get('ship_add_id'));
+            $leadTime = trim($data->get('lead_time'));
+            $status = trim($data->get('status'));
+            $datime = new \DateTime('now');
+            if (empty($qDate) || empty($quoteAddedby) || empty($custId) || empty($refNo) || empty($salsManId) || empty($job) || empty($termId) || empty($shipMethod) || empty($shipAddId) || empty($leadTime) || empty($status) || empty($datime)) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Parameter missing';
+                $statusCode = 422;
+            } else {
+                $updateQuote = $this->updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime);
+                if (!$updateQuote) {
+                    $arrApi['status'] = 0;
+                    $arrApi['message'] = 'Unable to update quote.';
+                    $statusCode = 422;
+                } else {
+                    $arrApi['status'] = 1;
+                    $arrApi['message'] = 'Updated quote.';
+                }
+            }
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+        return new JsonResponse($arrApi, $statusCode);
+
+    }
+
 
     //Reusable codes
+
+    private function updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime) {
+        $em = $this->getDoctrine()->getManager();
+        $quote = $em->getRepository(Quotes::class)->findOneById($qId);
+        if (!empty($quote)) {
+            $quote->setEstimatedate($qDate);
+            $quote->setEstimatorId($quoteAddedby);
+            $quote->setCustomerId($custId);
+            $quote->setRefNum($refNo);
+            $quote->setSalesmanId($salsManId);
+            $quote->setJobName($job);
+            $quote->setTermId($termId);
+            $quote->setShipMethdId($shipMethod);
+            $quote->setShipAddId($shipAddId);
+            $quote->setLeadTime($leadTime);
+            $quote->setStatus($status);
+            $quote->setUpdatedAt($datime);
+            $em->persist($quote);
+            $em->flush();
+            return 1;
+        }
+    }
 
     private function cloneVeneerData($quoteId, $clonedQuoteId, $datime) {
         $veneeerData = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId'=>$quoteId));
@@ -317,7 +388,7 @@ class QuoteController extends Controller
         $quote->setRefid($qData->getId());
         $quote->setEstimatedate($qData->getEstimatedate());
         $quote->setEstimatorId($qData->getEstimatorId());
-        $quote->setControlNumber($qData->getControlNumber());
+        $quote->setControlNumber($this->getLastControlNumber()+1);
         $quote->setVersion($qData->getVersion());
         $quote->setCustomerId($qData->getCustomerId());
         $quote->setRefNum($qData->getRefNum());
