@@ -33,8 +33,12 @@ class FileuploadController extends Controller
       $em = $this->getDoctrine()->getManager();
       $allowedExtension = $this->container->getParameter('allowed_extensions');
       $uploadDirectory = $this->container->getParameter('upload_file_destination');
-    
+
       $file = $request->files->get('file');
+      $attachableId = $request->request->get('attachableId');
+      $attachableType = $request->request->get('attachableType');
+      $originalname = $file->getClientOriginalName();
+      
       $ext = pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION);
       $filesize = $file->getSize();
 
@@ -51,6 +55,9 @@ class FileuploadController extends Controller
               if($file->move($uploadDirectory,$fileName)){
                   $fileEntity = new Files();
                   $fileEntity->setFileName($fileName);
+                  $fileEntity->setAttachableId($attachableId);
+                  $fileEntity->setAttachableType($attachableType);
+                  $fileEntity->setOriginalName($originalname);
                   $em->persist($fileEntity);
                   $em->flush();
                   $fileId = $fileEntity->getId();
@@ -58,6 +65,8 @@ class FileuploadController extends Controller
                   $arrApi['status'] = 1;
                   $arrApi['message'] = "Successfully Uploaded";
                   $arrApi['data']['fileId'] = $fileId;
+                  $arrApi['data']['ext'] = $ext;
+                  $arrApi['data']['originalname'] = $originalname;
 
               }
 
@@ -67,4 +76,39 @@ class FileuploadController extends Controller
       }
       return new JsonResponse($arrApi,$statusCode);
   }
+
+  /**
+     * @Route("api/fileDelete")
+     * @Method("POST")
+     */
+
+     public function fileDeleteAction(Request $request) {
+        $uploadDirectory = $this->container->getParameter('upload_file_destination');
+        $_DATA = file_get_contents('php://input');
+        $_DATA = json_decode($_DATA, true);
+        $arrApi = array();
+        $id = $_DATA['id'];
+        //$type = $_DATA['type'];
+        //$createdAt = new \DateTime('now');
+
+        $em = $this->getDoctrine()->getManager();
+        
+        $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($id);
+
+        try{
+            $fileName = $file->getFileName();
+            $em->remove($file);
+            $em->flush();
+            unlink($uploadDirectory.'/'.$fileName);
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+
+        $statusCode = 200;
+        $arrApi['status'] = 1;
+        $arrApi['message'] = 'File deleted Successfully.';
+            
+        return new JsonResponse($arrApi,$statusCode);
+    }
 }

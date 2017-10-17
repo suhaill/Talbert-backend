@@ -15,6 +15,7 @@ use Symfony\Component\Serializer\Serializer;
 use AppBundle\Entity\Veneer;
 use AppBundle\Entity\Plywood;
 use AppBundle\Entity\User;
+use AppBundle\Entity\Files;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -56,7 +57,12 @@ class VeneerController extends Controller
             $fileId = trim($getJson->get('fileId'));
             $quoteId = trim($getJson->get('quoteId'));
             $createdAt = new \DateTime('now');
-            
+
+            if($getJson->get('formtype'))
+            {
+                $formtype = trim($getJson->get('formtype'));
+            }
+           
             
             if (empty($quantity) || empty($speciesId) || empty($pattern) || 
             empty($grainDirectionId) || empty($gradeId) || 
@@ -73,7 +79,7 @@ class VeneerController extends Controller
                 $this->saveVeneerData($quantity, $speciesId, 
                 $pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize, 
                 $length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,
-                $comments,$createdAt,$fileId,$quoteId);
+                $comments,$createdAt,$fileId,$quoteId,$formtype);
             
             }
         }
@@ -84,7 +90,7 @@ class VeneerController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    private function saveVeneerData($quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$createdAt,$fileId,$quoteId)
+    private function saveVeneerData($quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$createdAt,$fileId,$quoteId,$formtype=null)
     {
         $em = $this->getDoctrine()->getManager();
         $veneer = new Veneer();
@@ -105,7 +111,7 @@ class VeneerController extends Controller
         $veneer->setSequenced($sequenced);
         $veneer->setLumberFee($lumberFee);
         $veneer->setComments($comments);
-        $veneer->setFileId($fileId);
+        $veneer->setFileId(0);
         $veneer->setQuoteId($quoteId);
         $veneer->setCreatedAt($createdAt);
         $veneer->setUpdatedAt($createdAt);
@@ -113,6 +119,47 @@ class VeneerController extends Controller
 
         $em->persist($veneer);
         $em->flush();
+        $lastInserted = $veneer->getId();
+
+        $fileId_ar = explode(',', $fileId);
+        //var_dump($fileId_ar);
+        if($formtype == 'clone')
+        {
+
+            for($i=0;$i<count($fileId_ar);$i++)
+            {
+                $em2 = $this->getDoctrine()->getManager();
+                $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+                //var_dump($file);
+                $fileEntity = new Files();
+                $fileEntity->setFileName($file->getFileName());
+                $fileEntity->setAttachableId($lastInserted);
+                $fileEntity->setAttachableType($file->getAttachableType());
+                $fileEntity->setOriginalName($file->getOriginalName());
+                $em->persist($fileEntity);
+                $em->flush();
+
+                /* $file->setAttachableId($lastInserted);
+                $em2->persist($file);
+                $em2->flush(); */
+    
+            }
+
+        }
+        else
+        {
+            for($i=0;$i<count($fileId_ar);$i++)
+            {
+                $em2 = $this->getDoctrine()->getManager();
+                $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+        
+                $file->setAttachableId($lastInserted);
+                $em2->persist($file);
+                $em2->flush();
+    
+            }
+        }
+        
     }
 
     /**
@@ -170,12 +217,24 @@ class VeneerController extends Controller
                             $arrApi['data']['comments'] = $veneer->getComments();
                             $arrApi['data']['quoteId'] = $veneer->getQuoteId();
                             $arrApi['data']['fileId'] = $veneer->getFileId();
-                            $arrApi['data']['isactive'] = $veneer->getIsActive();
-                            if(!empty($veneer->getFileId()))
+
+                            $allfiles = $this->getDoctrine()->getRepository("AppBundle:Files")->findBy(array('attachableid'=>$_DATA['id']));
+                            //var_dump($allfiles);
+                            $filestring = '';
+                            for($i=0;$i<count($allfiles);$i++)
                             {
-                                $arrApi['data']['fileLink'] = $this->getFileUrl( $veneer->getFileId(),$request );
-                            }
+                                $ext = pathinfo($allfiles[$i]->getOriginalName(), PATHINFO_EXTENSION);
+                                $filestring = $filestring.$allfiles[$i]->getId().',';
+                                $arrApi['data']['files'][$i]['id'] = $allfiles[$i]->getId();
+                                $arrApi['data']['files'][$i]['originalname'] = $allfiles[$i]->getOriginalName();
+                                $arrApi['data']['files'][$i]['type'] = $ext;
+                                $arrApi['data']['files'][$i]['fileLink'] = $this->getFileUrl( $allfiles[$i]->getId(),$request );
                                 
+                            }
+                            $arrApi['data']['filestring'] = rtrim($filestring,',');
+                            
+                            $arrApi['data']['isactive'] = $veneer->getIsActive();
+                               
                         }
                     }
                 }
@@ -281,12 +340,29 @@ class VeneerController extends Controller
         $veneer->setSequenced($sequenced);
         $veneer->setLumberFee($lumberFee);
         $veneer->setComments($comments);
-        $veneer->setFileId($fileId);
+        $veneer->setFileId(0);
         //$veneer->setQuoteId('1');
         //$veneer->setCreatedAt($createdAt);
         $veneer->setUpdatedAt($createdAt);
 
         $em->flush();
+
+        $lastInserted = $id;
+        //var_dump($lastInserted);
+        //var_dump($fileId);
+        $fileId_ar = explode(',', $fileId);
+        //print_r($fileId_ar);
+        for($i=0;$i<count($fileId_ar);$i++)
+        {
+            //var_dump($fileId_ar[$i]);
+            $em2 = $this->getDoctrine()->getManager();
+            $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+    
+            $file->setAttachableId($lastInserted);
+            $em2->persist($file);
+            $em2->flush();
+
+        }
     }
 
     function getFileUrl($fileId,$request)
