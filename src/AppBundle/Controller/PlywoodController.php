@@ -103,8 +103,7 @@ class PlywoodController extends Controller
             if (empty($quantity) || empty($speciesId) || empty($patternId) || 
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
-            || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId) || empty($cost) 
-            || empty($unitMesureCostId) || empty($lumberFee) ) {
+            || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId) || empty($lumberFee) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
@@ -113,13 +112,13 @@ class PlywoodController extends Controller
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully saved plywood data.';
                 $statusCode = 200;
-                $this->savePlywoodData($quantity, $speciesId, 
+                $lastInserted = $this->savePlywoodData($quantity, $speciesId, 
                 $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
                 $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId,$uvColorId, $sheenId,
                 $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
                 $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
                 $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype);
-            
+                $arrApi['lastInserted'] = $lastInserted;
             }
 
         }
@@ -210,42 +209,47 @@ class PlywoodController extends Controller
         
         $fileId_ar = explode(',', $fileId);
         //var_dump($fileId_ar);
-        if($formtype == 'clone')
+        if(count($fileId_ar)>0 && !empty($fileId))
         {
-
-            for($i=0;$i<count($fileId_ar);$i++)
+            if($formtype == 'clone')
             {
-                $em2 = $this->getDoctrine()->getManager();
-                $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
-                //var_dump($file);
-                $fileEntity = new Files();
-                $fileEntity->setFileName($file->getFileName());
-                $fileEntity->setAttachableId($lastInserted);
-                $fileEntity->setAttachableType($file->getAttachableType());
-                $fileEntity->setOriginalName($file->getOriginalName());
-                $em->persist($fileEntity);
-                $em->flush();
 
-                /* $file->setAttachableId($lastInserted);
-                $em2->persist($file);
-                $em2->flush(); */
-    
-            }
+                for($i=0;$i<count($fileId_ar);$i++)
+                {
+                    $em2 = $this->getDoctrine()->getManager();
+                    $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+                    //var_dump($file);
+                    $fileEntity = new Files();
+                    $fileEntity->setFileName($file->getFileName());
+                    $fileEntity->setAttachableId($lastInserted);
+                    $fileEntity->setAttachableType($file->getAttachableType());
+                    $fileEntity->setOriginalName($file->getOriginalName());
+                    $em->persist($fileEntity);
+                    $em->flush();
 
-        }
-        else
-        {
-            for($i=0;$i<count($fileId_ar);$i++)
-            {
-                $em2 = $this->getDoctrine()->getManager();
-                $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+                    /* $file->setAttachableId($lastInserted);
+                    $em2->persist($file);
+                    $em2->flush(); */
         
-                $file->setAttachableId($lastInserted);
-                $em2->persist($file);
-                $em2->flush();
-    
+                }
+
+            }
+            else
+            {
+                for($i=0;$i<count($fileId_ar);$i++)
+                {
+                    $em2 = $this->getDoctrine()->getManager();
+                    $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+            
+                    $file->setAttachableId($lastInserted);
+                    $em2->persist($file);
+                    $em2->flush();
+        
+                }
             }
         }
+
+        return $lastInserted;
     }
 
 
@@ -356,7 +360,7 @@ class PlywoodController extends Controller
                                 $arrApi['data']['fileLink'] = $this->getFileUrl( $plywood->getFileId(),$request );
                             } */
 
-                            $allfiles = $this->getDoctrine()->getRepository("AppBundle:Files")->findBy(array('attachableid'=>$_DATA['id']));
+                            $allfiles = $this->getDoctrine()->getRepository("AppBundle:Files")->findBy(array('attachableid'=>$_DATA['id'],'attachabletype'=>'Plywood'));
                             //var_dump($allfiles);
                             $filestring = '';
                             for($i=0;$i<count($allfiles);$i++)
@@ -478,7 +482,7 @@ class PlywoodController extends Controller
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
             || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId) || empty($topEdge) || empty($edgeMaterialId) 
-            || empty($cost) || empty($unitMesureCostId) || empty($lumberFee)) {
+            || empty($lumberFee)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;

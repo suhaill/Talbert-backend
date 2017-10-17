@@ -72,10 +72,11 @@ class VeneerController extends Controller
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully saved veneer data.';
                 $statusCode = 200;
-                $this->saveVeneerData($quantity, $speciesId, 
+                $lastInserted = $this->saveVeneerData($quantity, $speciesId, 
                 $pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize, 
                 $length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,
                 $comments,$createdAt,$fileId,$quoteId,$formtype);
+                $arrApi['lastInserted'] = $lastInserted;
             
             }
         }
@@ -116,46 +117,50 @@ class VeneerController extends Controller
         $em->persist($veneer);
         $em->flush();
         $lastInserted = $veneer->getId();
-
+        //var_dump($fileId);
         $fileId_ar = explode(',', $fileId);
         //var_dump($fileId_ar);
-        if($formtype == 'clone')
+        //echo count($fileId_ar);
+        if(count($fileId_ar)>0 && !empty($fileId))
         {
-
-            for($i=0;$i<count($fileId_ar);$i++)
+            if($formtype == 'clone')
             {
-                $em2 = $this->getDoctrine()->getManager();
-                $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
-                //var_dump($file);
-                $fileEntity = new Files();
-                $fileEntity->setFileName($file->getFileName());
-                $fileEntity->setAttachableId($lastInserted);
-                $fileEntity->setAttachableType($file->getAttachableType());
-                $fileEntity->setOriginalName($file->getOriginalName());
-                $em->persist($fileEntity);
-                $em->flush();
 
-                /* $file->setAttachableId($lastInserted);
-                $em2->persist($file);
-                $em2->flush(); */
-    
+                for($i=0;$i<count($fileId_ar);$i++)
+                {
+                    $em2 = $this->getDoctrine()->getManager();
+                    $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+                    //var_dump($file);
+                    $fileEntity = new Files();
+                    $fileEntity->setFileName($file->getFileName());
+                    $fileEntity->setAttachableId($lastInserted);
+                    $fileEntity->setAttachableType($file->getAttachableType());
+                    $fileEntity->setOriginalName($file->getOriginalName());
+                    $em->persist($fileEntity);
+                    $em->flush();
+
+                    /* $file->setAttachableId($lastInserted);
+                    $em2->persist($file);
+                    $em2->flush(); */
+        
+                }
+
             }
-
-        }
-        else
-        {
-            for($i=0;$i<count($fileId_ar);$i++)
+            else
             {
-                $em2 = $this->getDoctrine()->getManager();
-                $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+                for($i=0;$i<count($fileId_ar);$i++)
+                {
+                    $em2 = $this->getDoctrine()->getManager();
+                    $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+            
+                    $file->setAttachableId($lastInserted);
+                    $em2->persist($file);
+                    $em2->flush();
         
-                $file->setAttachableId($lastInserted);
-                $em2->persist($file);
-                $em2->flush();
-    
+                }
             }
         }
-        
+        return $lastInserted;
     }
 
     /**
@@ -214,7 +219,7 @@ class VeneerController extends Controller
                             $arrApi['data']['quoteId'] = $veneer->getQuoteId();
                             $arrApi['data']['fileId'] = $veneer->getFileId();
 
-                            $allfiles = $this->getDoctrine()->getRepository("AppBundle:Files")->findBy(array('attachableid'=>$_DATA['id']));
+                            $allfiles = $this->getDoctrine()->getRepository("AppBundle:Files")->findBy(array('attachableid'=>$_DATA['id'],'attachabletype'=>'Veneer'));
                             //var_dump($allfiles);
                             $filestring = '';
                             for($i=0;$i<count($allfiles);$i++)
