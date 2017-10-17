@@ -57,12 +57,8 @@ class VeneerController extends Controller
             $fileId = trim($getJson->get('fileId'));
             $quoteId = trim($getJson->get('quoteId'));
             $createdAt = new \DateTime('now');
-
-            if($getJson->get('formtype'))
-            {
-                $formtype = trim($getJson->get('formtype'));
-            }
-           
+            $formtype = trim($getJson->get('formtype'));
+            
             
             if (empty($quantity) || empty($speciesId) || empty($pattern) || 
             empty($grainDirectionId) || empty($gradeId) || 

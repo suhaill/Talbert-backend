@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use AppBundle\Entity\Plywood;
+use AppBundle\Entity\Files;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -45,7 +46,6 @@ class PlywoodController extends Controller
             $plywoodWidth = trim($getJson->get('width'));
             $plywoodLength = trim($getJson->get('length'));
             $finishThickId = trim($getJson->get('finishthick'));
-           
             $isSequenced = trim($getJson->get('sequenced'));
             $coreType = trim($getJson->get('coretype'));
             $thickness = trim($getJson->get('corethickness'));
@@ -54,31 +54,24 @@ class PlywoodController extends Controller
             $uvColorId = trim($getJson->get('uvcolor'));
             $sheenId = trim($getJson->get('sheen'));
             $shameOnId = trim($getJson->get('coresameon'));
-
             $coreSameOnbe = trim($getJson->get('coresameonbe'));
             $coreSameOnte = trim($getJson->get('coresameonte'));
             $coreSameOnre = trim($getJson->get('coresameonre'));
             $coreSameOnle = trim($getJson->get('coresameonle'));
-
             $backerId = trim($getJson->get('backergrade'));
             $edgeDetail = trim($getJson->get('egdedetail'));
-            
             $topEdge = trim($getJson->get('edgefinish'));
             $edgeMaterialId = trim($getJson->get('sizeedgematerial')); 
             $edgeFinishSpeciesId = trim($getJson->get('edgefinishspecies'));
-            
             $bottomEdge = trim($getJson->get('bedgefinish'));
             $bedgeMaterialId = trim($getJson->get('bsizeedgematerial')); 
             $bedgeFinishSpeciesId = trim($getJson->get('bedgefinishspecies')); 
-
             $rightEdge = trim($getJson->get('redgefinish'));
             $redgeMaterialId = trim($getJson->get('rsizeedgematerial')); 
             $redgeFinishSpeciesId = trim($getJson->get('redgefinishspecies')); 
-
             $leftEdge = trim($getJson->get('ledgefinish'));
             $ledgeMaterialId = trim($getJson->get('lsizeedgematerial')); 
             $ledgeFinishSpeciesId = trim($getJson->get('ledgefinishspecies')); 
-            
             $milling = trim($getJson->get('milling'));
             $millingDescription = trim($getJson->get('millingDescription'));
             $cost = trim($getJson->get('cost'));
@@ -88,6 +81,7 @@ class PlywoodController extends Controller
             $lumberFee = trim($getJson->get('lumberfee'));
             $autoNumberArr = $getJson->get('autoNumber');
             $autoNumberstring = '';
+
             if($autoNumberArr)
             {
                 foreach($autoNumberArr as $val) {
@@ -98,13 +92,13 @@ class PlywoodController extends Controller
                 $autoNumberstring = rtrim($autoNumberstring,',');
             }
             
-            
-           
             $autoNumber = $autoNumberstring;
             $comments = trim($getJson->get('comment'));
             $createdAt = new \DateTime('now');
             $fileId = trim($getJson->get('fileId'));
             $quoteId = trim($getJson->get('quoteId'));
+            $formtype = trim($getJson->get('formtype'));
+
 
             if (empty($quantity) || empty($speciesId) || empty($patternId) || 
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
@@ -124,13 +118,16 @@ class PlywoodController extends Controller
                 $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId,$uvColorId, $sheenId,
                 $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
                 $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
-                $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId);
+                $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype);
             
             }
 
         }
+
         catch(Exception $e) {
+
             throw $e->getMessage();
+
         }
 
         return new JsonResponse($arrApi, $statusCode);
@@ -141,7 +138,7 @@ class PlywoodController extends Controller
     $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId,$uvColorId, $sheenId,
     $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
     $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
-    $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId)
+    $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype)
     {
         $em = $this->getDoctrine()->getManager();
         $plywood = new Plywood();
@@ -199,7 +196,7 @@ class PlywoodController extends Controller
         $plywood->setLumberFee($lumberFee); 
         $plywood->setAutoNumber($autoNumber);
         //$plywood->setQuoteId('1');
-        $plywood->setFileId($fileId);
+        $plywood->setFileId(0);
         
         $plywood->setComments($comments);
         $plywood->setQuoteId($quoteId);
@@ -208,6 +205,47 @@ class PlywoodController extends Controller
         $plywood->setIsActive(1);
         $em->persist($plywood);
         $em->flush();
+
+        $lastInserted = $plywood->getId();
+        
+        $fileId_ar = explode(',', $fileId);
+        //var_dump($fileId_ar);
+        if($formtype == 'clone')
+        {
+
+            for($i=0;$i<count($fileId_ar);$i++)
+            {
+                $em2 = $this->getDoctrine()->getManager();
+                $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+                //var_dump($file);
+                $fileEntity = new Files();
+                $fileEntity->setFileName($file->getFileName());
+                $fileEntity->setAttachableId($lastInserted);
+                $fileEntity->setAttachableType($file->getAttachableType());
+                $fileEntity->setOriginalName($file->getOriginalName());
+                $em->persist($fileEntity);
+                $em->flush();
+
+                /* $file->setAttachableId($lastInserted);
+                $em2->persist($file);
+                $em2->flush(); */
+    
+            }
+
+        }
+        else
+        {
+            for($i=0;$i<count($fileId_ar);$i++)
+            {
+                $em2 = $this->getDoctrine()->getManager();
+                $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+        
+                $file->setAttachableId($lastInserted);
+                $em2->persist($file);
+                $em2->flush();
+    
+            }
+        }
     }
 
 
@@ -313,10 +351,27 @@ class PlywoodController extends Controller
                             $arrApi['data']['fileId'] = $plywood->getFileId();
                             $arrApi['data']['isactive'] = $plywood->getIsActive();
                             
-                            if(!empty($plywood->getFileId()))
+                            /* if(!empty($plywood->getFileId()))
                             {
                                 $arrApi['data']['fileLink'] = $this->getFileUrl( $plywood->getFileId(),$request );
+                            } */
+
+                            $allfiles = $this->getDoctrine()->getRepository("AppBundle:Files")->findBy(array('attachableid'=>$_DATA['id']));
+                            //var_dump($allfiles);
+                            $filestring = '';
+                            for($i=0;$i<count($allfiles);$i++)
+                            {
+                                $ext = pathinfo($allfiles[$i]->getOriginalName(), PATHINFO_EXTENSION);
+                                $filestring = $filestring.$allfiles[$i]->getId().',';
+                                $arrApi['data']['files'][$i]['id'] = $allfiles[$i]->getId();
+                                $arrApi['data']['files'][$i]['originalname'] = $allfiles[$i]->getOriginalName();
+                                $arrApi['data']['files'][$i]['type'] = $ext;
+                                $arrApi['data']['files'][$i]['fileLink'] = $this->getFileUrl( $allfiles[$i]->getId(),$request );
+                                
                             }
+                            $arrApi['data']['filestring'] = rtrim($filestring,',');
+                            
+                            //$arrApi['data']['isactive'] = $veneer->getIsActive();
         
                         }
                     }
@@ -512,12 +567,29 @@ class PlywoodController extends Controller
         $plywood->setAutoNumber($autoNumber);
         //$plywood->setQuoteId('1');
         $plywood->setComments($comments);
-        $plywood->setFileId($fileId);
+        $plywood->setFileId(0);
        //$veneer->setQuoteId('1');
         //$plywood->setCreatedAt($createdAt);
         $plywood->setUpdatedAt($createdAt);
 
         $em->flush();
+
+        $lastInserted = $id;
+        //var_dump($lastInserted);
+        //var_dump($fileId);
+        $fileId_ar = explode(',', $fileId);
+        //print_r($fileId_ar);
+        for($i=0;$i<count($fileId_ar);$i++)
+        {
+            //var_dump($fileId_ar[$i]);
+            $em2 = $this->getDoctrine()->getManager();
+            $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+    
+            $file->setAttachableId($lastInserted);
+            $em2->persist($file);
+            $em2->flush();
+
+        }
     }
 
     function getFileUrl($fileId,$request)
