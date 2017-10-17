@@ -146,12 +146,12 @@ class UserController extends Controller
                     $emailCount = $this->checkIfEmailExists($email);
                     if ($emailCount) {
                         $arrApi['status'] = 0;
-                        $arrApi['message'] = 'This Email Address already exists in the database.';
+                        $arrApi['message'] = 'Entered Email Address already exists.';
                     } else {
                         $phoneCount = $this->checkIfPhoneExists($phone);
                         if ($phoneCount) {
                             $arrApi['status'] = 0;
-                            $arrApi['message'] = 'This Phone number already exists in the database.';
+                            $arrApi['message'] = 'Entered phone number already exists.';
                         } else {
                             $userNameData = $this->checkIfUserNameExists($usrname);
                             if ($userNameData) {
@@ -171,7 +171,7 @@ class UserController extends Controller
                                 $lastInsertId = $user->getId();
                                 if (empty($lastInsertId)) {
                                     $arrApi['status'] = 0;
-                                    $arrApi['message'] = 'Error occured while inserting user data into database.';
+                                    $arrApi['message'] = 'Error occured while inserting user data.';
                                 } else {
                                     $profile = new Profile();
                                     $profile->setUserId($lastInsertId);
@@ -188,10 +188,10 @@ class UserController extends Controller
                                     $em->flush();
                                     if (empty($profile->getId())) {
                                         $arrApi['status'] = 0;
-                                        $arrApi['message'] = 'Error occured while inserting user profile data into database.';
+                                        $arrApi['message'] = 'Error occured while inserting user profile data.';
                                     } else {
                                         $arrApi['status'] = 1;
-                                        $arrApi['message'] = 'User data inserted into database successfully.';
+                                        $arrApi['message'] = 'User Added successfully.';
                                     }
                                 }
                             }
@@ -321,7 +321,7 @@ class UserController extends Controller
                             }
                             if ($emailCount) {
                                 $arrApi['status'] = 0;
-                                $arrApi['message'] = 'This Email Address already exists in the database.';
+                                $arrApi['message'] = 'Entered Email Address already exists.';
                             } else {
                                 if($profileObj->getPhone() != $phone){
                                 $phoneCount = $this->checkIfOthrUsrHasThisPhone($phone,$userId);
@@ -330,7 +330,7 @@ class UserController extends Controller
                             }
                                 if ($phoneCount) {
                                     $arrApi['status'] = 0;
-                                    $arrApi['message'] = 'This Phone number already exists in the database.';
+                                    $arrApi['message'] = 'Entered phone number already exists.';
                                 } else {
                                     if($user->getUsername() != $usrname){
                                     $userNameData = $this->checkIfOthrUsrHasThisUsername($usrname,$userId);
