@@ -391,9 +391,9 @@ class QuoteController extends Controller
         $quote->setControlNumber($this->getLastControlNumber()+1);
         $quote->setVersion($qData->getVersion());
         $quote->setCustomerId($qData->getCustomerId());
-        $quote->setRefNum($qData->getRefNum());
+        //$quote->setRefNum($qData->getRefNum());
         $quote->setSalesmanId($qData->getSalesmanId());
-        $quote->setJobName($qData->getJobName());
+        //$quote->setJobName($qData->getJobName());
         $quote->setTermId($qData->getTermId());
         $quote->setShipMethdId($qData->getShipMethdId());
         $quote->setShipAddId($qData->getShipAddId());
