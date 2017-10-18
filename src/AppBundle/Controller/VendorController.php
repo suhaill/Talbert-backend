@@ -54,15 +54,15 @@ class VendorController extends Controller
         $userNameData = $this->checkIfUserNameExists($username);
         if ($userNameData) {
             $arrApi['status'] = 0;
-            $arrApi['message'] = 'This Email already exists.';
+            $arrApi['message'] = 'Entered Email already exists.';
             $statusCode = 303;
         } else if($this->checkIfEmailExists($email)){
             $arrApi['status'] = 0;
-            $arrApi['message'] = 'This Email already exists.';
+            $arrApi['message'] = 'Entered Email already exists.';
             $statusCode = 303;
         }else if($this->checkIfPhoneExists($phone)){
             $arrApi['status'] = 0;
-            $arrApi['message'] = 'This Phone already exists.';
+            $arrApi['message'] = 'Entered phone number already exists.';
             $statusCode = 303;
         }else{
             try{
@@ -77,7 +77,7 @@ class VendorController extends Controller
                 $lastInsertId = $user->getId();
                 if (empty($lastInsertId)) {
                     $arrApi['status'] = 0;
-                    $arrApi['message'] = 'Error occured while inserting user data into database.';
+                    $arrApi['message'] = 'Error occured while inserting user data.';
                     $statusCode = 400;
                 } else {
                     $profile = new Profile();
@@ -95,7 +95,7 @@ class VendorController extends Controller
                     $em->flush();
                     if (empty($profile->getId())) {
                         $arrApi['status'] = 0;
-                        $arrApi['message'] = 'Error occured while inserting user profile data into database.';
+                        $arrApi['message'] = 'Error occured while inserting user profile data.';
                         $statusCode = 400;
                     } else {
 
@@ -107,11 +107,11 @@ class VendorController extends Controller
                         $em->flush();
                         if (empty($profile->getId())) {
                             $arrApi['status'] = 0;
-                            $arrApi['message'] = 'Error occured while inserting user profile data into database.';
+                            $arrApi['message'] = 'Error occured while inserting user profile data.';
                             $statusCode = 400;
                         }else{
                         $arrApi['status'] = 1;
-                        $arrApi['message'] = 'User data inserted into database successfully.';
+                        $arrApi['message'] = 'Vendor added Successfully';
                             $statusCode = 200;
                         }
                     }
@@ -239,18 +239,18 @@ class VendorController extends Controller
             $userNameData = $this->checkIfUserNameExists($username);
             if ($userNameData) {
                 $arrApi['status'] = 0;
-                $arrApi['message'] = 'This Email already exists.';
+                $arrApi['message'] = 'Entered Email already exists.';
                 $statusCode = 303;
             } else if($this->checkIfEmailExists($email)){
                 $arrApi['status'] = 0;
-                $arrApi['message'] = 'This Email already exists.';
+                $arrApi['message'] = 'Entered Email already exists.';
                 $statusCode = 303;
             }
         }
         if($phone != $vendor['phone']){
             if($this->checkIfPhoneExists($phone))
                 $arrApi['status'] = 0;
-                $arrApi['message'] = 'This Phone already exists.';
+                $arrApi['message'] = 'Entered phone number already exists.';
                 $statusCode = 303;
         }
 
