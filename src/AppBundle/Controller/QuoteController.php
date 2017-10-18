@@ -363,6 +363,12 @@ class QuoteController extends Controller
                 $plywd->setBedgeFinishSpeciesId($ply[$i]->getBedgeFinishSpeciesId());
                 $plywd->setRedgeFinishSpeciesId($ply[$i]->getRedgeFinishSpeciesId());
                 $plywd->setLedgeFinishSpeciesId($ply[$i]->getLedgeFinishSpeciesId());
+                $plywd->setUvColorId($ply[$i]->getUvColorId());
+                $plywd->setCoreSameOnbe($ply[$i]->getCoreSameOnbe());
+                $plywd->setCoreSameOnte($ply[$i]->getCoreSameOnte());
+                $plywd->setCoreSameOnre($ply[$i]->getCoreSameOnre());
+                $plywd->setCoreSameOnle($ply[$i]->getCoreSameOnle());
+                $plywd->setCoreSameOnle($ply[$i]->getCoreSameOnle());
                 $plywd->setMilling($ply[$i]->getMilling());
                 $plywd->setMillingDescription($ply[$i]->getMillingDescription());
                 $plywd->setCost($ply[$i]->getCost());
