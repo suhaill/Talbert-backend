@@ -138,6 +138,35 @@ class CustomerController extends Controller
     }
 
     /**
+     * @Route("/api/customer/getAllCustomersList")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("GET")
+     */
+    public function getAllCustomersAction(Request $request){
+        if ($request->getMethod() == 'GET') {
+            $arrApi = array();
+            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'));
+            if ( empty($users) ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'There is no user.';
+            } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived the customers list.';
+                for ($i=0; $i<count($users); $i++) {
+                    $userId = $users[$i]->getId();
+                    if (!empty($userId)) {
+                        $arrApi['data']['customers'][$i]['id'] = $users[$i]->getId();
+                        $arrApi['data']['customers'][$i]['fname'] = $this->getFnameById($userId);
+                        $arrApi['data']['customers'][$i]['comapny'] = $this->getCompanyById($userId);
+                        $arrApi['data']['customers'][$i]['createdDate'] = $this->getCreatedDateById($userId);
+                    }
+                }
+            }
+            return new JsonResponse($arrApi);
+        }
+    }
+
+    /**
      * @Route("/api/customer/getCustomerDetails")
      * @Security("is_granted('ROLE_USER')")
      * @Method("POST")
