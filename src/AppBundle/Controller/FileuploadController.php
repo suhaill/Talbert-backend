@@ -111,4 +111,37 @@ class FileuploadController extends Controller
             
         return new JsonResponse($arrApi,$statusCode);
     }
+
+    /**
+    * @Route("/api/fileDownload/{fileId}")
+    * @Method("GET")
+    */
+
+    public function fileDownloadAction($fileId,Request $request) {
+
+        $files = $this->getDoctrine()->getRepository('AppBundle:Files')->findOneById($fileId);
+        
+        //var_dump($files);
+        
+        //$baseurl = $request->getScheme() . '://' . $request->getHttpHost() . $request->getBasePath();
+       
+        $uploadDirectory = $this->container->getParameter('upload_file_destination');
+
+        $filePath = $uploadDirectory.$files->getFileName();
+
+        //var_dump($files);
+
+        $newname = $files->getOriginalName();
+        //$type = 'pdf';
+
+        header('Cache-Control: public');
+        header('Content-Description: File Transfer');
+        header('Content-Disposition: attachment; filename=' . $newname);
+        header('Content-Length: ' . filesize($filePath));
+        // Read file
+        readfile($filePath);
+
+        die();
+    
+    }
 }
