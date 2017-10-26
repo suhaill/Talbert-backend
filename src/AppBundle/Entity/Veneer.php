@@ -173,6 +173,118 @@ class Veneer
      private $isActive=true;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="cust_markup_percent", type="string", length=10, nullable=true)
+     */
+    private $custMarkupPer;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="ven_cost", type="string", length=10, nullable=true)
+     */
+    private $venCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="ven_waste", type="string", length=10, nullable=true)
+     */
+    private $venWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="core_cost", type="string", length=10, nullable=true)
+     */
+    private $coreCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="core_waste", type="string", length=10, nullable=true)
+     */
+    private $coreWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="backr_cost", type="string", length=10, nullable=true)
+     */
+    private $backrCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true)
+     */
+    private $backrWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="tot_cost_per_piece", type="string", length=10, nullable=true)
+     */
+    private $totCostPerPiece;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="markup", type="string", length=10, nullable=true)
+     */
+    private $markup;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="selling_price", type="string", length=10, nullable=true)
+     */
+    private $sellingPrice;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="lineitem_total", type="string", length=10, nullable=true)
+     */
+    private $lineitemTotal;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="machine_setup", type="string", length=10, nullable=true)
+     */
+    private $machineSetup;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="machine_tooling", type="string", length=10, nullable=true)
+     */
+    private $machineTooling;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="pre_finish_setup", type="string", length=10, nullable=true)
+     */
+    private $preFinishSetup;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="color_match", type="string", length=10, nullable=true)
+     */
+    private $colorMatch;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="total_cost", type="string", length=10, nullable=true)
+     */
+    private $totalCost;
+
+    /**
      * Get id
      *
      * @return int
@@ -694,5 +806,261 @@ class Veneer
      {
          $this->isActive = $isActive;
      }
+
+    /**
+     * @return string
+     */
+    public function getCustMarkupPer()
+    {
+        return $this->custMarkupPer;
+    }
+
+    /**
+     * @param string $custMarkupPer
+     */
+    public function setCustMarkupPer($custMarkupPer)
+    {
+        $this->custMarkupPer = $custMarkupPer;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVenCost()
+    {
+        return $this->venCost;
+    }
+
+    /**
+     * @param string $venCost
+     */
+    public function setVenCost($venCost)
+    {
+        $this->venCost = $venCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVenWaste()
+    {
+        return $this->venWaste;
+    }
+
+    /**
+     * @param string $venWaste
+     */
+    public function setVenWaste($venWaste)
+    {
+        $this->venWaste = $venWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCoreCost()
+    {
+        return $this->coreCost;
+    }
+
+    /**
+     * @param string $coreCost
+     */
+    public function setCoreCost($coreCost)
+    {
+        $this->coreCost = $coreCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCoreWaste()
+    {
+        return $this->coreWaste;
+    }
+
+    /**
+     * @param string $coreWaste
+     */
+    public function setCoreWaste($coreWaste)
+    {
+        $this->coreWaste = $coreWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackrCost()
+    {
+        return $this->backrCost;
+    }
+
+    /**
+     * @param string $backrCost
+     */
+    public function setBackrCost($backrCost)
+    {
+        $this->backrCost = $backrCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackrWaste()
+    {
+        return $this->backrWaste;
+    }
+
+    /**
+     * @param string $backrWaste
+     */
+    public function setBackrWaste($backrWaste)
+    {
+        $this->backrWaste = $backrWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTotCostPerPiece()
+    {
+        return $this->totCostPerPiece;
+    }
+
+    /**
+     * @param string $totCostPerPiece
+     */
+    public function setTotCostPerPiece($totCostPerPiece)
+    {
+        $this->totCostPerPiece = $totCostPerPiece;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMarkup()
+    {
+        return $this->markup;
+    }
+
+    /**
+     * @param string $markup
+     */
+    public function setMarkup($markup)
+    {
+        $this->markup = $markup;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSellingPrice()
+    {
+        return $this->sellingPrice;
+    }
+
+    /**
+     * @param string $sellingPrice
+     */
+    public function setSellingPrice($sellingPrice)
+    {
+        $this->sellingPrice = $sellingPrice;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLineitemTotal()
+    {
+        return $this->lineitemTotal;
+    }
+
+    /**
+     * @param string $lineitemTotal
+     */
+    public function setLineitemTotal($lineitemTotal)
+    {
+        $this->lineitemTotal = $lineitemTotal;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMachineSetup()
+    {
+        return $this->machineSetup;
+    }
+
+    /**
+     * @param string $machineSetup
+     */
+    public function setMachineSetup($machineSetup)
+    {
+        $this->machineSetup = $machineSetup;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMachineTooling()
+    {
+        return $this->machineTooling;
+    }
+
+    /**
+     * @param string $machineTooling
+     */
+    public function setMachineTooling($machineTooling)
+    {
+        $this->machineTooling = $machineTooling;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPreFinishSetup()
+    {
+        return $this->preFinishSetup;
+    }
+
+    /**
+     * @param string $preFinishSetup
+     */
+    public function setPreFinishSetup($preFinishSetup)
+    {
+        $this->preFinishSetup = $preFinishSetup;
+    }
+
+    /**
+     * @return string
+     */
+    public function getColorMatch()
+    {
+        return $this->colorMatch;
+    }
+
+    /**
+     * @param string $colorMatch
+     */
+    public function setColorMatch($colorMatch)
+    {
+        $this->colorMatch = $colorMatch;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTotalCost()
+    {
+        return $this->totalCost;
+    }
+
+    /**
+     * @param string $totalCost
+     */
+    public function setTotalCost($totalCost)
+    {
+        $this->totalCost = $totalCost;
+    }
 }
 
