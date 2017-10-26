@@ -599,11 +599,11 @@ class PlywoodController extends Controller
     function getFileUrl($fileId,$request)
     {
         
-        $files = $this->getDoctrine()->getRepository('AppBundle:Files')->findOneById($fileId);
-        
+       /*  $files = $this->getDoctrine()->getRepository('AppBundle:Files')->findOneById($fileId);
+         */
         $baseurl = $request->getScheme() . '://' . $request->getHttpHost() . $request->getBasePath();
        
-        return $baseurl.'/uploads/'.$files->getFileName();
+        return $baseurl.'/api/fileDownload/'.$fileId;
 
     }
 
