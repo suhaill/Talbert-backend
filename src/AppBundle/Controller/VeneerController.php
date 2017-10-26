@@ -200,6 +200,7 @@ class VeneerController extends Controller
 
                             $arrApi['data']['id'] = $userId;
                             $arrApi['data']['quantity'] = $veneer->getQuantity();
+                            $arrApi['data']['type'] = 'veneer';
                             $arrApi['data']['speciesId'] = $veneer->getSpeciesId();
                             $arrApi['data']['grainPatternId'] = $veneer->getGrainPatternId();
                             $arrApi['data']['flakexFiguredId'] = $veneer->getFlakexFiguredId();
@@ -233,9 +234,27 @@ class VeneerController extends Controller
                                 
                             }
                             $arrApi['data']['filestring'] = rtrim($filestring,',');
-                            
                             $arrApi['data']['isactive'] = $veneer->getIsActive();
-                               
+                            $arrApi['data']['custMarkupPer'] = $veneer->getCustMarkupPer();
+                            $arrApi['data']['venCost'] = $veneer->getVenCost();
+                            $arrApi['data']['venWaste'] = $veneer->getVenWaste();
+                            $arrApi['data']['subTotVen'] = $veneer->getSubTotalVen();
+                            $arrApi['data']['coreCost'] = $veneer->getCoreCost();
+                            $arrApi['data']['coreWaste'] = $veneer->getCoreWaste();
+                            $arrApi['data']['subTotCore'] = $veneer->getSubTotalCore();
+                            $arrApi['data']['backrCost'] = $veneer->getBackrCost();
+                            $arrApi['data']['backrWaste'] = $veneer->getBackrWaste();
+                            $arrApi['data']['subTotBackr'] = $veneer->getSubTotalBackr();
+                            $arrApi['data']['totCostPerPiece'] = $veneer->getTotCostPerPiece();
+                            $arrApi['data']['macrkup'] = $veneer->getMarkup();
+                            $arrApi['data']['sellingPrice'] = $veneer->getSellingPrice();
+                            $arrApi['data']['lineitemTotal'] = $veneer->getLineitemTotal();
+                            $arrApi['data']['machineSetup'] = $veneer->getMachineSetup();
+                            $arrApi['data']['machineTooling'] = $veneer->getMachineTooling();
+                            $arrApi['data']['preFinishSetup'] = $veneer->getPreFinishSetup();
+                            $arrApi['data']['colorMatch'] = $veneer->getColorMatch();
+                            $arrApi['data']['totalCost'] = $veneer->getTotalCost();
+
                         }
                     }
                 }

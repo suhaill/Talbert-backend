@@ -196,6 +196,13 @@ class Veneer
     /**
      * @var string
      *
+     * @ORM\Column(name="sub_total_ven", type="string", length=10, nullable=true)
+     */
+    private $subTotalVen;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="core_cost", type="string", length=10, nullable=true)
      */
     private $coreCost;
@@ -210,6 +217,13 @@ class Veneer
     /**
      * @var string
      *
+     * @ORM\Column(name="sub_total_core", type="string", length=10, nullable=true)
+     */
+    private $subTotalCore;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="backr_cost", type="string", length=10, nullable=true)
      */
     private $backrCost;
@@ -220,6 +234,13 @@ class Veneer
      * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true)
      */
     private $backrWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_backr", type="string", length=10, nullable=true)
+     */
+    private $subTotalBackr;
 
     /**
      * @var string
@@ -858,6 +879,22 @@ class Veneer
     /**
      * @return string
      */
+    public function getSubTotalVen()
+    {
+        return $this->subTotalVen;
+    }
+
+    /**
+     * @param string $subTotalVen
+     */
+    public function setSubTotalVen($subTotalVen)
+    {
+        $this->subTotalVen = $subTotalVen;
+    }
+
+    /**
+     * @return string
+     */
     public function getCoreCost()
     {
         return $this->coreCost;
@@ -874,6 +911,22 @@ class Veneer
     /**
      * @return string
      */
+    public function getSubTotalCore()
+    {
+        return $this->subTotalCore;
+    }
+
+    /**
+     * @param string $subTotalCore
+     */
+    public function setSubTotalCore($subTotalCore)
+    {
+        $this->subTotalCore = $subTotalCore;
+    }
+
+    /**
+     * @return string
+     */
     public function getCoreWaste()
     {
         return $this->coreWaste;
@@ -885,6 +938,22 @@ class Veneer
     public function setCoreWaste($coreWaste)
     {
         $this->coreWaste = $coreWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalBackr()
+    {
+        return $this->subTotalBackr;
+    }
+
+    /**
+     * @param string $subTotalBackr
+     */
+    public function setSubTotalBackr($subTotalBackr)
+    {
+        $this->subTotalBackr = $subTotalBackr;
     }
 
     /**
