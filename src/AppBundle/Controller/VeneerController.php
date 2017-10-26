@@ -423,4 +423,59 @@ class VeneerController extends Controller
             
         return new JsonResponse($arrApi,$statusCode);
     }
+
+    /**
+     * @Route("api/veneer/saveVeneerCalculatedPrice")
+     * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
+     */
+    public function saveVeneerCalculatedPriceAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        if ( empty($data['veneerId']) || $data['custMarkupPer'] == null || empty($data['venCost']) || empty($data['venWaste'])) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Please provide all the details.';
+            $statusCode = 422;
+        } else {
+            try {
+                $updateVeneer = $this->updateVeneerCalculatedPrice($data);
+                if ($updateVeneer) {
+                    $arrApi['status'] = 1;
+                    $arrApi['message'] = 'Successfully saved calculated price.';
+                }
+            }
+            catch(Exception $e) {
+                throw $e->getMessage();
+            }
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function updateVeneerCalculatedPrice($data) {
+        //$venData = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findOneById($data['veneerId']);
+        $em = $this->getDoctrine()->getManager();
+        $venData = $em->getRepository(Veneer::class)->find($data['veneerId']);
+        $venData->setCustMarkupPer($data['custMarkupPer']);
+        $venData->setVenCost($data['venCost']);
+        $venData->setVenWaste($data['venWaste']);
+        $venData->setCoreCost($data['corCost']);
+        $venData->setCoreWaste($data['corWaste']);
+        $venData->setBackrCost($data['bakrCost']);
+        $venData->setBackrWaste($data['bakrWaste']);
+        $venData->setTotCostPerPiece($data['totalCostPerPiece']);
+        $venData->setMarkup($data['markup']);
+        $venData->setSellingPrice($data['sellingPrice']);
+        $venData->setLineitemTotal($data['lineitemTotal']);
+        $venData->setMachineSetup($data['machnStp']);
+        $venData->setMachineTooling($data['machnTlng']);
+        $venData->setPreFinishSetup($data['preFnshStp']);
+        $venData->setColorMatch($data['clrMatch']);
+        $venData->setTotalCost($data['totalCost']);
+        $em->persist($venData);
+        $em->flush();
+        return 1;
+    }
+
 }
