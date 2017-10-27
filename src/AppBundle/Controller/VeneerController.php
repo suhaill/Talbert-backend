@@ -479,10 +479,13 @@ class VeneerController extends Controller
         $venData->setCustMarkupPer($data['custMarkupPer']);
         $venData->setVenCost($data['venCost']);
         $venData->setVenWaste($data['venWaste']);
+        $venData->setSubTotalVen($data['subTotVen']);
         $venData->setCoreCost($data['corCost']);
         $venData->setCoreWaste($data['corWaste']);
+        $venData->setSubTotalCore($data['subTotCor']);
         $venData->setBackrCost($data['bakrCost']);
         $venData->setBackrWaste($data['bakrWaste']);
+        $venData->setSubTotalBackr($data['subTotBackr']);
         $venData->setTotCostPerPiece($data['totalCostPerPiece']);
         $venData->setMarkup($data['markup']);
         $venData->setSellingPrice($data['sellingPrice']);

@@ -287,6 +287,7 @@ class PlywoodController extends Controller
 
                             $arrApi['data']['id'] = $userId;
                             $arrApi['data']['quantity'] = $plywood->getQuantity();
+                            $arrApi['data']['type'] = 'plywood';
                             $arrApi['data']['speciesId'] = $plywood->getSpeciesId();
                             $arrApi['data']['grainPatternId'] = $plywood->getGrainPatternId();
                             $arrApi['data']['flakexFiguredId'] = $plywood->getFlakexFiguredId();
