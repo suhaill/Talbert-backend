@@ -560,7 +560,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['core'] = $this->getCoreNameById($v->getCoreTypeId());
                     $lineItem[$i]['edge'] = 'NA';
                     $lineItem[$i]['unitPrice'] = 'NA';
-                    $lineItem[$i]['totalPrice'] = 'NA';
+                    $lineItem[$i]['totalPrice'] = $v->getTotalCost();
                     $i++;
                 }
             }
