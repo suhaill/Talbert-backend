@@ -371,6 +371,223 @@ class Plywood
      * @ORM\Column(type="boolean", nullable=false)
      */
      private $isActive=true;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="cust_markup_percent", type="string", length=10, nullable=true)
+     */
+    private $custMarkupPer;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="ven_cost", type="string", length=10, nullable=true)
+     */
+    private $venCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="ven_waste", type="string", length=10, nullable=true)
+     */
+    private $venWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_ven", type="string", length=10, nullable=true)
+     */
+    private $subTotalVen;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="core_cost", type="string", length=10, nullable=true)
+     */
+    private $coreCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="core_waste", type="string", length=10, nullable=true)
+     */
+    private $coreWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_core", type="string", length=10, nullable=true)
+     */
+    private $subTotalCore;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="backr_cost", type="string", length=10, nullable=true)
+     */
+    private $backrCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true)
+     */
+    private $backrWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_backr", type="string", length=10, nullable=true)
+     */
+    private $subTotalBackr;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="finish_cost", type="string", length=10, nullable=true)
+     */
+    private $finishCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="finish_waste", type="string", length=10, nullable=true)
+     */
+    private $finishWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_finish", type="string", length=10, nullable=true)
+     */
+    private $subTotalFinish;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="edgeint_cost", type="string", length=10, nullable=true)
+     */
+    private $edgeintCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="edgeint_waste", type="string", length=10, nullable=true)
+     */
+    private $edgeintWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_edgeint", type="string", length=10, nullable=true)
+     */
+    private $subTotalEdgeint;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="edgev_cost", type="string", length=10, nullable=true)
+     */
+    private $edgevCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="edgev_waste", type="string", length=10, nullable=true)
+     */
+    private $edgevWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_edgev", type="string", length=10, nullable=true)
+     */
+    private $subTotalEdgev;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="milling_cost", type="string", length=10, nullable=true)
+     */
+    private $millingCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="milling_waste", type="string", length=10, nullable=true)
+     */
+    private $millingWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_milling", type="string", length=10, nullable=true)
+     */
+    private $subTotalMilling;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="total_cost_per_piece", type="string", length=10, nullable=true)
+     */
+    private $totalcostPerPiece;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="markup", type="string", length=10, nullable=true)
+     */
+    private $markup;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="selling_price", type="string", length=10, nullable=true)
+     */
+    private $sellingPrice;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="lineitem_total", type="string", length=10, nullable=true)
+     */
+    private $lineitemTotal;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="machine_setup", type="string", length=10, nullable=true)
+     */
+    private $machineSetup;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="machine_tooling", type="string", length=10, nullable=true)
+     */
+    private $machineTooling;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="pre_finish_setup", type="string", length=10, nullable=true)
+     */
+    private $preFinishSetup;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="color_match", type="string", length=10, nullable=true)
+     */
+    private $colorMatch;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="total_cost", type="string", length=10, nullable=true)
+     */
+    private $totalCost;
      
     /**
      * Get id
@@ -1589,4 +1806,502 @@ class Plywood
      {
          $this->isActive = $isActive;
      }
+
+    /**
+     * @return string
+     */
+    public function getCustMarkupPer()
+    {
+        return $this->custMarkupPer;
+    }
+
+    /**
+     * @param string $custMarkupPer
+     */
+    public function setCustMarkupPer($custMarkupPer)
+    {
+        $this->custMarkupPer = $custMarkupPer;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVenCost()
+    {
+        return $this->venCost;
+    }
+
+    /**
+     * @param string $venCost
+     */
+    public function setVenCost($venCost)
+    {
+        $this->venCost = $venCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVenWaste()
+    {
+        return $this->venWaste;
+    }
+
+    /**
+     * @param string $venWaste
+     */
+    public function setVenWaste($venWaste)
+    {
+        $this->venWaste = $venWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalVen()
+    {
+        return $this->subTotalVen;
+    }
+
+    /**
+     * @param string $subTotalVen
+     */
+    public function setSubTotalVen($subTotalVen)
+    {
+        $this->subTotalVen = $subTotalVen;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCoreCost()
+    {
+        return $this->coreCost;
+    }
+
+    /**
+     * @param string $coreCost
+     */
+    public function setCoreCost($coreCost)
+    {
+        $this->coreCost = $coreCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCoreWaste()
+    {
+        return $this->coreWaste;
+    }
+
+    /**
+     * @param string $coreWaste
+     */
+    public function setCoreWaste($coreWaste)
+    {
+        $this->coreWaste = $coreWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalCore()
+    {
+        return $this->subTotalCore;
+    }
+
+    /**
+     * @param string $subTotalCore
+     */
+    public function setSubTotalCore($subTotalCore)
+    {
+        $this->subTotalCore = $subTotalCore;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackrCost()
+    {
+        return $this->backrCost;
+    }
+
+    /**
+     * @param string $backrCost
+     */
+    public function setBackrCost($backrCost)
+    {
+        $this->backrCost = $backrCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackrWaste()
+    {
+        return $this->backrWaste;
+    }
+
+    /**
+     * @param string $backrWaste
+     */
+    public function setBackrWaste($backrWaste)
+    {
+        $this->backrWaste = $backrWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalBackr()
+    {
+        return $this->subTotalBackr;
+    }
+
+    /**
+     * @param string $subTotalBackr
+     */
+    public function setSubTotalBackr($subTotalBackr)
+    {
+        $this->subTotalBackr = $subTotalBackr;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFinishCost()
+    {
+        return $this->finishCost;
+    }
+
+    /**
+     * @param string $finishCost
+     */
+    public function setFinishCost($finishCost)
+    {
+        $this->finishCost = $finishCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFinishWaste()
+    {
+        return $this->finishWaste;
+    }
+
+    /**
+     * @param string $finishWaste
+     */
+    public function setFinishWaste($finishWaste)
+    {
+        $this->finishWaste = $finishWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalFinish()
+    {
+        return $this->subTotalFinish;
+    }
+
+    /**
+     * @param string $subTotalFinish
+     */
+    public function setSubTotalFinish($subTotalFinish)
+    {
+        $this->subTotalFinish = $subTotalFinish;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEdgeintCost()
+    {
+        return $this->edgeintCost;
+    }
+
+    /**
+     * @param string $edgeintCost
+     */
+    public function setEdgeintCost($edgeintCost)
+    {
+        $this->edgeintCost = $edgeintCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEdgeintWaste()
+    {
+        return $this->edgeintWaste;
+    }
+
+    /**
+     * @param string $edgeintWaste
+     */
+    public function setEdgeintWaste($edgeintWaste)
+    {
+        $this->edgeintWaste = $edgeintWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalEdgeint()
+    {
+        return $this->subTotalEdgeint;
+    }
+
+    /**
+     * @param string $subTotalEdgeint
+     */
+    public function setSubTotalEdgeint($subTotalEdgeint)
+    {
+        $this->subTotalEdgeint = $subTotalEdgeint;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEdgevCost()
+    {
+        return $this->edgevCost;
+    }
+
+    /**
+     * @param string $edgevCost
+     */
+    public function setEdgevCost($edgevCost)
+    {
+        $this->edgevCost = $edgevCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEdgevWaste()
+    {
+        return $this->edgevWaste;
+    }
+
+    /**
+     * @param string $edgevWaste
+     */
+    public function setEdgevWaste($edgevWaste)
+    {
+        $this->edgevWaste = $edgevWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalEdgev()
+    {
+        return $this->subTotalEdgev;
+    }
+
+    /**
+     * @param string $subTotalEdgev
+     */
+    public function setSubTotalEdgev($subTotalEdgev)
+    {
+        $this->subTotalEdgev = $subTotalEdgev;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMillingCost()
+    {
+        return $this->millingCost;
+    }
+
+    /**
+     * @param string $millingCost
+     */
+    public function setMillingCost($millingCost)
+    {
+        $this->millingCost = $millingCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMillingWaste()
+    {
+        return $this->millingWaste;
+    }
+
+    /**
+     * @param string $millingWaste
+     */
+    public function setMillingWaste($millingWaste)
+    {
+        $this->millingWaste = $millingWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalMilling()
+    {
+        return $this->subTotalMilling;
+    }
+
+    /**
+     * @param string $subTotalMilling
+     */
+    public function setSubTotalMilling($subTotalMilling)
+    {
+        $this->subTotalMilling = $subTotalMilling;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTotalcostPerPiece()
+    {
+        return $this->totalcostPerPiece;
+    }
+
+    /**
+     * @param string $totalcostPerPiece
+     */
+    public function setTotalcostPerPiece($totalcostPerPiece)
+    {
+        $this->totalcostPerPiece = $totalcostPerPiece;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMarkup()
+    {
+        return $this->markup;
+    }
+
+    /**
+     * @param string $markup
+     */
+    public function setMarkup($markup)
+    {
+        $this->markup = $markup;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSellingPrice()
+    {
+        return $this->sellingPrice;
+    }
+
+    /**
+     * @param string $sellingPrice
+     */
+    public function setSellingPrice($sellingPrice)
+    {
+        $this->sellingPrice = $sellingPrice;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLineitemTotal()
+    {
+        return $this->lineitemTotal;
+    }
+
+    /**
+     * @param string $lineitemTotal
+     */
+    public function setLineitemTotal($lineitemTotal)
+    {
+        $this->lineitemTotal = $lineitemTotal;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMachineSetup()
+    {
+        return $this->machineSetup;
+    }
+
+    /**
+     * @param string $machineSetup
+     */
+    public function setMachineSetup($machineSetup)
+    {
+        $this->machineSetup = $machineSetup;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMachineTooling()
+    {
+        return $this->machineTooling;
+    }
+
+    /**
+     * @param string $machineTooling
+     */
+    public function setMachineTooling($machineTooling)
+    {
+        $this->machineTooling = $machineTooling;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPreFinishSetup()
+    {
+        return $this->preFinishSetup;
+    }
+
+    /**
+     * @param string $preFinishSetup
+     */
+    public function setPreFinishSetup($preFinishSetup)
+    {
+        $this->preFinishSetup = $preFinishSetup;
+    }
+
+    /**
+     * @return string
+     */
+    public function getColorMatch()
+    {
+        return $this->colorMatch;
+    }
+
+    /**
+     * @param string $colorMatch
+     */
+    public function setColorMatch($colorMatch)
+    {
+        $this->colorMatch = $colorMatch;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTotalCost()
+    {
+        return $this->totalCost;
+    }
+
+    /**
+     * @param string $totalCost
+     */
+    public function setTotalCost($totalCost)
+    {
+        $this->totalCost = $totalCost;
+    }
+
+
  }
