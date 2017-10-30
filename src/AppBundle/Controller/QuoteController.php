@@ -539,8 +539,8 @@ class QuoteController extends Controller
                     $lineItem[$i]['length'] = $p->getPlywoodLength();
                     $lineItem[$i]['core'] = $this->getCoreNameById($p->getCoreType());
                     $lineItem[$i]['edge'] = $this->getEdgeNameById($p->getEdgeDetail());
-                    $lineItem[$i]['unitPrice'] = $p->getCost();
-                    $lineItem[$i]['totalPrice'] = $p->getCost();
+                    $lineItem[$i]['unitPrice'] = $p->getTotalcostPerPiece();
+                    $lineItem[$i]['totalPrice'] = $p->getTotalCost();
                     $i++;
                 }
             }
@@ -559,7 +559,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['length'] = $v->getLength();
                     $lineItem[$i]['core'] = $this->getCoreNameById($v->getCoreTypeId());
                     $lineItem[$i]['edge'] = 'NA';
-                    $lineItem[$i]['unitPrice'] = 'NA';
+                    $lineItem[$i]['unitPrice'] = $v->getTotCostPerPiece();
                     $lineItem[$i]['totalPrice'] = $v->getTotalCost();
                     $i++;
                 }

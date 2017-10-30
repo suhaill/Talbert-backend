@@ -375,6 +375,39 @@ class PlywoodController extends Controller
                                 
                             }
                             $arrApi['data']['filestring'] = rtrim($filestring,',');
+                            // Calculator data
+                            $arrApi['data']['custMarkup'] = $plywood->getCustMarkupPer();
+                            $arrApi['data']['venCost'] = $plywood->getVenCost();
+                            $arrApi['data']['venWaste'] = $plywood->getVenWaste();
+                            $arrApi['data']['subTotalVen'] = $plywood->getSubTotalVen();
+                            $arrApi['data']['coreCost'] = $plywood->getCoreCost();
+                            $arrApi['data']['coreWaste'] = $plywood->getCoreWaste();
+                            $arrApi['data']['subTotalCore'] = $plywood->getSubTotalCore();
+                            $arrApi['data']['backrCost'] = $plywood->getBackrCost();
+                            $arrApi['data']['backrWaste'] = $plywood->getBackrWaste();
+                            $arrApi['data']['subTotalBackr'] = $plywood->getSubTotalBackr();
+                            $arrApi['data']['finishCost'] = $plywood->getFinishCost();
+                            $arrApi['data']['finishWaste'] = $plywood->getFinishWaste();
+                            $arrApi['data']['subTotalWaste'] = $plywood->getSubTotalFinish();
+                            $arrApi['data']['edgeIntCost'] = $plywood->getEdgeintCost();
+                            $arrApi['data']['edgeIntWaste'] = $plywood->getEdgeintWaste();
+                            $arrApi['data']['subTotalEdgeint'] = $plywood->getSubTotalEdgeint();
+                            $arrApi['data']['edgeVCost'] = $plywood->getEdgevCost();
+                            $arrApi['data']['edgeVWaste'] = $plywood->getEdgevWaste();
+                            $arrApi['data']['subTotalEdgev'] = $plywood->getSubTotalEdgev();
+                            $arrApi['data']['millingCost'] = $plywood->getMillingCost();
+                            $arrApi['data']['millingWaste'] = $plywood->getMillingWaste();
+                            $arrApi['data']['subTotalmilling'] = $plywood->getSubTotalMilling();
+                            $arrApi['data']['totalCostPerPiece'] = $plywood->getTotalcostPerPiece();
+                            $arrApi['data']['markup'] = $plywood->getMarkup();
+                            $arrApi['data']['sellingPrice'] = $plywood->getSellingPrice();
+                            $arrApi['data']['lineitemTotal'] = $plywood->getLineitemTotal();
+                            $arrApi['data']['machineSetup'] = $plywood->getMachineSetup();
+                            $arrApi['data']['machineTooling'] = $plywood->getMachineTooling();
+                            $arrApi['data']['preFinishSetup'] = $plywood->getPreFinishSetup();
+                            $arrApi['data']['colorMatch'] = $plywood->getColorMatch();
+                            $arrApi['data']['totalCost'] = $plywood->getTotalCost();
+
                             
                             //$arrApi['data']['isactive'] = $veneer->getIsActive();
         
@@ -508,6 +541,75 @@ class PlywoodController extends Controller
 
         return new JsonResponse($arrApi, $statusCode);
     }
+
+    /**
+     * @Route("api/plywood/savePlywoodCalculatedPrice")
+     * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
+     */
+    public function savePlywoodCalculatedPriceAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        if ( empty($data['plyId']) || $data['custMarkupPer'] == null || empty($data['venCost']) || empty($data['venWaste'])) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Please provide all the details.';
+            $statusCode = 422;
+        } else {
+            try {
+                $updatePlywood = $this->updatePlywoodCalculatedPrice($data);
+                if ($updatePlywood) {
+                    $arrApi['status'] = 1;
+                    $arrApi['message'] = 'Successfully saved calculated price.';
+                }
+            }
+            catch(Exception $e) {
+                throw $e->getMessage();
+            }
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function updatePlywoodCalculatedPrice($data) {
+        $em = $this->getDoctrine()->getManager();
+        $plyData = $em->getRepository(Plywood::class)->find($data['plyId']);
+        $plyData->setCustMarkupPer($data['custMarkupPer']);
+        $plyData->setVenCost($data['venCost']);
+        $plyData->setVenWaste($data['venWaste']);
+        $plyData->setSubTotalVen($data['subTotVen']);
+        $plyData->setCoreCost($data['corCost']);
+        $plyData->setCoreWaste($data['corWaste']);
+        $plyData->setSubTotalCore($data['subTotCor']);
+        $plyData->setBackrCost($data['bakrCost']);
+        $plyData->setBackrWaste($data['bakrWaste']);
+        $plyData->setSubTotalBackr($data['subTotBackr']);
+        $plyData->setFinishCost($data['finishCostPly']);
+        $plyData->setFinishWaste($data['finishWastePly']);
+        $plyData->setSubTotalFinish($data['subTotalFinish']);
+        $plyData->setEdgeintCost($data['edgeIntCostPly']);
+        $plyData->setEdgeintWaste($data['edgeIntWastePly']);
+        $plyData->setSubTotalEdgeint($data['subTotalEdgeInt']);
+        $plyData->setEdgevCost($data['edgeVCostPly']);
+        $plyData->setEdgevWaste($data['edgeVWastePly']);
+        $plyData->setSubTotalEdgev($data['subTotalEdgeIntV']);
+        $plyData->setMillingCost($data['millingCostPly']);
+        $plyData->setMillingWaste($data['millingVWastePly']);
+        $plyData->setSubTotalMilling($data['subTotalMilling']);
+        $plyData->setTotalcostPerPiece($data['totalCostPerPiece']);
+        $plyData->setMarkup($data['markup']);
+        $plyData->setSellingPrice($data['sellingPrice']);
+        $plyData->setLineitemTotal($data['lineitemTotal']);
+        $plyData->setMachineSetup($data['machnStp']);
+        $plyData->setMachineTooling($data['machnTlng']);
+        $plyData->setPreFinishSetup($data['preFnshStp']);
+        $plyData->setColorMatch($data['clrMatch']);
+        $plyData->setTotalCost($data['totalCost']);
+        $em->persist($plyData);
+        $em->flush();
+        return 1;
+    }
+
 
     private function editPlywoodData($id,$quantity, $speciesId, 
     $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
