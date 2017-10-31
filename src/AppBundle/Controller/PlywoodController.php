@@ -202,6 +202,38 @@ class PlywoodController extends Controller
         $plywood->setCreatedAt($createdAt);
         $plywood->setUpdatedAt($createdAt);
         $plywood->setIsActive(1);
+        // Calculator data
+        $plywood->setCustMarkupPer(25);
+        $plywood->setVenCost(0);
+        $plywood->setVenWaste(0);
+        $plywood->setSubTotalVen(0);
+        $plywood->setCoreCost(0);
+        $plywood->setCoreWaste(0);
+        $plywood->setSubTotalCore(0);
+        $plywood->setBackrCost(0);
+        $plywood->setBackrWaste(0);
+        $plywood->setSubTotalBackr(0);
+        $plywood->setFinishCost(0);
+        $plywood->setFinishWaste(0);
+        $plywood->setSubTotalFinish(0);
+        $plywood->setEdgeintCost(0);
+        $plywood->setEdgeintWaste(0);
+        $plywood->setSubTotalEdgeint(0);
+        $plywood->setEdgevCost(0);
+        $plywood->setEdgevWaste(0);
+        $plywood->setSubTotalEdgev(0);
+        $plywood->setMillingCost(0);
+        $plywood->setMillingWaste(0);
+        $plywood->setSubTotalMilling(0);
+        $plywood->setTotalcostPerPiece(0);
+        $plywood->setMarkup(0);
+        $plywood->setSellingPrice(0);
+        $plywood->setLineitemTotal(0);
+        $plywood->setMachineSetup(0);
+        $plywood->setMachineTooling(0);
+        $plywood->setPreFinishSetup(0);
+        $plywood->setColorMatch(0);
+        $plywood->setTotalCost(0);
         $em->persist($plywood);
         $em->flush();
 
