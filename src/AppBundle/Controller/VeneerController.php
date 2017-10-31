@@ -113,6 +113,26 @@ class VeneerController extends Controller
         $veneer->setCreatedAt($createdAt);
         $veneer->setUpdatedAt($createdAt);
         $veneer->setIsActive(1);
+        $veneer->setCustMarkupPer(25);
+        $veneer->setVenCost(0);
+        $veneer->setVenWaste(0);
+        $veneer->setSubTotalVen(0);
+        $veneer->setCoreCost(0);
+        $veneer->setSubTotalCore(0);
+        $veneer->setCoreWaste(0);
+        $veneer->setSubTotalBackr(0);
+        $veneer->setBackrCost(0);
+        $veneer->setBackrWaste(0);
+        $veneer->setTotCostPerPiece(0);
+        $veneer->setMarkup(0);
+        $veneer->setMarkup(0);
+        $veneer->setSellingPrice(0);
+        $veneer->setLineitemTotal(0);
+        $veneer->setMachineSetup(0);
+        $veneer->setMachineTooling(0);
+        $veneer->setPreFinishSetup(0);
+        $veneer->setColorMatch(0);
+        $veneer->setTotalCost(0);
 
         $em->persist($veneer);
         $em->flush();
