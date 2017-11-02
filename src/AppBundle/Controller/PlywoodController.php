@@ -716,18 +716,20 @@ class PlywoodController extends Controller
         $lastInserted = $id;
         //var_dump($lastInserted);
         //var_dump($fileId);
-        $fileId_ar = explode(',', $fileId);
-        //print_r($fileId_ar);
-        for($i=0;$i<count($fileId_ar);$i++)
-        {
-            //var_dump($fileId_ar[$i]);
-            $em2 = $this->getDoctrine()->getManager();
-            $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
-    
-            $file->setAttachableId($lastInserted);
-            $em2->persist($file);
-            $em2->flush();
+        if (!empty($fileId)) {
+            $fileId_ar = explode(',', $fileId);
+            //print_r($fileId_ar);
+            for($i=0;$i<count($fileId_ar);$i++)
+            {
+                //var_dump($fileId_ar[$i]);
+                $em2 = $this->getDoctrine()->getManager();
+                $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
 
+                $file->setAttachableId($lastInserted);
+                $em2->persist($file);
+                $em2->flush();
+
+            }
         }
     }
 
