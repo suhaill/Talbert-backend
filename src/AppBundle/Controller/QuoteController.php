@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\MessageTemplates;
 use AppBundle\Entity\Plywood;
 use AppBundle\Service\JsonToArrayGenerator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
@@ -131,10 +132,12 @@ class QuoteController extends Controller
                 $arrApi['message'] = 'Successfully retreived quote details';
                 $arrApi['data']['id'] = $quoteData->getId();
                 $arrApi['data']['date'] = $quoteData->getEstimateDate();
-                //$arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
+                $arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
                 $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
                 $arrApi['data']['version'] = $quoteData->getVersion();
                 $arrApi['data']['customer'] = $this->getCustomerNameById($quoteData->getCustomerId());
+                $arrApi['data']['userEmail'] = $this->getCustomerEmailById($quoteData->getEstimatorId());
+                $arrApi['data']['customerEmail'] = $this->getCustomerEmailById($quoteData->getCustomerId());
                 $arrApi['data']['customerId'] = $quoteData->getCustomerId();
                 $arrApi['data']['referenceNumber'] = $quoteData->getRefNum();
                 $arrApi['data']['salesman'] = $this->getSalesmanNameById($quoteData->getSalesmanId());
@@ -267,8 +270,50 @@ class QuoteController extends Controller
 
     }
 
+    /**
+     * @Route("/api/quote/getEmailQuoteData")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     * params: None
+     */
+    public function getEmailQuoteDataAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $qId = $data->get('qId');
+        $currUserId = $data->get('currentuserId');
+        if (empty($qId) || empty($currUserId)) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Parameter missing.';
+            $statusCode = 422;
+        } else {
+            try {
+                $messageTemplate = $this->getMessageTemplateforEmailQuote();
+                if (!empty($messageTemplate)) {
+                    $arrApi['status'] = 1;
+                    $arrApi['message'] = 'Successfully reterived email quote data.';
+                    $arrApi['data']['template'] = $messageTemplate;
+                }
+
+
+            }
+            catch(Exception $e) {
+                throw $e->getMessage();
+            }
+        }
+        return new JsonResponse($arrApi, $statusCode);
+     }
 
     //Reusable codes
+
+    private function getMessageTemplateforEmailQuote() {
+        $em = $this->getDoctrine()->getManager();
+        $messTemplate = $em->getRepository(MessageTemplates::class)->findOneById(1);
+        if (!empty($messTemplate)) {
+            return $messTemplate->getMessage();
+        }
+    }
 
     private function updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime) {
         $em = $this->getDoctrine()->getManager();
@@ -452,6 +497,18 @@ class QuoteController extends Controller
                 ->getRepository('AppBundle:Profile')
                 ->findOneBy(array('userId' => $customer_id));
             $customerName =  $profileObj->getFname();
+            if (!empty($customerName)) {
+                return $customerName;
+            }
+        }
+    }
+
+    private function getCustomerEmailById($customer_id) {
+        if (!empty($customer_id)) {
+            $profileObj = $this->getDoctrine()
+                ->getRepository('AppBundle:Profile')
+                ->findOneBy(array('userId' => $customer_id));
+            $customerName =  $profileObj->getEmail();
             if (!empty($customerName)) {
                 return $customerName;
             }
