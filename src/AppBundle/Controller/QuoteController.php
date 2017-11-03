@@ -289,14 +289,18 @@ class QuoteController extends Controller
             $statusCode = 422;
         } else {
             try {
-                $messageTemplate = $this->getMessageTemplateforEmailQuote();
+                $custName = $this->getCustomerNameByQuote($qId);
+                $userName = $this->getCustomerNameById($currUserId);
+                $projName = 'Talbert Quote Project';
+                $messageTemplate = $this->replaceShortcodeFromMessage($custName,$userName,$projName,$this->getMessageTemplateforEmailQuote());
                 if (!empty($messageTemplate)) {
                     $arrApi['status'] = 1;
                     $arrApi['message'] = 'Successfully reterived email quote data.';
+                    $arrApi['data']['id'] = $qId;
                     $arrApi['data']['template'] = $messageTemplate;
+                    $attachmentData = $this->getLineitemAttachmentsList($request,$qId);
+                    $arrApi['data']['attachments'] = $attachmentData;
                 }
-
-
             }
             catch(Exception $e) {
                 throw $e->getMessage();
@@ -306,6 +310,22 @@ class QuoteController extends Controller
      }
 
     //Reusable codes
+
+    private function getVeneerIds($ven) {
+        $ids = array();
+        for ($i=0;$i<count($ven);$i++) {
+            $ids[] = $ven[$i]->getId();
+        }
+        return $ids;
+    }
+
+    private function getPlywoodIds($ply) {
+        $ids = array();
+        for ($i=0;$i<count($ply);$i++) {
+            $ids[] = $ply[$i]->getId();
+        }
+        return $ids;
+    }
 
     private function getMessageTemplateforEmailQuote() {
         $em = $this->getDoctrine()->getManager();
@@ -679,5 +699,45 @@ class QuoteController extends Controller
         $custId = $quoteRecord->getCustomerId();
         return $this->getCustomerNameById($custId);
 
+    }
+
+    private function getLineitemAttachmentsList($request, $qId) {
+        $attachmentArr = array();
+        $ply = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId'=>$qId));
+        $ven = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId'=>$qId));
+        if (!empty($ply)) {
+            $plyIds = $this->getPlywoodIds($ply);
+            $plyFiles = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('attachableid'=>$plyIds, 'attachabletype' => 'plywood'));
+        }
+        if (!empty($ven)) {
+            $venIds = $this->getVeneerIds($ven);
+            $venFiles = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('attachableid'=>$venIds, 'attachabletype' => 'veneer'));
+        }
+        $i=0;
+        if (!empty($plyFiles) || !empty($venFiles)) {
+            if (!empty($plyFiles)) {
+                foreach ($plyFiles as $p) {
+                    $attachmentArr[$i]['id'] = $p->getId();
+                    $attachmentArr[$i]['name'] = $p->getOriginalName();
+                    $attachmentArr[$i]['url'] = $request->getHost().'/'.$request->getBasePath().'/uploads/'.$p->getFileName();
+                    $i++;
+                }
+            }
+            if (!empty($venFiles)) {
+                foreach ($venFiles as $v) {
+                    $attachmentArr[$i]['id'] = $v->getId();
+                    $attachmentArr[$i]['name'] = $v->getOriginalName();
+                    $attachmentArr[$i]['url'] = $request->getHost().'/'.$request->getBasePath().'/uploads/'.$v->getFileName();
+                    $i++;
+                }
+            }
+            return $attachmentArr;
+        }
+    }
+
+    private function replaceShortcodeFromMessage($custName,$userName,$projName,$message) {
+        $shortCodes = array('{first_name_customer}','{project_name}','{user_first_name}');
+        $values  = array($custName, $projName, $userName);
+        return str_replace($shortCodes, $values, $message);
     }
 }

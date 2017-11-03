@@ -47,7 +47,7 @@ class Veneer
      *
      * @ORM\Column(name="flakex_figured_id", type="integer")
      */
-     private $flakexFiguredId;
+    private $flakexFiguredId;
 
     /**
      * @var int
@@ -170,7 +170,7 @@ class Veneer
     /**
      * @ORM\Column(type="boolean", nullable=false)
      */
-     private $isActive=true;
+    private $isActive=true;
 
     /**
      * @var string
@@ -395,22 +395,22 @@ class Veneer
      *
      * @return Veneer
      */
-     public function setFlakexFiguredId($flakexFiguredId)
-     {
-         $this->flakexFiguredId = $flakexFiguredId;
- 
-         return $this;
-     }
- 
-     /**
-      * Get flakexFiguredId
-      *
-      * @return int
-      */
-     public function getFlakexFiguredId()
-     {
-         return $this->flakexFiguredId;
-     }
+    public function setFlakexFiguredId($flakexFiguredId)
+    {
+        $this->flakexFiguredId = $flakexFiguredId;
+
+        return $this;
+    }
+
+    /**
+     * Get flakexFiguredId
+     *
+     * @return int
+     */
+    public function getFlakexFiguredId()
+    {
+        return $this->flakexFiguredId;
+    }
 
     /**
      * Set pattern
@@ -815,18 +815,18 @@ class Veneer
     /**
      * @return mixed
      */
-     public function getIsActive()
-     {
-         return $this->isActive;
-     }
- 
-     /**
-      * @param mixed $isActive
-      */
-     public function setIsActive($isActive)
-     {
-         $this->isActive = $isActive;
-     }
+    public function getIsActive()
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param mixed $isActive
+     */
+    public function setIsActive($isActive)
+    {
+        $this->isActive = $isActive;
+    }
 
     /**
      * @return string
@@ -1132,4 +1132,3 @@ class Veneer
         $this->totalCost = $totalCost;
     }
 }
-

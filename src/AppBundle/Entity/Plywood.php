@@ -47,7 +47,7 @@ class Plywood
      *
      * @ORM\Column(name="flakex_figured_id", type="integer")
      */
-     private $flakexFiguredId;
+    private $flakexFiguredId;
 
     /**
      * @var int
@@ -139,14 +139,14 @@ class Plywood
      * @ORM\Column(name="uvCuredId", type="integer")
      */
     private $uvCuredId;
-    
+
 
     /**
      * @var int
      *
      * @ORM\Column(name="uvColorId", type="integer")
      */
-     private $uvColorId;
+    private $uvColorId;
 
     /**
      * @var int
@@ -161,15 +161,15 @@ class Plywood
      * @ORM\Column(name="shameOnId", type="integer", options={"default":0})
      */
     private $shameOnId;
-    
+
     /**
      * @var int
      *
      * @ORM\Column(name="coreSameOnbe", type="integer", options={"default":0})
      */
-     private $coreSameOnbe;
+    private $coreSameOnbe;
 
-     /**
+    /**
      * @var int
      *
      * @ORM\Column(name="coreSameOnte", type="integer", options={"default":0})
@@ -181,9 +181,9 @@ class Plywood
      *
      * @ORM\Column(name="coreSameOnre", type="integer", options={"default":0})
      */
-     private $coreSameOnre;
+    private $coreSameOnre;
 
-     /**
+    /**
      * @var int
      *
      * @ORM\Column(name="coreSameOnle", type="integer", options={"default":0})
@@ -223,19 +223,19 @@ class Plywood
      * @ORM\Column(name="bottomEdge", type="integer")
      */
     private $bottomEdge;
-     
+
     /**
-    * @var int
-    *
-    * @ORM\Column(name="bedgeMaterialId", type="integer")
-    */
+     * @var int
+     *
+     * @ORM\Column(name="bedgeMaterialId", type="integer")
+     */
     private $bedgeMaterialId;
 
     /**
-    * @var int
-    *
-    * @ORM\Column(name="bedgeFinishSpeciesId", type="integer")
-    */
+     * @var int
+     *
+     * @ORM\Column(name="bedgeFinishSpeciesId", type="integer")
+     */
     private $bedgeFinishSpeciesId;
 
     /**
@@ -243,20 +243,20 @@ class Plywood
      *
      * @ORM\Column(name="rightEdge", type="integer")
      */
-     private $rightEdge;
-     
+    private $rightEdge;
+
     /**
-    * @var int
-    *
-    * @ORM\Column(name="redgeMaterialId", type="integer")
-    */
+     * @var int
+     *
+     * @ORM\Column(name="redgeMaterialId", type="integer")
+     */
     private $redgeMaterialId;
 
     /**
-    * @var int
-    *
-    * @ORM\Column(name="redgeFinishSpeciesId", type="integer")
-    */
+     * @var int
+     *
+     * @ORM\Column(name="redgeFinishSpeciesId", type="integer")
+     */
     private $redgeFinishSpeciesId;
 
     /**
@@ -264,20 +264,20 @@ class Plywood
      *
      * @ORM\Column(name="leftEdge", type="integer")
      */
-     private $leftEdge;
-     
+    private $leftEdge;
+
     /**
-    * @var int
-    *
-    * @ORM\Column(name="ledgeMaterialId", type="integer")
-    */
+     * @var int
+     *
+     * @ORM\Column(name="ledgeMaterialId", type="integer")
+     */
     private $ledgeMaterialId;
 
     /**
-    * @var int
-    *
-    * @ORM\Column(name="ledgeFinishSpeciesId", type="integer")
-    */
+     * @var int
+     *
+     * @ORM\Column(name="ledgeFinishSpeciesId", type="integer")
+     */
     private $ledgeFinishSpeciesId;
 
     /**
@@ -347,7 +347,7 @@ class Plywood
      *
      * @ORM\Column(name="quote_id", type="integer")
      */
-     private $quoteId;
+    private $quoteId;
     /**
      * @ORM\Column(type="integer",name="file_id")
      */
@@ -358,19 +358,19 @@ class Plywood
      *
      * @ORM\Column(name="created_at", type="datetime")
      */
-     private $createdAt;
-     
+    private $createdAt;
+
     /**
-    * @var \DateTime
-    *
-    * @ORM\Column(name="updated_at", type="datetime")
-    */
+     * @var \DateTime
+     *
+     * @ORM\Column(name="updated_at", type="datetime")
+     */
     private $updatedAt;
-     
+
     /**
      * @ORM\Column(type="boolean", nullable=false)
      */
-     private $isActive=true;
+    private $isActive=true;
 
     /**
      * @var string
@@ -588,7 +588,7 @@ class Plywood
      * @ORM\Column(name="total_cost", type="string", length=10, nullable=true)
      */
     private $totalCost;
-     
+
     /**
      * Get id
      *
@@ -726,22 +726,22 @@ class Plywood
      *
      * @return Veneer
      */
-     public function setFlakexFiguredId($flakexFiguredId)
-     {
-         $this->flakexFiguredId = $flakexFiguredId;
- 
-         return $this;
-     }
- 
-     /**
-      * Get flakexFiguredId
-      *
-      * @return int
-      */
-     public function getFlakexFiguredId()
-     {
-         return $this->flakexFiguredId;
-     }
+    public function setFlakexFiguredId($flakexFiguredId)
+    {
+        $this->flakexFiguredId = $flakexFiguredId;
+
+        return $this;
+    }
+
+    /**
+     * Get flakexFiguredId
+     *
+     * @return int
+     */
+    public function getFlakexFiguredId()
+    {
+        return $this->flakexFiguredId;
+    }
 
     /**
      * Set gradeId
@@ -1014,22 +1014,22 @@ class Plywood
      *
      * @return Plywood
      */
-     public function setUvColorId($uvColorId)
-     {
-         $this->uvColorId = $uvColorId;
- 
-         return $this;
-     }
- 
-     /**
-      * Get uvColorId
-      *
-      * @return int
-      */
-     public function getUvColorId()
-     {
-         return $this->uvColorId;
-     }
+    public function setUvColorId($uvColorId)
+    {
+        $this->uvColorId = $uvColorId;
+
+        return $this;
+    }
+
+    /**
+     * Get uvColorId
+     *
+     * @return int
+     */
+    public function getUvColorId()
+    {
+        return $this->uvColorId;
+    }
 
     /**
      * Set sheenId
@@ -1070,28 +1070,28 @@ class Plywood
     }
 
     /**
-      * Get shameOnId
-      *
-      * @return int
-      */
-      public function getShameOnId()
-      {
-          return $this->shameOnId;
-      }
+     * Get shameOnId
+     *
+     * @return int
+     */
+    public function getShameOnId()
+    {
+        return $this->shameOnId;
+    }
 
-      /**
+    /**
      * Set coreSameOnbe
      *
      * @param integer $coreSameOnbe
      *
      * @return Plywood
      */
-     public function setCoreSameOnbe($coreSameOnbe)
-     {
-         $this->coreSameOnbe = $coreSameOnbe;
- 
-         return $this;
-     }
+    public function setCoreSameOnbe($coreSameOnbe)
+    {
+        $this->coreSameOnbe = $coreSameOnbe;
+
+        return $this;
+    }
 
     /**
      * Get coreSameOnbe
@@ -1103,7 +1103,7 @@ class Plywood
         return $this->coreSameOnbe;
     }
 
-    
+
     /**
      * Set coreSameOnte
      *
@@ -1111,36 +1111,36 @@ class Plywood
      *
      * @return Plywood
      */
-     public function setCoreSameOnte($coreSameOnte)
-     {
-         $this->coreSameOnte = $coreSameOnte;
- 
-         return $this;
-     }
- 
-     /**
-      * Get coreSameOnte
-      *
-      * @return int
-      */
-     public function getCoreSameOnte()
-     {
-         return $this->coreSameOnte;
-     }
+    public function setCoreSameOnte($coreSameOnte)
+    {
+        $this->coreSameOnte = $coreSameOnte;
 
-     /**
+        return $this;
+    }
+
+    /**
+     * Get coreSameOnte
+     *
+     * @return int
+     */
+    public function getCoreSameOnte()
+    {
+        return $this->coreSameOnte;
+    }
+
+    /**
      * Set coreSameOnre
      *
      * @param integer $coreSameOnre
      *
      * @return Plywood
      */
-     public function setCoreSameOnre($coreSameOnre)
-     {
-         $this->coreSameOnre = $coreSameOnre;
- 
-         return $this;
-     }
+    public function setCoreSameOnre($coreSameOnre)
+    {
+        $this->coreSameOnre = $coreSameOnre;
+
+        return $this;
+    }
 
     /**
      * Get coreSameOnre
@@ -1153,7 +1153,7 @@ class Plywood
     }
 
 
-     /**
+    /**
      * Set coreSameOnle
      *
      * @param integer $coreSameOnle
@@ -1231,24 +1231,24 @@ class Plywood
      *
      * @return Plywood
      */
-     public function setBottomEdge($bottomEdge)
-     {
-         $this->bottomEdge = $bottomEdge;
- 
-         return $this;
-     }
- 
-     /**
-      * Get bottomEdge
-      *
-      * @return int
-      */
-     public function getBottomEdge()
-     {
-         return $this->bottomEdge;
-     }
+    public function setBottomEdge($bottomEdge)
+    {
+        $this->bottomEdge = $bottomEdge;
 
-     /**
+        return $this;
+    }
+
+    /**
+     * Get bottomEdge
+     *
+     * @return int
+     */
+    public function getBottomEdge()
+    {
+        return $this->bottomEdge;
+    }
+
+    /**
      * Set rightEdge
      *
      * @param integer $rightEdge
@@ -1279,22 +1279,22 @@ class Plywood
      *
      * @return Plywood
      */
-     public function setLeftEdge($leftEdge)
-     {
-         $this->leftEdge = $leftEdge;
- 
-         return $this;
-     }
- 
-     /**
-      * Get leftEdge
-      *
-      * @return int
-      */
-     public function getLeftEdge()
-     {
-         return $this->leftEdge;
-     }
+    public function setLeftEdge($leftEdge)
+    {
+        $this->leftEdge = $leftEdge;
+
+        return $this;
+    }
+
+    /**
+     * Get leftEdge
+     *
+     * @return int
+     */
+    public function getLeftEdge()
+    {
+        return $this->leftEdge;
+    }
 
     /**
      * Set edgeMaterialId
@@ -1327,24 +1327,24 @@ class Plywood
      *
      * @return Plywood
      */
-     public function setBedgeMaterialId($bedgeMaterialId)
-     {
-         $this->bedgeMaterialId = $bedgeMaterialId;
- 
-         return $this;
-     }
- 
-     /**
-      * Get bedgeMaterialId
-      *
-      * @return int
-      */
-     public function getBedgeMaterialId()
-     {
-         return $this->bedgeMaterialId;
-     }
+    public function setBedgeMaterialId($bedgeMaterialId)
+    {
+        $this->bedgeMaterialId = $bedgeMaterialId;
 
-     /**
+        return $this;
+    }
+
+    /**
+     * Get bedgeMaterialId
+     *
+     * @return int
+     */
+    public function getBedgeMaterialId()
+    {
+        return $this->bedgeMaterialId;
+    }
+
+    /**
      * Set redgeMaterialId
      *
      * @param integer $redgeMaterialId
@@ -1375,22 +1375,22 @@ class Plywood
      *
      * @return Plywood
      */
-     public function setLedgeMaterialId($ledgeMaterialId)
-     {
-         $this->ledgeMaterialId = $ledgeMaterialId;
- 
-         return $this;
-     }
- 
-     /**
-      * Get ledgeMaterialId
-      *
-      * @return int
-      */
-     public function getLedgeMaterialId()
-     {
-         return $this->ledgeMaterialId;
-     }
+    public function setLedgeMaterialId($ledgeMaterialId)
+    {
+        $this->ledgeMaterialId = $ledgeMaterialId;
+
+        return $this;
+    }
+
+    /**
+     * Get ledgeMaterialId
+     *
+     * @return int
+     */
+    public function getLedgeMaterialId()
+    {
+        return $this->ledgeMaterialId;
+    }
 
     /**
      * Set edgeFinishSpeciesId
@@ -1423,24 +1423,24 @@ class Plywood
      *
      * @return Plywood
      */
-     public function setBedgeFinishSpeciesId($bedgeFinishSpeciesId)
-     {
-         $this->bedgeFinishSpeciesId = $bedgeFinishSpeciesId;
- 
-         return $this;
-     }
- 
-     /**
-      * Get bedgeFinishSpeciesId
-      *
-      * @return int
-      */
-     public function getBedgeFinishSpeciesId()
-     {
-         return $this->bedgeFinishSpeciesId;
-     }
+    public function setBedgeFinishSpeciesId($bedgeFinishSpeciesId)
+    {
+        $this->bedgeFinishSpeciesId = $bedgeFinishSpeciesId;
 
-     /**
+        return $this;
+    }
+
+    /**
+     * Get bedgeFinishSpeciesId
+     *
+     * @return int
+     */
+    public function getBedgeFinishSpeciesId()
+    {
+        return $this->bedgeFinishSpeciesId;
+    }
+
+    /**
      * Set redgeFinishSpeciesId
      *
      * @param integer $redgeFinishSpeciesId
@@ -1471,22 +1471,22 @@ class Plywood
      *
      * @return Plywood
      */
-     public function setLedgeFinishSpeciesId($ledgeFinishSpeciesId)
-     {
-         $this->ledgeFinishSpeciesId = $ledgeFinishSpeciesId;
- 
-         return $this;
-     }
- 
-     /**
-      * Get ledgeFinishSpeciesId
-      *
-      * @return int
-      */
-     public function getLedgeFinishSpeciesId()
-     {
-         return $this->ledgeFinishSpeciesId;
-     }
+    public function setLedgeFinishSpeciesId($ledgeFinishSpeciesId)
+    {
+        $this->ledgeFinishSpeciesId = $ledgeFinishSpeciesId;
+
+        return $this;
+    }
+
+    /**
+     * Get ledgeFinishSpeciesId
+     *
+     * @return int
+     */
+    public function getLedgeFinishSpeciesId()
+    {
+        return $this->ledgeFinishSpeciesId;
+    }
 
     /**
      * Set milling
@@ -1703,7 +1703,7 @@ class Plywood
     {
         return $this->comments;
     }
-    
+
     /**
      * Set quoteId
      *
@@ -1711,22 +1711,22 @@ class Plywood
      *
      * @return Veneer
      */
-     public function setQuoteId($quoteId)
-     {
-         $this->quoteId = $quoteId;
- 
-         return $this;
-     }
- 
-     /**
-      * Get quoteId
-      *
-      * @return int
-      */
-     public function getQuoteId()
-     {
-         return $this->quoteId;
-     }
+    public function setQuoteId($quoteId)
+    {
+        $this->quoteId = $quoteId;
+
+        return $this;
+    }
+
+    /**
+     * Get quoteId
+     *
+     * @return int
+     */
+    public function getQuoteId()
+    {
+        return $this->quoteId;
+    }
     /**
      * Set createdAt
      *
@@ -1734,46 +1734,46 @@ class Plywood
      *
      * @return Veneer
      */
-     public function setCreatedAt($createdAt)
-     {
-         $this->createdAt = $createdAt;
- 
-         return $this;
-     }
- 
-     /**
-      * Get createdAt
-      *
-      * @return \DateTime
-      */
-     public function getCreatedAt()
-     {
-         return $this->createdAt;
-     }
- 
-     /**
-      * Set updatedAt
-      *
-      * @param \DateTime $updatedAt
-      *
-      * @return Veneer
-      */
-     public function setUpdatedAt($updatedAt)
-     {
-         $this->updatedAt = $updatedAt;
- 
-         return $this;
-     }
- 
-     /**
-      * Get updatedAt
-      *
-      * @return \DateTime
-      */
-     public function getUpdatedAt()
-     {
-         return $this->updatedAt;
-     }
+    public function setCreatedAt($createdAt)
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    /**
+     * Get createdAt
+     *
+     * @return \DateTime
+     */
+    public function getCreatedAt()
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * Set updatedAt
+     *
+     * @param \DateTime $updatedAt
+     *
+     * @return Veneer
+     */
+    public function setUpdatedAt($updatedAt)
+    {
+        $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    /**
+     * Get updatedAt
+     *
+     * @return \DateTime
+     */
+    public function getUpdatedAt()
+    {
+        return $this->updatedAt;
+    }
 
     /**
      * @return mixed
@@ -1794,18 +1794,18 @@ class Plywood
     /**
      * @return mixed
      */
-     public function getIsActive()
-     {
-         return $this->isActive;
-     }
- 
-     /**
-      * @param mixed $isActive
-      */
-     public function setIsActive($isActive)
-     {
-         $this->isActive = $isActive;
-     }
+    public function getIsActive()
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param mixed $isActive
+     */
+    public function setIsActive($isActive)
+    {
+        $this->isActive = $isActive;
+    }
 
     /**
      * @return string
@@ -2304,4 +2304,4 @@ class Plywood
     }
 
 
- }
+}
