@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Entity\MessageTemplates;
 use AppBundle\Entity\Plywood;
+use AppBundle\Entity\SentQuotes;
 use AppBundle\Service\JsonToArrayGenerator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -309,7 +310,106 @@ class QuoteController extends Controller
         return new JsonResponse($arrApi, $statusCode);
      }
 
+    /**
+     * @Route("/api/quote/emailQuote")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     * params: None
+     */
+    public function EmailQuoteAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $qId = $data->get('qId');
+        $currUserId = $data->get('currentuserId');
+        $currUserEmail = $data->get('currUserEmail');
+        $custEmail = $data->get('custEmail');
+        $msg = $data->get('msg');
+        $cmt = $data->get('cmt');
+        $chkVal = $data->get('chkVal');
+        $datime = new \DateTime('now');
+        if (empty($qId) || empty($currUserId) || empty($currUserEmail) || empty($custEmail) || empty($msg)) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Parameter missing.';
+            $statusCode = 422;
+        } else {
+            //$newMessage = $msg."\r\n\r\nCOMMENT - ".$cmt;
+            $newMessage = $this->createMessageToBeSent($msg, $cmt);
+            $urls = $this->getAttachmentUrls($chkVal, $request);
+            $message = \Swift_Message::newInstance()
+                ->setFrom($currUserEmail)
+                ->setTo($custEmail)
+                ->setSubject('Quote Email')
+                ->setBody($newMessage, 'text/plain');
+            for ($i=0;$i<count($urls);$i++) {
+                $message->attach(\Swift_Attachment::fromPath($urls[$i]));
+            }
+            try {
+                $mailSent = $this->get('mailer')->send($message);
+                if ($mailSent) {
+                    $arrApi['status'] = 1;
+                    $arrApi['message'] = 'Successfully sent email.';
+                    $statusCode = 200;
+                    $this->saveSentEmailDetails($qId, $currUserId, $cmt, $chkVal, $datime);
+                }
+            }
+            catch(Exception $e) {
+                throw $e->getMessage();
+            }
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
+
     //Reusable codes
+
+    private function createMessageToBeSent($msg, $cmt) {
+        $nStr = "Please call me with any questions.\r\n\r\n".$cmt."\r\n\r\n";
+        return str_replace("Please call me with any questions.",$nStr, $msg);
+    }
+
+    private function saveSentEmailDetails($qId, $currUserId, $cmt, $chkVal, $datime) {
+        $custId = $this->getCustomerIdByQuoteId($qId);
+        $chkBxVal = $this->strignfyCHKArr($chkVal);
+        $em = $this->getDoctrine()->getManager();
+        $sentQuote = new SentQuotes();
+        $sentQuote->setQuote($qId);
+        $sentQuote->setCurrLoggedinUser($currUserId);
+        $sentQuote->setCustomer($custId);
+        $sentQuote->setComment($cmt);
+        $sentQuote->setAttachment($chkBxVal);
+        $sentQuote->setCreatedAt($datime);
+        $sentQuote->setUpdatedAt($datime);
+        $em->persist($sentQuote);
+        $em->flush();
+        return;
+    }
+
+    private function strignfyCHKArr($chkVal) {
+        return implode(',', $chkVal);
+    }
+
+    private function getCustomerIdByQuoteId($qId) {
+        $quoteRecord = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findById($qId);
+        if (!empty($quoteRecord)) {
+            return $quoteRecord[0]->getCustomerId();
+        }
+    }
+
+    private function getAttachmentUrls($idArr, $request) {
+        $urlArr = array();
+        $attachments = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('id'=>$idArr));
+        if (!empty($attachments)) {
+            //print_r($attachments);die;
+            $i=0;
+            foreach ($attachments as $a) {
+                $urlArr[$i] = 'http://'.$request->getHost().'/'.$request->getBasePath().'/uploads/'.$a->getFileName();
+                $i++;
+            }
+        }
+        return $urlArr;
+    }
 
     private function getVeneerIds($ven) {
         $ids = array();
@@ -718,7 +818,8 @@ class QuoteController extends Controller
             if (!empty($plyFiles)) {
                 foreach ($plyFiles as $p) {
                     $attachmentArr[$i]['id'] = $p->getId();
-                    $attachmentArr[$i]['name'] = $p->getOriginalName();
+                    $attachmentArr[$i]['name'] = $this->wordLimit($p->getOriginalName());
+                    $attachmentArr[$i]['origName'] = $p->getOriginalName();
                     $attachmentArr[$i]['url'] = $request->getHost().'/'.$request->getBasePath().'/uploads/'.$p->getFileName();
                     $i++;
                 }
@@ -726,7 +827,8 @@ class QuoteController extends Controller
             if (!empty($venFiles)) {
                 foreach ($venFiles as $v) {
                     $attachmentArr[$i]['id'] = $v->getId();
-                    $attachmentArr[$i]['name'] = $v->getOriginalName();
+                    $attachmentArr[$i]['name'] = $this->wordLimit($v->getOriginalName());
+                    $attachmentArr[$i]['origName'] = $v->getOriginalName();
                     $attachmentArr[$i]['url'] = $request->getHost().'/'.$request->getBasePath().'/uploads/'.$v->getFileName();
                     $i++;
                 }
@@ -739,5 +841,16 @@ class QuoteController extends Controller
         $shortCodes = array('{first_name_customer}','{project_name}','{user_first_name}');
         $values  = array($custName, $projName, $userName);
         return str_replace($shortCodes, $values, $message);
+    }
+
+    private function wordLimit($text) {
+         if (!empty($text)) {
+             if (strlen($text) > 20) {
+               $txt = substr($text, 0,20).'...';
+             } else {
+                 $txt = $text;
+             }
+             return $txt;
+         }
     }
 }
