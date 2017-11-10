@@ -20,6 +20,8 @@ use AppBundle\Entity\Veneer;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Knp\Snappy\Pdf;
+use Symfony\Component\Filesystem\Filesystem;
 
 class QuoteController extends Controller
 {
@@ -319,24 +321,27 @@ class QuoteController extends Controller
     public function EmailQuoteAction(Request $request) {
         $arrApi = array();
         $statusCode = 200;
-        $jsontoarraygenerator = new JsonToArrayGenerator();
-        $data = $jsontoarraygenerator->getJson($request);
-        $qId = $data->get('qId');
-        $currUserId = $data->get('currentuserId');
-        $currUserEmail = $data->get('currUserEmail');
-        $custEmail = $data->get('custEmail');
-        $msg = $data->get('msg');
-        $cmt = $data->get('cmt');
-        $chkVal = $data->get('chkVal');
+        $_DATA = file_get_contents('php://input');
+        $_DATA = json_decode($_DATA, true);
+        $qId = $_DATA['qId'];
+        $currUserId = $_DATA['currentuserId'];
+        $currUserEmail = $_DATA['currUserEmail'];
+        $custEmail = $_DATA['custEmail'];
+        $msg = $_DATA['msg'];
+        $cmt = $_DATA['cmt'];
+        $chkVal = $_DATA['chkVal'];
+        $html = $_DATA['html'];
         $datime = new \DateTime('now');
-        if (empty($qId) || empty($currUserId) || empty($currUserEmail) || empty($custEmail) || empty($msg)) {
+        if (empty($qId) || empty($currUserId) || empty($currUserEmail) || empty($custEmail) || empty($msg) || empty($html)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Parameter missing.';
             $statusCode = 422;
         } else {
-            //$newMessage = $msg."\r\n\r\nCOMMENT - ".$cmt;
+            $pdfName = 'uploads/quote_screenshots/quotePDF-'.$qId.'-'.time().'.pdf';
+            $quotePdfUrl = $this->createQuoteLineitemPDF($html, $pdfName, $request);
             $newMessage = $this->createMessageToBeSent($msg, $cmt);
             $urls = $this->getAttachmentUrls($chkVal, $request);
+            $urls[] = $quotePdfUrl;
             $message = \Swift_Message::newInstance()
                 ->setFrom($currUserEmail)
                 ->setTo($custEmail)
@@ -352,6 +357,8 @@ class QuoteController extends Controller
                     $arrApi['message'] = 'Successfully sent email.';
                     $statusCode = 200;
                     $this->saveSentEmailDetails($qId, $currUserId, $cmt, $chkVal, $datime);
+                    $fs = new Filesystem();
+                    $fs->remove($pdfName);
                 }
             }
             catch(Exception $e) {
@@ -363,6 +370,16 @@ class QuoteController extends Controller
 
 
     //Reusable codes
+
+    private function createQuoteLineitemPDF($html,$pdfName, $request) {
+        $fs = new Filesystem();
+        $snappy = new Pdf(  '../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename=$pdfName');
+        $snappy->generateFromHtml($html, $pdfName);
+        $fs->chmod($pdfName, 0777);
+        return 'http://'.$request->getHost().'/'.$request->getBasePath().'/'.$pdfName;
+    }
 
     private function createMessageToBeSent($msg, $cmt) {
         $nStr = "Please call me with any questions.\r\n\r\n".$cmt."\r\n\r\n";
