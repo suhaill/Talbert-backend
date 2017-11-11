@@ -222,6 +222,9 @@ class PlywoodController extends Controller
         $plywood->setEdgevCost(0);
         $plywood->setEdgevWaste(0);
         $plywood->setSubTotalEdgev(0);
+        $plywood->setFinishEdgeCost(0);
+        $plywood->setFinishEdgeWaste(0);
+        $plywood->setSubTotalFinishEdge(0);
         $plywood->setMillingCost(0);
         $plywood->setMillingWaste(0);
         $plywood->setSubTotalMilling(0);
@@ -387,6 +390,7 @@ class PlywoodController extends Controller
                             $arrApi['data']['quoteId'] = $plywood->getQuoteId();
                             $arrApi['data']['fileId'] = $plywood->getFileId();
                             $arrApi['data']['isactive'] = $plywood->getIsActive();
+
                             
                             /* if(!empty($plywood->getFileId()))
                             {
@@ -427,6 +431,9 @@ class PlywoodController extends Controller
                             $arrApi['data']['edgeVCost'] = $plywood->getEdgevCost();
                             $arrApi['data']['edgeVWaste'] = $plywood->getEdgevWaste();
                             $arrApi['data']['subTotalEdgev'] = $plywood->getSubTotalEdgev();
+                            $arrApi['data']['finishEdgeCost'] = $plywood->getFinishEdgeCost();
+                            $arrApi['data']['finishEdgeWaste'] = $plywood->getFinishEdgeWaste();
+                            $arrApi['data']['subTotalFinishEdge'] = $plywood->getSubTotalFinishEdge();
                             $arrApi['data']['millingCost'] = $plywood->getMillingCost();
                             $arrApi['data']['millingWaste'] = $plywood->getMillingWaste();
                             $arrApi['data']['subTotalmilling'] = $plywood->getSubTotalMilling();
