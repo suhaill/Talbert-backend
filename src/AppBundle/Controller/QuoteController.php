@@ -368,6 +368,34 @@ class QuoteController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    /**
+     * @Route("/api/quote/searchQuote")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     * params: None
+     */
+    public function searchQuoteAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $quote = $data->get('quote');
+        $currUserId = $data->get('currentuserId');
+        if (empty($quote) || empty($currUserId)) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Parameter missing.';
+            $statusCode = 422;
+        } else {
+            try {
+                echo 'hi';die;
+            }
+            catch(Exception $e) {
+                throw $e->getMessage();
+            }
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
 
     //Reusable codes
 

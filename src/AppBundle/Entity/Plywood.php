@@ -375,217 +375,238 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="cust_markup_percent", type="string", length=10, nullable=true)
+     * @ORM\Column(name="cust_markup_percent", type="string", length=10, nullable=true, options={"default":25})
      */
     private $custMarkupPer;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="ven_cost", type="string", length=10, nullable=true)
+     * @ORM\Column(name="ven_cost", type="string", length=10, nullable=true, options={"default":0})
      */
     private $venCost;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="ven_waste", type="string", length=10, nullable=true)
+     * @ORM\Column(name="ven_waste", type="string", length=10, nullable=true, options={"default":0})
      */
     private $venWaste;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="sub_total_ven", type="string", length=10, nullable=true)
+     * @ORM\Column(name="sub_total_ven", type="string", length=10, nullable=true, options={"default":0})
      */
     private $subTotalVen;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="core_cost", type="string", length=10, nullable=true)
+     * @ORM\Column(name="core_cost", type="string", length=10, nullable=true, options={"default":0})
      */
     private $coreCost;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="core_waste", type="string", length=10, nullable=true)
+     * @ORM\Column(name="core_waste", type="string", length=10, nullable=true, options={"default":0})
      */
     private $coreWaste;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="sub_total_core", type="string", length=10, nullable=true)
+     * @ORM\Column(name="sub_total_core", type="string", length=10, nullable=true, options={"default":0})
      */
     private $subTotalCore;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="backr_cost", type="string", length=10, nullable=true)
+     * @ORM\Column(name="backr_cost", type="string", length=10, nullable=true, options={"default":0})
      */
     private $backrCost;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true)
+     * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true, options={"default":0})
      */
     private $backrWaste;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="sub_total_backr", type="string", length=10, nullable=true)
+     * @ORM\Column(name="sub_total_backr", type="string", length=10, nullable=true, options={"default":0})
      */
     private $subTotalBackr;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="finish_cost", type="string", length=10, nullable=true)
+     * @ORM\Column(name="finish_cost", type="string", length=10, nullable=true, options={"default":0})
      */
     private $finishCost;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="finish_waste", type="string", length=10, nullable=true)
+     * @ORM\Column(name="finish_waste", type="string", length=10, nullable=true, options={"default":0})
      */
     private $finishWaste;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="sub_total_finish", type="string", length=10, nullable=true)
+     * @ORM\Column(name="sub_total_finish", type="string", length=10, nullable=true, options={"default":0})
      */
     private $subTotalFinish;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="edgeint_cost", type="string", length=10, nullable=true)
+     * @ORM\Column(name="edgeint_cost", type="string", length=10, nullable=true, options={"default":0})
      */
     private $edgeintCost;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="edgeint_waste", type="string", length=10, nullable=true)
+     * @ORM\Column(name="edgeint_waste", type="string", length=10, nullable=true, options={"default":0})
      */
     private $edgeintWaste;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="sub_total_edgeint", type="string", length=10, nullable=true)
+     * @ORM\Column(name="sub_total_edgeint", type="string", length=10, nullable=true, options={"default":0})
      */
     private $subTotalEdgeint;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="edgev_cost", type="string", length=10, nullable=true)
+     * @ORM\Column(name="edgev_cost", type="string", length=10, nullable=true, options={"default":0})
      */
     private $edgevCost;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="edgev_waste", type="string", length=10, nullable=true)
+     * @ORM\Column(name="edgev_waste", type="string", length=10, nullable=true, options={"default":0})
      */
     private $edgevWaste;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="sub_total_edgev", type="string", length=10, nullable=true)
+     * @ORM\Column(name="sub_total_edgev", type="string", length=10, nullable=true, options={"default":0})
      */
     private $subTotalEdgev;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="milling_cost", type="string", length=10, nullable=true)
+     * @ORM\Column(name="finishedge_cost", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $finishEdgeCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="finishedge_waste", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $finishEdgeWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_finishedge", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $subTotalFinishEdge;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="milling_cost", type="string", length=10, nullable=true, options={"default":0})
      */
     private $millingCost;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="milling_waste", type="string", length=10, nullable=true)
+     * @ORM\Column(name="milling_waste", type="string", length=10, nullable=true, options={"default":0})
      */
     private $millingWaste;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="sub_total_milling", type="string", length=10, nullable=true)
+     * @ORM\Column(name="sub_total_milling", type="string", length=10, nullable=true, options={"default":0})
      */
     private $subTotalMilling;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="total_cost_per_piece", type="string", length=10, nullable=true)
+     * @ORM\Column(name="total_cost_per_piece", type="string", length=10, nullable=true, options={"default":0})
      */
     private $totalcostPerPiece;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="markup", type="string", length=10, nullable=true)
+     * @ORM\Column(name="markup", type="string", length=10, nullable=true, options={"default":0})
      */
     private $markup;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="selling_price", type="string", length=10, nullable=true)
+     * @ORM\Column(name="selling_price", type="string", length=10, nullable=true, options={"default":0})
      */
     private $sellingPrice;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="lineitem_total", type="string", length=10, nullable=true)
+     * @ORM\Column(name="lineitem_total", type="string", length=10, nullable=true, options={"default":0})
      */
     private $lineitemTotal;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="machine_setup", type="string", length=10, nullable=true)
+     * @ORM\Column(name="machine_setup", type="string", length=10, nullable=true, options={"default":0})
      */
     private $machineSetup;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="machine_tooling", type="string", length=10, nullable=true)
+     * @ORM\Column(name="machine_tooling", type="string", length=10, nullable=true, options={"default":0})
      */
     private $machineTooling;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="pre_finish_setup", type="string", length=10, nullable=true)
+     * @ORM\Column(name="pre_finish_setup", type="string", length=10, nullable=true, options={"default":0})
      */
     private $preFinishSetup;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="color_match", type="string", length=10, nullable=true)
+     * @ORM\Column(name="color_match", type="string", length=10, nullable=true, options={"default":0})
      */
     private $colorMatch;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="total_cost", type="string", length=10, nullable=true)
+     * @ORM\Column(name="total_cost", type="string", length=10, nullable=true, options={"default":0})
      */
     private $totalCost;
 
@@ -2109,6 +2130,54 @@ class Plywood
     public function setSubTotalEdgev($subTotalEdgev)
     {
         $this->subTotalEdgev = $subTotalEdgev;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFinishEdgeCost()
+    {
+        return $this->finishEdgeCost;
+    }
+
+    /**
+     * @param string $finishEdgeCost
+     */
+    public function setFinishEdgeCost($finishEdgeCost)
+    {
+        $this->finishEdgeCost = $finishEdgeCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFinishEdgeWaste()
+    {
+        return $this->finishEdgeWaste;
+    }
+
+    /**
+     * @param string $finishEdgeWaste
+     */
+    public function setFinishEdgeWaste($finishEdgeWaste)
+    {
+        $this->finishEdgeWaste = $finishEdgeWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalFinishEdge()
+    {
+        return $this->subTotalFinishEdge;
+    }
+
+    /**
+     * @param string $subTotalFinishEdge
+     */
+    public function setSubTotalFinishEdge($subTotalFinishEdge)
+    {
+        $this->subTotalFinishEdge = $subTotalFinishEdge;
     }
 
     /**
