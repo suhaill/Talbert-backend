@@ -150,6 +150,62 @@ class Quotes
     private $status;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="comment", type="string", length=500, nullable=true)
+     */
+    private $comment;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="quote_total", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $quoteTot;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="exp_fee", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $expFee;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="discount", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $discount;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="lum_fee", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $lumFee;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="ship_charge", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $shipCharge;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sales_tax", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $salesTax;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="project_tot", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $projectTot;
+
+    /**
      * @var \DateTime
      *
      * @ORM\Column(name="created_at", type="datetime", nullable=true)
@@ -446,6 +502,134 @@ class Quotes
     public function getStatus()
     {
         return $this->status;
+    }
+
+    /**
+     * @return string
+     */
+    public function getComment()
+    {
+        return $this->comment;
+    }
+
+    /**
+     * @param string $comment
+     */
+    public function setComment($comment)
+    {
+        $this->comment = $comment;
+    }
+
+    /**
+     * @return string
+     */
+    public function getQuoteTot()
+    {
+        return $this->quoteTot;
+    }
+
+    /**
+     * @param string $quoteTot
+     */
+    public function setQuoteTot($quoteTot)
+    {
+        $this->quoteTot = $quoteTot;
+    }
+
+    /**
+     * @return string
+     */
+    public function getExpFee()
+    {
+        return $this->expFee;
+    }
+
+    /**
+     * @param string $expFee
+     */
+    public function setExpFee($expFee)
+    {
+        $this->expFee = $expFee;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDiscount()
+    {
+        return $this->discount;
+    }
+
+    /**
+     * @param string $discount
+     */
+    public function setDiscount($discount)
+    {
+        $this->discount = $discount;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLumFee()
+    {
+        return $this->lumFee;
+    }
+
+    /**
+     * @param string $lumFee
+     */
+    public function setLumFee($lumFee)
+    {
+        $this->lumFee = $lumFee;
+    }
+
+    /**
+     * @return string
+     */
+    public function getShipCharge()
+    {
+        return $this->shipCharge;
+    }
+
+    /**
+     * @param string $shipCharge
+     */
+    public function setShipCharge($shipCharge)
+    {
+        $this->shipCharge = $shipCharge;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSalesTax()
+    {
+        return $this->salesTax;
+    }
+
+    /**
+     * @param string $salesTax
+     */
+    public function setSalesTax($salesTax)
+    {
+        $this->salesTax = $salesTax;
+    }
+
+    /**
+     * @return string
+     */
+    public function getProjectTot()
+    {
+        return $this->projectTot;
+    }
+
+    /**
+     * @param string $projectTot
+     */
+    public function setProjectTot($projectTot)
+    {
+        $this->projectTot = $projectTot;
     }
 
     /**

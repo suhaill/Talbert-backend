@@ -154,6 +154,14 @@ class QuoteController extends Controller
                 $arrApi['data']['shipAddId'] = $quoteData->getShipAddId();
                 $arrApi['data']['leadTime'] = $quoteData->getLeadTime();
                 $arrApi['data']['status'] = $quoteData->getStatus();
+                $arrApi['data']['comment'] = $quoteData->getComment();
+                $arrApi['data']['quoteTot'] = $quoteData->getQuoteTot();
+                $arrApi['data']['expFee'] = $quoteData->getExpFee();
+                $arrApi['data']['discount'] = $quoteData->getDiscount();
+                $arrApi['data']['lumFee'] = $quoteData->getLumFee();
+                $arrApi['data']['shipCharge'] = $quoteData->getShipCharge();
+                $arrApi['data']['salesTax'] = $quoteData->getSalesTax();
+                $arrApi['data']['projectTot'] = $quoteData->getProjectTot();
                 $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
             }
         }
