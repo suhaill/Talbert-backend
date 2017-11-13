@@ -257,13 +257,16 @@ class QuoteController extends Controller
             $shipAddId = trim($data->get('ship_add_id'));
             $leadTime = trim($data->get('lead_time'));
             $status = trim($data->get('status'));
+            $comment = trim($data->get('comment'));
+            $expFee = trim($data->get('expFee'));
+            $discount = trim($data->get('discount'));
             $datime = new \DateTime('now');
             if (empty($qDate) || empty($quoteAddedby) || empty($custId) || empty($refNo) || empty($salsManId) || empty($job) || empty($termId) || empty($shipMethod) || empty($shipAddId) || empty($leadTime) || empty($status) || empty($datime)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Parameter missing';
                 $statusCode = 422;
             } else {
-                $updateQuote = $this->updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime);
+                $updateQuote = $this->updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $comment, $expFee, $discount, $datime);
                 if (!$updateQuote) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'Unable to update quote.';
@@ -488,7 +491,7 @@ class QuoteController extends Controller
         }
     }
 
-    private function updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime) {
+    private function updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status,  $comment, $expFee, $discount, $datime) {
         $em = $this->getDoctrine()->getManager();
         $quote = $em->getRepository(Quotes::class)->findOneById($qId);
         if (!empty($quote)) {
@@ -503,6 +506,9 @@ class QuoteController extends Controller
             $quote->setShipAddId($shipAddId);
             $quote->setLeadTime($leadTime);
             $quote->setStatus($status);
+            $quote->setComment($comment);
+            $quote->setExpFee($expFee);
+            $quote->setDiscount($discount);
             $quote->setUpdatedAt($datime);
             $em->persist($quote);
             $em->flush();
