@@ -124,6 +124,9 @@ class VeneerController extends Controller
         $veneer->setBackrCost(0);
         $veneer->setBackrWaste(0);
         $veneer->setTotCostPerPiece(0);
+        $veneer->setRunningCost(0);
+        $veneer->setRunningWaste(0);
+        $veneer->getSubTotalrunning(0);
         $veneer->setMarkup(0);
         $veneer->setMarkup(0);
         $veneer->setSellingPrice(0);
@@ -133,7 +136,6 @@ class VeneerController extends Controller
         $veneer->setPreFinishSetup(0);
         $veneer->setColorMatch(0);
         $veneer->setTotalCost(0);
-
         $em->persist($veneer);
         $em->flush();
         $lastInserted = $veneer->getId();
@@ -265,6 +267,10 @@ class VeneerController extends Controller
                             $arrApi['data']['backrCost'] = $veneer->getBackrCost();
                             $arrApi['data']['backrWaste'] = $veneer->getBackrWaste();
                             $arrApi['data']['subTotBackr'] = $veneer->getSubTotalBackr();
+                            $arrApi['data']['rfCost'] = $veneer->getRunningCost();
+                            $arrApi['data']['rfWaste'] = $veneer->getRunningWaste();
+                            $arrApi['data']['subTotRf'] = $veneer->getSubTotalrunning();
+
                             $arrApi['data']['totCostPerPiece'] = $veneer->getTotCostPerPiece();
                             $arrApi['data']['macrkup'] = $veneer->getMarkup();
                             $arrApi['data']['sellingPrice'] = $veneer->getSellingPrice();
@@ -509,6 +515,11 @@ class VeneerController extends Controller
         $venData->setBackrCost($data['bakrCost']);
         $venData->setBackrWaste($data['bakrWaste']);
         $venData->setSubTotalBackr($data['subTotBackr']);
+
+        $venData->setRunningCost($data['rfCost']);
+        $venData->setRunningWaste($data['rfWaste']);
+        $venData->setSubTotalrunning($data['subTotRf']);
+
         $venData->setTotCostPerPiece($data['totalCostPerPiece']);
         $venData->setMarkup($data['markup']);
         $venData->setSellingPrice($data['sellingPrice']);

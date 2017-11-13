@@ -228,6 +228,9 @@ class PlywoodController extends Controller
         $plywood->setMillingCost(0);
         $plywood->setMillingWaste(0);
         $plywood->setSubTotalMilling(0);
+        $plywood->setRunningCost(0);
+        $plywood->setRunningWaste(0);
+        $plywood->setSubTotalrunning(0);
         $plywood->setTotalcostPerPiece(0);
         $plywood->setMarkup(0);
         $plywood->setSellingPrice(0);
@@ -437,6 +440,9 @@ class PlywoodController extends Controller
                             $arrApi['data']['millingCost'] = $plywood->getMillingCost();
                             $arrApi['data']['millingWaste'] = $plywood->getMillingWaste();
                             $arrApi['data']['subTotalmilling'] = $plywood->getSubTotalMilling();
+                            $arrApi['data']['rfCostP'] = $plywood->getRunningCost();
+                            $arrApi['data']['rfWasteP'] = $plywood->getRunningWaste();
+                            $arrApi['data']['subTotRfP'] = $plywood->getSubTotalrunning();
                             $arrApi['data']['totalCostPerPiece'] = $plywood->getTotalcostPerPiece();
                             $arrApi['data']['markup'] = $plywood->getMarkup();
                             $arrApi['data']['sellingPrice'] = $plywood->getSellingPrice();
@@ -635,6 +641,9 @@ class PlywoodController extends Controller
         $plyData->setMillingCost($data['millingCostPly']);
         $plyData->setMillingWaste($data['millingVWastePly']);
         $plyData->setSubTotalMilling($data['subTotalMilling']);
+        $plyData->setRunningCost($data['rfCostP']);
+        $plyData->setRunningWaste($data['rfWasteP']);
+        $plyData->setSubTotalrunning($data['rfSubTotP']);
         $plyData->setTotalcostPerPiece($data['totalCostPerPiece']);
         $plyData->setMarkup($data['markup']);
         $plyData->setSellingPrice($data['sellingPrice']);
