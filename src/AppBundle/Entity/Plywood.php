@@ -550,6 +550,27 @@ class Plywood
     /**
      * @var string
      *
+     * @ORM\Column(name="running_cost", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $runningCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="running_waste", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $runningWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_running", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $subTotalrunning;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="total_cost_per_piece", type="string", length=10, nullable=true, options={"default":0})
      */
     private $totalcostPerPiece;
@@ -2226,6 +2247,54 @@ class Plywood
     public function setSubTotalMilling($subTotalMilling)
     {
         $this->subTotalMilling = $subTotalMilling;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRunningCost()
+    {
+        return $this->runningCost;
+    }
+
+    /**
+     * @param string $runningCost
+     */
+    public function setRunningCost($runningCost)
+    {
+        $this->runningCost = $runningCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRunningWaste()
+    {
+        return $this->runningWaste;
+    }
+
+    /**
+     * @param string $runningWaste
+     */
+    public function setRunningWaste($runningWaste)
+    {
+        $this->runningWaste = $runningWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalrunning()
+    {
+        return $this->subTotalrunning;
+    }
+
+    /**
+     * @param string $subTotalrunning
+     */
+    public function setSubTotalrunning($subTotalrunning)
+    {
+        $this->subTotalrunning = $subTotalrunning;
     }
 
     /**
