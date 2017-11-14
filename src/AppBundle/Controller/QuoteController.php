@@ -125,6 +125,7 @@ class QuoteController extends Controller
                     $quoteId = $quotes[0]->getId();
                 }
             }
+            $this->updateQuoteData($quoteId);
             $quoteData = $this->getQuoteDataById($quoteId);
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
@@ -155,7 +156,7 @@ class QuoteController extends Controller
                 $arrApi['data']['leadTime'] = $quoteData->getLeadTime();
                 $arrApi['data']['status'] = $quoteData->getStatus();
                 $arrApi['data']['comment'] = $quoteData->getComment();
-                $arrApi['data']['quoteTot'] = $quoteData->getQuoteTot();
+                $arrApi['data']['quoteSubTot'] = $quoteData->getQuoteTot();
                 $arrApi['data']['expFee'] = $quoteData->getExpFee();
                 $arrApi['data']['discount'] = $quoteData->getDiscount();
                 $arrApi['data']['lumFee'] = $quoteData->getLumFee();
@@ -911,5 +912,117 @@ class QuoteController extends Controller
              }
              return $txt;
          }
+    }
+
+    private function updateQuoteData($quoteId) {
+        $salesTaxRate = 0;
+        $salesTaxAmount = 0;
+        $quoteSubTotal = $this->getPlywoodSubTotalByQuoteId($quoteId) + $this->getVeneerSubTotalByQuoteId($quoteId);
+        $quoteData = $this->getQuoteDataById($quoteId);
+        $shipAddId = $quoteData->getShipAddId();
+        $expFee = $quoteData->getExpFee();
+        $discount = $quoteData->getDiscount();
+        if (!empty($shipAddId)) {
+            $salesTaxRate = $this->getSalesTaxRateByAddId($shipAddId);
+        }
+        $salesTaxAmount = (($quoteSubTotal + $expFee - $discount ) * ($salesTaxRate)) / 100;
+        $shipCharge = $this->getShippingChargeByAddId($shipAddId);
+        $lumFee = $this->getPlywoodLumberFeeByQuoteId($quoteId) + $this->getVeneerLumberFeeByQuoteId($quoteId);
+        $projectTotal = ($quoteSubTotal + $expFee - $discount + $salesTaxAmount + $shipCharge + $lumFee);
+        $this->saveQuoteCalculatedData($quoteId, $quoteSubTotal, $salesTaxAmount, $shipCharge, $lumFee, $projectTotal);
+    }
+
+    private function saveQuoteCalculatedData($quoteId, $quoteSubTotal, $salesTaxAmount, $shipCharge, $lumFee, $projectTotal) {
+        $em = $this->getDoctrine()->getManager();
+        $quote = $em->getRepository(Quotes::class)->findOneById($quoteId);
+        $datime = new \DateTime('now');
+        if (!empty($quote)) {
+            $quote->setQuoteTot($quoteSubTotal);
+            $quote->setSalesTax($salesTaxAmount);
+            $quote->setShipCharge($shipCharge);
+            $quote->setLumFee($lumFee);
+            $quote->setProjectTot($projectTotal);
+            $quote->setUpdatedAt($datime);
+            $em->persist($quote);
+            $em->flush();
+        }
+    }
+
+    private function getShippingChargeByAddId($shipAddId) {
+        $shipCharge = 0;
+        $add = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findById($shipAddId);
+        if (!empty($add)) {
+            $shipCharge = $add[0]->getDeliveryCharge();
+        }
+        return $shipCharge;
+    }
+
+    private function getPlywoodLumberFeeByQuoteId($quoteId) {
+        $lumFee = 0;
+        $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+        if (!empty($plywoodRecords)) {
+            $i=0;
+            foreach ($plywoodRecords as $p) {
+                $lumFee += ($p->getTotalCost() * $p->getLumberFee()) / 100;
+                $i++;
+            }
+        } else {
+            $lumFee = 0;
+        }
+        return $lumFee;
+    }
+
+    private function getVeneerLumberFeeByQuoteId($quoteId) {
+        $lumFee = 0;
+        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+        if (!empty($veneerRecords)) {
+            $i=0;
+            foreach ($veneerRecords as $v) {
+                $lumFee += ($v->getTotalCost() * $v->getLumberFee()) / 100;
+                $i++;
+            }
+        } else {
+            $lumFee = 0;
+        }
+        return  $lumFee;
+    }
+
+    private function getPlywoodSubTotalByQuoteId($quoteId) {
+        $subtotal = '';
+        $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+        if (!empty($plywoodRecords)) {
+            $i=0;
+            foreach ($plywoodRecords as $p) {
+                $subtotal += $p->getTotalCost();
+                $i++;
+            }
+        } else {
+            $subtotal = 0;
+        }
+        return $subtotal;
+    }
+
+    private function getSalesTaxRateByAddId($shipAddId) {
+        $salesTaxRate = 0;
+        $add = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findById($shipAddId);
+        if (!empty($add)) {
+            $salesTaxRate = $add[0]->getSalesTaxRate();
+        }
+        return $salesTaxRate;
+    }
+
+    private function getVeneerSubTotalByQuoteId($quoteId) {
+        $subtotal = '';
+        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+        if (!empty($veneerRecords)) {
+            $i=0;
+            foreach ($veneerRecords as $v) {
+                $subtotal += $v->getTotalCost();
+                $i++;
+            }
+        } else {
+            $subtotal = 0;
+        }
+        return $subtotal;
     }
 }
