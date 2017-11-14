@@ -58,7 +58,7 @@ class CustomerController extends Controller
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'You are not allowed to add customers';
             } else {
-                if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($email) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty ($prdArr) || empty ($shipArr) || empty (trim($prdArr[0]['products'])) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) ) {
+                if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($email) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip)  || empty ($shipArr) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) ) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'Please fill all required fields';
                 } else {
@@ -239,7 +239,7 @@ class CustomerController extends Controller
                     $arrApi['message'] = 'You are not allowed to update customers';
                     $statusCode = 422;
                 } else {
-                    if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty ($prdArr) || empty ($shipArr) || empty (trim($prdArr[0]['products'])) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) ) {
+                    if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty ($shipArr) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) ) {
                         $arrApi['status'] = 0;
                         $arrApi['message'] = 'Please fill all required fields';
                         $statusCode = 422;
@@ -396,21 +396,23 @@ class CustomerController extends Controller
     }
 
     private function updateDiscountData($prdArr, $userId) {
-        $deleteDiscount = $this->deleteDiscountsDataByUserId($userId);
-        if ($deleteDiscount) {
-            $rate = 20;
-            $sts = 1;
-            $em = $this->getDoctrine()->getManager();
-            foreach ($prdArr as $val) {
-                $dis = new Discounts();
-                $dis->setProductName($val['products']);
-                $dis->setUserId($userId);
-                $dis->setRate($rate);
-                $dis->setStatus($sts);
-                $em->persist($dis);
+        if (!empty($prdArr)) {
+            $deleteDiscount = $this->deleteDiscountsDataByUserId($userId);
+            if ($deleteDiscount) {
+                $rate = 20;
+                $sts = 1;
+                $em = $this->getDoctrine()->getManager();
+                foreach ($prdArr as $val) {
+                    $dis = new Discounts();
+                    $dis->setProductName($val['products']);
+                    $dis->setUserId($userId);
+                    $dis->setRate($rate);
+                    $dis->setStatus($sts);
+                    $em->persist($dis);
+                    $em->flush();
+                }
                 $em->flush();
             }
-            $em->flush();
         }
     }
 
@@ -507,15 +509,17 @@ class CustomerController extends Controller
     private function saveDiscountData($prdArr, $lastUserId) {
         $rate = 10;
         $sts = 1;
-        $em = $this->getDoctrine()->getManager();
-        foreach ($prdArr as $val) {
-            $dis = new Discounts();
-            $dis->setProductName($val['products']);
-            $dis->setUserId($lastUserId);
-            $dis->setRate($rate);
-            $dis->setStatus($sts);
-            $em->persist($dis);
-            $em->flush();
+        if (!empty($prdArr)) {
+            $em = $this->getDoctrine()->getManager();
+            foreach ($prdArr as $val) {
+                $dis = new Discounts();
+                $dis->setProductName($val['products']);
+                $dis->setUserId($lastUserId);
+                $dis->setRate($rate);
+                $dis->setStatus($sts);
+                $em->persist($dis);
+                $em->flush();
+            }
         }
     }
 
