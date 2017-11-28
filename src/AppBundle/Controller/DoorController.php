@@ -15,6 +15,7 @@ use Symfony\Component\Serializer\Serializer;
 use AppBundle\Entity\Quotes;
 use AppBundle\Entity\Doors;
 use AppBundle\Entity\Skins;
+use AppBundle\Entity\Files;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -35,7 +36,7 @@ class DoorController extends Controller
         $statusCode = 200;
         $jsontoarraygenerator = new JsonToArrayGenerator();
         $data = $jsontoarraygenerator->getJson($request);
-        //print_r($data);die;
+        $fileIds = $data->get('fileId');
         $qid = trim($data->get('qid'));
         $qty = trim($data->get('qty'));
         $width = trim($data->get('width'));
@@ -61,6 +62,7 @@ class DoorController extends Controller
                 } else {
                     $arrApi['status'] = 1;
                     $arrApi['message'] = 'Successfully saved door.';
+                    $this->updateFilesIdsInFilesTable($fileIds, $isDoorSaved);
                     $this->saveDoorSkinData($data);
                 }
             }
@@ -68,59 +70,26 @@ class DoorController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    private function saveDoorSkinData($data) {
-        $qid = trim($data->get('qid'));
-        $skinType = trim($data->get('skinType'));
-        $species = trim($data->get('species'));
-        $grainPattern = trim($data->get('grainPattern'));
-        $grainDirection = trim($data->get('grainDirection'));
-        $pattern = trim($data->get('pattern'));
-        $grade = trim($data->get('grade'));
-        $leedRegs = trim($data->get('leedRegs'));
-        $manufacturer = trim($data->get('manufacturer'));
-        $color = trim($data->get('color'));
-        $edge = trim($data->get('edge'));
-        $skinFrontthickness = trim($data->get('skinFrontthickness'));
-        $skinTypeBack = trim($data->get('skinTypeBack'));
-        $backSpecies = trim($data->get('backSpecies'));
-        $backGrainPattern = trim($data->get('backGrainPattern'));
-        $backGrainDirection = trim($data->get('backGrainDirection'));
-        $backPattern = trim($data->get('backPattern'));
-        $backGrade = trim($data->get('backGrade'));
-        $backLeedRegs = trim($data->get('backLeedRegs'));
-        $backManufacturer = trim($data->get('backManufacturer'));
-        $backColor = trim($data->get('backColor'));
-        $backEdge = trim($data->get('backEdge'));
-        $skinBackthickness = trim($data->get('skinBackthickness'));
-        // Save skin data
-        $em = $this->getDoctrine()->getManager();
-        $skin = new Skins();
-        $skin->setQuoteId($qid);
-        $skin->setSkinType($skinType);
-        $skin->setSpecies($species);
-        $skin->setGrain($grainPattern);
-        $skin->setGrainDir($grainDirection);
-        $skin->setPattern($pattern);
-        $skin->setGrade($grade);
-        $skin->setLeedReqs($leedRegs);
-        $skin->setManufacturer($manufacturer);
-        $skin->setColor($color);
-        $skin->setEdge($edge);
-        $skin->setThickness($skinFrontthickness);
-        $skin->setSkinTypeBack($skinTypeBack);
-        $skin->setBackSpecies($backSpecies);
-        $skin->setBackGrain($backGrainPattern);
-        $skin->setBackGrainDir($backGrainDirection);
-        $skin->setBackPattern($backPattern);
-        $skin->setBackGrade($backGrade);
-        $skin->setBackLeedReqs($backLeedRegs);
-        $skin->setBackManufacturer($backManufacturer);
-        $skin->setBackColor($backColor);
-        $skin->setBackEdge($backEdge);
-        $skin->setBackThickness($skinBackthickness);
-        $em->persist($skin);
-        $em->flush();
-        return $skin->getId();
+    private function updateFilesIdsInFilesTable($fileId_ar, $doorId) {
+        if (!empty($fileId_ar)) {
+            $fileId_ar = explode(',', $fileId_ar);
+            for($i=0;$i<count($fileId_ar);$i++) {
+                $em2 = $this->getDoctrine()->getManager();
+                $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
+                $file->setAttachableId($doorId);
+                $em2->persist($file);
+                $em2->flush();
+            }
+        }
+    }
+
+    private function checkIfQuoteExists($qid) {
+        $quote = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findById($qid);
+        if (empty($quote)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     private function saveDoorData($data) {
@@ -281,12 +250,58 @@ class DoorController extends Controller
         return $door->getId();
     }
 
-    private function checkIfQuoteExists($qid) {
-        $quote = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findById($qid);
-        if (empty($quote)) {
-            return false;
-        } else {
-            return true;
-        }
+    private function saveDoorSkinData($data) {
+        $qid = trim($data->get('qid'));
+        $skinType = trim($data->get('skinType'));
+        $species = trim($data->get('species'));
+        $grainPattern = trim($data->get('grainPattern'));
+        $grainDirection = trim($data->get('grainDirection'));
+        $pattern = trim($data->get('pattern'));
+        $grade = trim($data->get('grade'));
+        $leedRegs = trim($data->get('leedRegs'));
+        $manufacturer = trim($data->get('manufacturer'));
+        $color = trim($data->get('color'));
+        $edge = trim($data->get('edge'));
+        $skinFrontthickness = trim($data->get('skinFrontthickness'));
+        $skinTypeBack = trim($data->get('skinTypeBack'));
+        $backSpecies = trim($data->get('backSpecies'));
+        $backGrainPattern = trim($data->get('backGrainPattern'));
+        $backGrainDirection = trim($data->get('backGrainDirection'));
+        $backPattern = trim($data->get('backPattern'));
+        $backGrade = trim($data->get('backGrade'));
+        $backLeedRegs = trim($data->get('backLeedRegs'));
+        $backManufacturer = trim($data->get('backManufacturer'));
+        $backColor = trim($data->get('backColor'));
+        $backEdge = trim($data->get('backEdge'));
+        $skinBackthickness = trim($data->get('skinBackthickness'));
+        // Save skin data
+        $em = $this->getDoctrine()->getManager();
+        $skin = new Skins();
+        $skin->setQuoteId($qid);
+        $skin->setSkinType($skinType);
+        $skin->setSpecies($species);
+        $skin->setGrain($grainPattern);
+        $skin->setGrainDir($grainDirection);
+        $skin->setPattern($pattern);
+        $skin->setGrade($grade);
+        $skin->setLeedReqs($leedRegs);
+        $skin->setManufacturer($manufacturer);
+        $skin->setColor($color);
+        $skin->setEdge($edge);
+        $skin->setThickness($skinFrontthickness);
+        $skin->setSkinTypeBack($skinTypeBack);
+        $skin->setBackSpecies($backSpecies);
+        $skin->setBackGrain($backGrainPattern);
+        $skin->setBackGrainDir($backGrainDirection);
+        $skin->setBackPattern($backPattern);
+        $skin->setBackGrade($backGrade);
+        $skin->setBackLeedReqs($backLeedRegs);
+        $skin->setBackManufacturer($backManufacturer);
+        $skin->setBackColor($backColor);
+        $skin->setBackEdge($backEdge);
+        $skin->setBackThickness($skinBackthickness);
+        $em->persist($skin);
+        $em->flush();
+        return $skin->getId();
     }
 }
