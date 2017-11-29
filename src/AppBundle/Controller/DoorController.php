@@ -200,22 +200,51 @@ class DoorController extends Controller
         }
         return new JsonResponse($arrApi, $statusCode);
     }
-    private function getFileUrl($fileId,$request) {
-        $baseurl = $request->getScheme() . '://' . $request->getHttpHost() . $request->getBasePath();
-        return $baseurl.'/api/fileDownload/'.$fileId;
 
-    }
-
-    private function getAttachmentsByDoorId($doorId) {
-        return $this->getDoctrine()->getRepository("AppBundle:Files")->findBy(array('attachableid'=> $doorId,'attachabletype'=>'door'));
-    }
-
-    private function getSkinDetailsbyDoorId($doorId) {
-        return $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId'=> $doorId));
-    }
-
-    private function checkIfDoorExists($doorId) {
-        return $this->getDoctrine()->getRepository('AppBundle:Doors')->findOneById($doorId);
+    /**
+     * @Route("/api/doors/updateDoor")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     * params: Various
+     */
+    public function updateDoorAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $fileIds = $data->get('fileId');
+        $qid = trim($data->get('qid'));
+        $doorId = trim($data->get('doorId'));
+        $qty = trim($data->get('qty'));
+        $width = trim($data->get('width'));
+        $length = trim($data->get('length'));
+        $thickness = trim($data->get('thickness'));
+        $lumFee = trim($data->get('lumFee'));
+        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($lumFee)) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Please fill all the fields.';
+            $statusCode = 422;
+        } else {
+            $doorExists = $this->checkIfDoorExists($doorId);
+            if (!$doorExists) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'This quote does not exists.';
+                $statusCode = 422;
+            } else {
+                $isDoorUpdated = $this->updateDoorData($data);
+                if (!$isDoorUpdated) {
+                    $arrApi['status'] = 0;
+                    $arrApi['message'] = 'Door can not be saved.';
+                    $statusCode = 422;
+                } else {
+                    $arrApi['status'] = 1;
+                    $arrApi['message'] = 'Successfully updated door.';
+                    $this->updateFilesIdsInFilesTable($fileIds, $doorId);
+                    $this->updateDoorSkinData($data);
+                }
+            }
+        }
+        return new JsonResponse($arrApi, $statusCode);
     }
 
     private function updateFilesIdsInFilesTable($fileId_ar, $doorId) {
@@ -452,5 +481,140 @@ class DoorController extends Controller
         $em->persist($skin);
         $em->flush();
         return $skin->getId();
+    }
+
+    private function updateDoorData($data) {
+        //print_r($data);die;
+        $em = $this->getDoctrine()->getManager();
+        $door = $em->getRepository(Doors::class)->find($data->get('doorId'));
+        $datime = new \DateTime('now');
+        $door->setQty($data->get('qty'));
+        $door->setPair($data->get('pair'));
+        $door->setSwing($data->get('swing'));
+        $door->setWidth($data->get('width'));
+        $door->setLength($data->get('length'));
+        $door->setThickness($data->get('thickness'));
+        $door->setDoorUse($data->get('use'));
+        $door->setConstruction($data->get('construction'));
+        $door->setFireRating($data->get('fireRating'));
+        $door->setDoorCore($data->get('doorCore'));
+        $door->setSequence($data->get('sequesnce'));
+        $door->setSound($data->get('sound'));
+        $door->setSoundDrop($data->get('soundDrop'));
+        $door->setLouvers($data->get('louvers'));
+        $door->setLouversDrop($data->get('louversDrop'));
+        $door->setBevel($data->get('bevel'));
+        $door->setBevelDrop($data->get('bevelDrop'));
+        $door->setEdgeFinish($data->get('edgeFinish'));
+        $door->setTopEdge($data->get('topEdge'));
+        $door->setTopEdgeMaterial($data->get('topEdgeMaterial'));
+        $door->setTopEdgeSpecies($data->get('topEdgeSpecies'));
+        $door->setBottomEdge($data->get('bottomEdge'));
+        $door->setBottomEdgeMaterial($data->get('bottomEdgeMaterial'));
+        $door->setBottomEdgeSpecies($data->get('bottomEdgeSpecies'));
+        $door->setRightEdge($data->get('rightEdge'));
+        $door->setREdgeMat($data->get('rightEdgeMaterial'));
+        $door->setEEdgeSp($data->get('rightEdheSpecies'));
+        $door->setLeftEdge($data->get('leftEdge'));
+        $door->setLEdgeMat($data->get('leftEdgeMaterial'));
+        $door->setLEdgeSp($data->get('leftEdgeSpecies'));
+        $door->setLightOpening($data->get('lightOpening'));
+        $door->setLightOpDrop($data->get('lightOpeningDrop'));
+        $door->setLocationFromTop($data->get('locationFromTop'));
+        $door->setLocFromLockEdge($data->get('locationFromLockEdge'));
+        $door->setOpeningSize($data->get('openingSize'));
+        $door->setStopSize($data->get('stopSize'));
+        $door->setGlass($data->get('glass'));
+        $door->setGlassDrop($data->get('glassDrop'));
+        $door->setFinish($data->get('finishCheck'));
+        $door->setFacPaint($data->get('facPaint'));
+        $door->setUvCured($data->get('uvcured'));
+        $door->setColor($data->get('uvcolor'));
+        $door->setSheen($data->get('sheen'));
+        $door->setSameOnBack($data->get('sameOnBack'));
+        $door->setSameOnBottom($data->get('sameOnBottom'));
+        $door->setSameOnTop($data->get('sameOnTop'));
+        $door->setSameOnRight($data->get('sameOnRight'));
+        $door->setSameOnLeft($data->get('sameOnLeft'));
+        $door->setDoorFrame($data->get('doorFrame'));
+        $door->setDoorDrop($data->get('doorDrop'));
+        $door->setSurfaceMachning($data->get('surfaceMachining'));
+        $door->setSurfaceStyle($data->get('surfaceStyle'));
+        $door->setSurfaceDepth($data->get('surfaceDepth'));
+        $door->setSurfaceSides($data->get('surfaceSides'));
+        $door->setStyles($data->get('styles'));
+        $door->setStyleWidth($data->get('styleWidth'));
+        $door->setMachning($data->get('machining'));
+        $door->setHindgeModelNo($data->get('hindgeModelNumber'));
+        $door->setHindgeWeight($data->get('hingeWeight'));
+        $door->setPosFromTop($data->get('positionFromTop'));
+        $door->setHindgeSize($data->get('hingeSize'));
+        $door->setBackSet($data->get('backSet'));
+        $door->setHandleBolt($data->get('handleBolt'));
+        $door->setPosFromTopMach($data->get('positionFromTopMach'));
+        $door->setVerticalRod($data->get('verticalRod'));
+        $door->setIsLabel($data->get('labelsYesNo'));
+        $door->setLabels($data->get('labels'));
+        $door->setFacePreps($data->get('facePreps'));
+        $door->setBlockingCharge($data->get('blockingCharge'));
+        $door->setBlockingUpcharge($data->get('blockingUpcharge'));
+        $door->setLumFee($data->get('lumFee'));
+        $door->setComment($data->get('comment'));
+        $door->setUpdatedAt($datime);
+        $em->persist($door);
+        $em->flush();
+        return true;
+    }
+
+    private function updateDoorSkinData($data) {
+        $skinId = $this->getSkinIdbyDoorId($data->get('doorId'));
+        $em = $this->getDoctrine()->getManager();
+        $skin = $em->getRepository(Skins::class)->find($skinId);
+        $skin->setSkinType($data->get('skinType'));
+        $skin->setSpecies($data->get('species'));
+        $skin->setGrain($data->get('grainPattern'));
+        $skin->setGrainDir($data->get('grainDirection'));
+        $skin->setPattern($data->get('pattern'));
+        $skin->setGrade($data->get('grade'));
+        $skin->setLeedReqs($data->get('leedRegs'));
+        $skin->setManufacturer($data->get('manufacturer'));
+        $skin->setColor($data->get('color'));
+        $skin->setEdge($data->get('edge'));
+        $skin->setThickness($data->get('skinFrontthickness'));
+        $skin->setSkinTypeBack($data->get('skinTypeBack'));
+        $skin->setBackSpecies($data->get('backSpecies'));
+        $skin->setBackGrain($data->get('backGrainPattern'));
+        $skin->setBackGrainDir($data->get('backGrainDirection'));
+        $skin->setBackPattern($data->get('backPattern'));
+        $skin->setBackGrade($data->get('backGrade'));
+        $skin->setBackLeedReqs($data->get('backLeedRegs'));
+        $skin->setBackManufacturer($data->get('backManufacturer'));
+        $skin->setBackColor($data->get('backColor'));
+        $skin->setBackEdge($data->get('backEdge'));
+        $skin->setBackThickness($data->get('skinBackthickness'));
+        $em->persist($skin);
+        $em->flush();
+    }
+
+    private function getSkinIdbyDoorId($doorId) {
+        $skinData = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId'=> $doorId));
+        return $skinData->getId();
+    }
+
+    private function getFileUrl($fileId,$request) {
+        $baseurl = $request->getScheme() . '://' . $request->getHttpHost() . $request->getBasePath();
+        return $baseurl.'/api/fileDownload/'.$fileId;
+    }
+
+    private function getAttachmentsByDoorId($doorId) {
+        return $this->getDoctrine()->getRepository("AppBundle:Files")->findBy(array('attachableid'=> $doorId,'attachabletype'=>'door'));
+    }
+
+    private function getSkinDetailsbyDoorId($doorId) {
+        return $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId'=> $doorId));
+    }
+
+    private function checkIfDoorExists($doorId) {
+        return $this->getDoctrine()->getRepository('AppBundle:Doors')->findOneById($doorId);
     }
 }
