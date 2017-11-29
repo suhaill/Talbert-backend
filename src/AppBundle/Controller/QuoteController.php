@@ -759,8 +759,9 @@ class QuoteController extends Controller
         $lineItem = array();
         $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $qId,'isActive'=>1));
         $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
+        $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $qId));
         $i=0;
-        if (!empty($plywoodRecords) || !empty($veneerRecords)) {
+        if (!empty($plywoodRecords) || !empty($veneerRecords) || !empty($doorRecords)) {
             if (!empty($plywoodRecords)) {
                 foreach ($plywoodRecords as $p) {
                     $lineItem[$i]['id'] = $p->getId();
@@ -801,7 +802,48 @@ class QuoteController extends Controller
                     $i++;
                 }
             }
+            if (!empty($doorRecords)) {
+                foreach ($doorRecords as $d) {
+                    $lineItem[$i]['id'] = $d->getId();
+                    $lineItem[$i]['type'] = 'door';
+                    $lineItem[$i]['url'] = 'door/edit-door';
+                    $lineItem[$i]['quantity'] = $d->getQty();
+                    $lineItem[$i]['species'] = $this->getSpeciesNameById($this->getSpeciesIdByDoorId($d->getId()));
+                    $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d->getId()));
+                    $lineItem[$i]['grade'] = $this->getGradeNameById($this->getGradeIdByDoorId($d->getId()));
+                    $lineItem[$i]['back'] = 'NA';//$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
+                    $lineItem[$i]['thickness'] = 'NA';//$this->getThicknessNameById($d->getThicknessId());
+                    $lineItem[$i]['width'] = $d->getWidth();
+                    $lineItem[$i]['length'] = $d->getLength();
+                    $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
+                    $lineItem[$i]['edge'] = 'NA';
+                    $lineItem[$i]['unitPrice'] = '0';
+                    $lineItem[$i]['totalPrice'] = '0';
+                    $i++;
+                }
+            }
             return $lineItem;
+        }
+    }
+
+    private function getSpeciesIdByDoorId($doorId) {
+        $skinRecord = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId' => $doorId));
+        if (!empty($skinRecord)) {
+            return $skinRecord->getSpecies();
+        }
+    }
+
+    private function getPatternIdByDoorId($doorId) {
+        $skinRecord = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId' => $doorId));
+        if (!empty($skinRecord)) {
+            return $skinRecord->getPattern();
+        }
+    }
+
+    private function getGradeIdByDoorId($doorId) {
+        $skinRecord = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId' => $doorId));
+        if (!empty($skinRecord)) {
+            return $skinRecord->getGrade();
         }
     }
 
