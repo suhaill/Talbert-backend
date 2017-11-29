@@ -29,6 +29,13 @@ class Skins
     private $quoteId;
 
     /**
+     * @var int
+     *
+     * @ORM\Column(name="door_id", type="integer")
+     */
+    private $doorId;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="skin_type", type="string", length=15)
@@ -214,6 +221,22 @@ class Skins
     public function getQuoteId()
     {
         return $this->quoteId;
+    }
+
+    /**
+     * @param int $doorId
+     */
+    public function setDoorId($doorId)
+    {
+        $this->doorId = $doorId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDoorId()
+    {
+        return $this->doorId;
     }
 
     /**
