@@ -63,11 +63,159 @@ class DoorController extends Controller
                     $arrApi['status'] = 1;
                     $arrApi['message'] = 'Successfully saved door.';
                     $this->updateFilesIdsInFilesTable($fileIds, $isDoorSaved);
-                    $this->saveDoorSkinData($data);
+                    $this->saveDoorSkinData($data,$isDoorSaved);
                 }
             }
         }
         return new JsonResponse($arrApi, $statusCode);
+    }
+
+    /**
+     * @Route("/api/doors/getDoorDetailsbyId")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("GET")
+     * params: Various
+     */
+    public function getDoorDetailsAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $doorId = $request->query->get('id');
+        if (!empty($doorId)) {
+            $doorExists = $this->checkIfDoorExists($doorId);
+            //print_r($doorExists);die;
+            if (!empty($doorExists)) {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived door details';
+                $arrApi['data']['id'] = $doorExists->getId();
+                $arrApi['data']['quoteId'] = $doorExists->getQuoteId();
+                $arrApi['data']['qty'] = $doorExists->getQty();
+                $arrApi['data']['pair'] = $doorExists->getPair();
+                $arrApi['data']['swing'] = $doorExists->getSwing();
+                $arrApi['data']['width'] = $doorExists->getWidth();
+                $arrApi['data']['length'] = $doorExists->getLength();
+                $arrApi['data']['dthickness'] = $doorExists->getThickness();
+                $arrApi['data']['doorUse'] = $doorExists->getDoorUse();
+                $arrApi['data']['construction'] = $doorExists->getConstruction();
+                $arrApi['data']['fireRating'] = $doorExists->getFireRating();
+                $arrApi['data']['doorCore'] = $doorExists->getDoorCore();
+                $arrApi['data']['sequence'] = $doorExists->getSequence();
+                $arrApi['data']['sound'] = $doorExists->getSound();
+                $arrApi['data']['soundDrop'] = $doorExists->getSoundDrop();
+                $arrApi['data']['louvers'] = $doorExists->getLouvers();
+                $arrApi['data']['louversDrop'] = $doorExists->getLouversDrop();
+                $arrApi['data']['bevel'] = $doorExists->getBevel();
+                $arrApi['data']['bevelDrop'] = $doorExists->getBevelDrop();
+                $arrApi['data']['edgeFinish'] = $doorExists->getEdgeFinish();
+                $arrApi['data']['tEdge'] = $doorExists->getTopEdge();
+                $arrApi['data']['tEdgeMat'] = $doorExists->getTopEdgeMaterial();
+                $arrApi['data']['tEdgeSp'] = $doorExists->getTopEdgeSpecies();
+                $arrApi['data']['bEdge'] = $doorExists->getBottomEdge();
+                $arrApi['data']['bEdgeMat'] = $doorExists->getBottomEdgeMaterial();
+                $arrApi['data']['bEdgeSp'] = $doorExists->getBottomEdgeSpecies();
+                $arrApi['data']['rEdge'] = $doorExists->getRightEdge();
+                $arrApi['data']['lEdgeMat'] = $doorExists->getREdgeMat();
+                $arrApi['data']['rEdgeSp'] = $doorExists->getEEdgeSp();
+                $arrApi['data']['lEdge'] = $doorExists->getLeftEdge();
+                $arrApi['data']['lEdgemat'] = $doorExists->getLEdgeMat();
+                $arrApi['data']['lEdgeSp'] = $doorExists->getLEdgeSp();
+                $arrApi['data']['lightOpening'] = $doorExists->getLightOpening();
+                $arrApi['data']['lightOpDrop'] = $doorExists->getLightOpDrop();
+                $arrApi['data']['locFromTop'] = $doorExists->getLocationFromTop();
+                $arrApi['data']['locFromLockedge'] = $doorExists->getLocFromLockEdge();
+                $arrApi['data']['openingSize'] = $doorExists->getOpeningSize();
+                $arrApi['data']['stopSize'] = $doorExists->getStopSize();
+                $arrApi['data']['glass'] = $doorExists->getGlass();
+                $arrApi['data']['glassDrop'] = $doorExists->getGlassDrop();
+                $arrApi['data']['finish'] = $doorExists->getFinish();
+                $arrApi['data']['facPaint'] = $doorExists->getFacPaint();
+                $arrApi['data']['uvCured'] = $doorExists->getUvCured();
+                $arrApi['data']['dcolor'] = $doorExists->getColor();
+                $arrApi['data']['sheen'] = $doorExists->getSheen();
+                $arrApi['data']['sameOnBack'] = $doorExists->getSameOnBack();
+                $arrApi['data']['sameOnBottom'] = $doorExists->getSameOnBottom();
+                $arrApi['data']['sameOnTop'] = $doorExists->getSameOnTop();
+                $arrApi['data']['sameOnRight'] = $doorExists->getSameOnRight();
+                $arrApi['data']['sameOnLeft'] = $doorExists->getSameOnLeft();
+                $arrApi['data']['doorframe'] = $doorExists->getDoorFrame();
+                $arrApi['data']['doorDrop'] = $doorExists->getDoorDrop();
+                $arrApi['data']['surfaceMachning'] = $doorExists->getSurfaceMachning();
+                $arrApi['data']['surfaceStyles'] = $doorExists->getSurfaceStyle();
+                $arrApi['data']['surfacedepth'] = $doorExists->getSurfaceDepth();
+                $arrApi['data']['surfaceSides'] = $doorExists->getSurfaceSides();
+                $arrApi['data']['styles'] = $doorExists->getStyles();
+                $arrApi['data']['styleWidth'] = $doorExists->getStyleWidth();
+                $arrApi['data']['machining'] = $doorExists->getMachning();
+                $arrApi['data']['hindgeModelNo'] = $doorExists->getHindgeModelNo();
+                $arrApi['data']['hindgeWeight'] = $doorExists->getHindgeWeight();
+                $arrApi['data']['posFromTop'] = $doorExists->getPosFromTop();
+                $arrApi['data']['hindgeSize'] = $doorExists->getHindgeSize();
+                $arrApi['data']['backSet'] = $doorExists->getBackSet();
+                $arrApi['data']['handleBolt'] = $doorExists->getHandleBolt();
+                $arrApi['data']['posFromTopMach'] = $doorExists->getPosFromTopMach();
+                $arrApi['data']['verticalRod'] = $doorExists->getVerticalRod();
+                $arrApi['data']['isLabel'] = $doorExists->getIsLabel();
+                $arrApi['data']['labels'] = $doorExists->getLabels();
+                $arrApi['data']['facePreps'] = $doorExists->getFacePreps();
+                $arrApi['data']['blockingCharge'] = $doorExists->getBlockingCharge();
+                $arrApi['data']['blockingUpCharge'] = $doorExists->getBlockingUpcharge();
+                $arrApi['data']['lumFee'] = $doorExists->getLumFee();
+                $arrApi['data']['comment'] = $doorExists->getComment();
+                $skinData = $this->getSkinDetailsbyDoorId($doorId);
+                if (!empty($skinData)) {
+                    $arrApi['data']['skinType'] = $skinData->getSkinType();
+                    $arrApi['data']['species'] = $skinData->getSpecies();
+                    $arrApi['data']['grain'] = $skinData->getGrain();
+                    $arrApi['data']['grainDir'] = $skinData->getGrainDir();
+                    $arrApi['data']['pattern'] = $skinData->getPattern();
+                    $arrApi['data']['grade'] = $skinData->getGrade();
+                    $arrApi['data']['leedReqs'] = $skinData->getLeedReqs();
+                    $arrApi['data']['manufac'] = $skinData->getManufacturer();
+                    $arrApi['data']['color'] = $skinData->getColor();
+                    $arrApi['data']['edge'] = $skinData->getEdge();
+                    $arrApi['data']['thickness'] = $skinData->getThickness();
+                    $arrApi['data']['skinTypeBack'] = $skinData->getSkinTypeBack();
+                    $arrApi['data']['backSpecies'] = $skinData->getBackSpecies();
+                    $arrApi['data']['backGrain'] = $skinData->getBackGrain();
+                    $arrApi['data']['backGrainDir'] = $skinData->getBackGrainDir();
+                    $arrApi['data']['backPattern'] = $skinData->getBackPattern();
+                    $arrApi['data']['backGrade'] = $skinData->getBackGrade();
+                    $arrApi['data']['backLeedReqs'] = $skinData->getBackLeedReqs();
+                    $arrApi['data']['backManufac'] = $skinData->getBackManufacturer();
+                    $arrApi['data']['backColor'] = $skinData->getBackColor();
+                    $arrApi['data']['backEdge'] = $skinData->getBackEdge();
+                    $arrApi['data']['backThickness'] = $skinData->getBackThickness();
+                }
+                $allfiles = $this->getAttachmentsByDoorId($doorId);
+                $filestring = '';
+                for($i=0;$i<count($allfiles);$i++) {
+                    $ext = pathinfo($allfiles[$i]->getOriginalName(), PATHINFO_EXTENSION);
+                    $filestring = $filestring.$allfiles[$i]->getId().',';
+                    $arrApi['data']['files'][$i]['id'] = $allfiles[$i]->getId();
+                    $arrApi['data']['files'][$i]['originalname'] = $allfiles[$i]->getOriginalName();
+                    $arrApi['data']['files'][$i]['type'] = $ext;
+                    $arrApi['data']['files'][$i]['fileLink'] = $this->getFileUrl( $allfiles[$i]->getId(),$request );
+                }
+                $arrApi['data']['filestring'] = rtrim($filestring,',');
+            }
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+    private function getFileUrl($fileId,$request) {
+        $baseurl = $request->getScheme() . '://' . $request->getHttpHost() . $request->getBasePath();
+        return $baseurl.'/api/fileDownload/'.$fileId;
+
+    }
+
+    private function getAttachmentsByDoorId($doorId) {
+        return $this->getDoctrine()->getRepository("AppBundle:Files")->findBy(array('attachableid'=> $doorId,'attachabletype'=>'door'));
+    }
+
+    private function getSkinDetailsbyDoorId($doorId) {
+        return $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId'=> $doorId));
+    }
+
+    private function checkIfDoorExists($doorId) {
+        return $this->getDoctrine()->getRepository('AppBundle:Doors')->findOneById($doorId);
     }
 
     private function updateFilesIdsInFilesTable($fileId_ar, $doorId) {
@@ -250,7 +398,7 @@ class DoorController extends Controller
         return $door->getId();
     }
 
-    private function saveDoorSkinData($data) {
+    private function saveDoorSkinData($data, $doorId) {
         $qid = trim($data->get('qid'));
         $skinType = trim($data->get('skinType'));
         $species = trim($data->get('species'));
@@ -278,6 +426,7 @@ class DoorController extends Controller
         $em = $this->getDoctrine()->getManager();
         $skin = new Skins();
         $skin->setQuoteId($qid);
+        $skin->setDoorId($doorId);
         $skin->setSkinType($skinType);
         $skin->setSpecies($species);
         $skin->setGrain($grainPattern);
