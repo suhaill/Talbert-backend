@@ -36,8 +36,10 @@ class DoorController extends Controller
         $statusCode = 200;
         $jsontoarraygenerator = new JsonToArrayGenerator();
         $data = $jsontoarraygenerator->getJson($request);
+        $addOrClone = $data->get('type');
         $fileIds = $data->get('fileId');
         $qid = trim($data->get('qid'));
+        $doorId = trim($data->get('doorId'));
         $qty = trim($data->get('qty'));
         $width = trim($data->get('width'));
         $length = trim($data->get('length'));
@@ -62,7 +64,11 @@ class DoorController extends Controller
                 } else {
                     $arrApi['status'] = 1;
                     $arrApi['message'] = 'Successfully saved door.';
-                    $this->updateFilesIdsInFilesTable($fileIds, $isDoorSaved);
+                    if ($addOrClone == 'clone') {
+                        $this->cloneFilesIdsInFilesTable($doorId, $isDoorSaved);
+                    } else {
+                        $this->updateFilesIdsInFilesTable($fileIds, $isDoorSaved);
+                    }
                     $this->saveDoorSkinData($data,$isDoorSaved);
                 }
             }
@@ -256,6 +262,25 @@ class DoorController extends Controller
                 $file->setAttachableId($doorId);
                 $em2->persist($file);
                 $em2->flush();
+            }
+        }
+    }
+
+    private function cloneFilesIdsInFilesTable($doorId, $newdoorId) {
+        $files = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('attachabletype' => 'door', 'attachableid' => $doorId));
+        $datime = new \DateTime('now');
+        if (!empty($files)) {
+            $em = $this->getDoctrine()->getManager();
+            for ($i=0; $i< count($files); $i++) {
+                $filesObj = new Files();
+                $filesObj->setFileName($files[$i]->getFileName());
+                $filesObj->setOriginalName($files[$i]->getOriginalName());
+                $filesObj->setAttachableType($files[$i]->getAttachableType());
+                $filesObj->setAttachableId($newdoorId);
+                $filesObj->setCreatedAt($datime);
+                $filesObj->setUpdatedAt($datime);
+                $em->persist($filesObj);
+                $em->flush();
             }
         }
     }
