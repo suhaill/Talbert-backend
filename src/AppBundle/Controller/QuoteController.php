@@ -17,6 +17,9 @@ use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use AppBundle\Entity\Quotes;
 use AppBundle\Entity\Veneer;
+use AppBundle\Entity\Doors;
+use AppBundle\Entity\Skins;
+use AppBundle\Entity\Files;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -193,10 +196,9 @@ class QuoteController extends Controller
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully cloned quote';
                 $clonedQuoteId = $this->cloneQuoteData($quoteData, $datime);
-                //$this->clonePlywoodData($quoteId, $clonedQuoteId, $datime);
-                //$this->cloneVeneerData($quoteId, $clonedQuoteId, $datime);
+                $this->clonePlywoodData($quoteId, $clonedQuoteId, $datime);
+                $this->cloneVeneerData($quoteId, $clonedQuoteId, $datime);
                 $this->cloneDoorData($quoteId, $clonedQuoteId, $datime);
-                $this->cloneSkinData($quoteId, $clonedQuoteId, $datime);
             }
         }
         catch(Exception $e) {
@@ -527,16 +529,24 @@ class QuoteController extends Controller
         $quote->setControlNumber($this->getLastControlNumber()+1);
         $quote->setVersion($qData->getVersion());
         $quote->setCustomerId($qData->getCustomerId());
-        //$quote->setRefNum($qData->getRefNum());
+        $quote->setRefNum($qData->getRefNum());
         $quote->setSalesmanId($qData->getSalesmanId());
-        //$quote->setJobName($qData->getJobName());
+        $quote->setJobName($qData->getJobName());
         $quote->setTermId($qData->getTermId());
         $quote->setShipMethdId($qData->getShipMethdId());
         $quote->setShipAddId($qData->getShipAddId());
         $quote->setLeadTime($qData->getLeadTime());
         $quote->setStatus($qData->getStatus());
+        $quote->setComment($qData->getComment());
         $quote->setCreatedAt($datime);
         $quote->setUpdatedAt($datime);
+        $quote->setQuoteTot($qData->getQuoteTot());
+        $quote->setExpFee($qData->getExpFee());
+        $quote->setDiscount($qData->getDiscount());
+        $quote->setLumFee($qData->getLumFee());
+        $quote->setShipCharge($qData->getShipCharge());
+        $quote->setSalesTax($qData->getSalesTax());
+        $quote->setProjectTot($qData->getProjectTot());
         $em->persist($quote);
         $em->flush();
         return $quote->getId();
@@ -599,8 +609,46 @@ class QuoteController extends Controller
                 $plywd->setCreatedAt($datime);
                 $plywd->setUpdatedAt($datime);
                 $plywd->setFileId($ply[$i]->getFileId());
+                $plywd->setCustMarkupPer($ply[$i]->getCustMarkupPer());
+                $plywd->setVenCost($ply[$i]->getVenCost());
+                $plywd->setVenWaste($ply[$i]->getVenWaste());
+                $plywd->setSubTotalVen($ply[$i]->getSubTotalVen());
+                $plywd->setCoreCost($ply[$i]->getCoreCost());
+                $plywd->setCoreWaste($ply[$i]->getCoreWaste());
+                $plywd->setSubTotalCore($ply[$i]->getSubTotalCore());
+                $plywd->setBackrCost($ply[$i]->getBackrCost());
+                $plywd->setBackrWaste($ply[$i]->getBackrWaste());
+                $plywd->setSubTotalBackr($ply[$i]->getSubTotalBackr());
+                $plywd->setFinishCost($ply[$i]->getFinishCost());
+                $plywd->setFinishWaste($ply[$i]->getFinishWaste());
+                $plywd->setSubTotalFinish($ply[$i]->getSubTotalFinish());
+                $plywd->setEdgeintCost($ply[$i]->getEdgeintCost());
+                $plywd->setEdgeintWaste($ply[$i]->getEdgeintWaste());
+                $plywd->setSubTotalEdgeint($ply[$i]->getSubTotalEdgeint());
+                $plywd->setEdgevCost($ply[$i]->getEdgevCost());
+                $plywd->setEdgevWaste($ply[$i]->getEdgevWaste());
+                $plywd->setSubTotalEdgev($ply[$i]->getSubTotalEdgev());
+                $plywd->setFinishEdgeCost($ply[$i]->getFinishEdgeCost());
+                $plywd->setFinishEdgeWaste($ply[$i]->getFinishEdgeWaste());
+                $plywd->setSubTotalFinishEdge($ply[$i]->getSubTotalFinishEdge());
+                $plywd->setMillingCost($ply[$i]->getMillingCost());
+                $plywd->setMillingWaste($ply[$i]->getMillingWaste());
+                $plywd->setSubTotalMilling($ply[$i]->getSubTotalMilling());
+                $plywd->setRunningCost($ply[$i]->getRunningCost());
+                $plywd->setRunningWaste($ply[$i]->getRunningWaste());
+                $plywd->setSubTotalrunning($ply[$i]->getSubTotalrunning());
+                $plywd->setTotalcostPerPiece($ply[$i]->getTotalcostPerPiece());
+                $plywd->setMarkup($ply[$i]->getMarkup());
+                $plywd->setSellingPrice($ply[$i]->getSellingPrice());
+                $plywd->setLineitemTotal($ply[$i]->getLineitemTotal());
+                $plywd->setMachineSetup($ply[$i]->getMachineSetup());
+                $plywd->setMachineTooling($ply[$i]->getMachineTooling());
+                $plywd->setPreFinishSetup($ply[$i]->getPreFinishSetup());
+                $plywd->setColorMatch($ply[$i]->getColorMatch());
+                $plywd->setTotalCost($ply[$i]->getTotalCost());
                 $em->persist($plywd);
                 $em->flush();
+                $this->cloneAttachments($ply[$i]->getId(), $plywd->getId(), 'Plywood', $datime);
             }
         }
     }
@@ -630,10 +678,33 @@ class QuoteController extends Controller
                 $veneer->setComments($veneeerData[$i]->getComments());
                 $veneer->setQuoteId($clonedQuoteId);
                 $veneer->setFileId($veneeerData[$i]->getFileId());
+                $veneer->setCustMarkupPer($veneeerData[$i]->getCustMarkupPer());
+                $veneer->setVenCost($veneeerData[$i]->getVenCost());
+                $veneer->setVenWaste($veneeerData[$i]->getVenWaste());
+                $veneer->setSubTotalVen($veneeerData[$i]->getSubTotalVen());
+                $veneer->setCoreCost($veneeerData[$i]->getCoreCost());
+                $veneer->setSubTotalCore($veneeerData[$i]->getSubTotalCore());
+                $veneer->setCoreWaste($veneeerData[$i]->getCoreWaste());
+                $veneer->setSubTotalBackr($veneeerData[$i]->getSubTotalBackr());
+                $veneer->setBackrCost($veneeerData[$i]->getBackrCost());
+                $veneer->setBackrWaste($veneeerData[$i]->getBackrWaste());
+                $veneer->setRunningCost($veneeerData[$i]->getRunningCost());
+                $veneer->setRunningWaste($veneeerData[$i]->getRunningWaste());
+                $veneer->setSubTotalrunning($veneeerData[$i]->getSubTotalrunning());
+                $veneer->setTotCostPerPiece($veneeerData[$i]->getTotCostPerPiece());
+                $veneer->setMarkup($veneeerData[$i]->getMarkup());
+                $veneer->setSellingPrice($veneeerData[$i]->getSellingPrice());
+                $veneer->setLineitemTotal($veneeerData[$i]->getLineitemTotal());
+                $veneer->setMachineSetup($veneeerData[$i]->getMachineSetup());
+                $veneer->setMachineTooling($veneeerData[$i]->getMachineTooling());
+                $veneer->setPreFinishSetup($veneeerData[$i]->getPreFinishSetup());
+                $veneer->setColorMatch($veneeerData[$i]->getColorMatch());
+                $veneer->setTotalCost($veneeerData[$i]->getTotalCost());
                 $veneer->setCreatedAt($datime);
                 $veneer->setUpdatedAt($datime);
                 $em->persist($veneer);
                 $em->flush();
+                $this->cloneAttachments($veneeerData[$i]->getId(), $veneer->getId(), 'Veneer', $datime);
             }
         }
     }
@@ -721,12 +792,64 @@ class QuoteController extends Controller
                 $door->setUpdatedAt($datime);
                 $em->persist($door);
                 $em->flush();
+                $this->cloneSkinData($clonedQuoteId, $doorData[$i]->getId(), $door->getId(), $datime);
             }
         }
     }
 
-    private function cloneSkinData($quoteId, $clonedQuoteId, $datime) {
+    private function cloneSkinData($clonedQuoteId, $oldDoorId, $newDoorId, $datime) {
+        $skinData = $this->getDoctrine()->getRepository('AppBundle:Skins')->findBy(array('doorId' => $oldDoorId));
+        if (!empty($skinData)) {
+            $em = $this->getDoctrine()->getManager();
+            for ($i=0; $i< count($skinData); $i++) {
+                $skin = new Skins();
+                $skin->setQuoteId($clonedQuoteId);
+                $skin->setDoorId($newDoorId);
+                $skin->setSkinType($skinData[$i]->getSkinType());
+                $skin->setSpecies($skinData[$i]->getSpecies());
+                $skin->setGrain($skinData[$i]->getGrain());
+                $skin->setGrainDir($skinData[$i]->getGrainDir());
+                $skin->setPattern($skinData[$i]->getPattern());
+                $skin->setGrade($skinData[$i]->getGrade());
+                $skin->setLeedReqs($skinData[$i]->getLeedReqs());
+                $skin->setManufacturer($skinData[$i]->getManufacturer());
+                $skin->setColor($skinData[$i]->getColor());
+                $skin->setEdge($skinData[$i]->getEdge());
+                $skin->setThickness($skinData[$i]->getThickness());
+                $skin->setSkinTypeBack($skinData[$i]->getSkinTypeBack());
+                $skin->setBackSpecies($skinData[$i]->getBackSpecies());
+                $skin->setBackGrain($skinData[$i]->getBackGrain());
+                $skin->setBackGrainDir($skinData[$i]->getBackGrainDir());
+                $skin->setBackPattern($skinData[$i]->getBackPattern());
+                $skin->setBackGrade($skinData[$i]->getBackGrade());
+                $skin->setBackLeedReqs($skinData[$i]->getBackLeedReqs());
+                $skin->setBackManufacturer($skinData[$i]->getBackManufacturer());
+                $skin->setBackColor($skinData[$i]->getBackColor());
+                $skin->setBackEdge($skinData[$i]->getBackEdge());
+                $skin->setBackThickness($skinData[$i]->getBackThickness());
+                $em->persist($skin);
+                $em->flush();
+                $this->cloneAttachments($oldDoorId, $newDoorId, 'door', $datime);
+            }
+        }
+    }
 
+    private function cloneAttachments($doorId, $newdoorId, $type, $datime) {
+        $files = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('attachabletype' => $type, 'attachableid' => $doorId));
+        if (!empty($files)) {
+            $em = $this->getDoctrine()->getManager();
+            for ($i=0; $i< count($files); $i++) {
+                $filesObj = new Files();
+                $filesObj->setFileName($files[$i]->getFileName());
+                $filesObj->setOriginalName($files[$i]->getOriginalName());
+                $filesObj->setAttachableType($files[$i]->getAttachableType());
+                $filesObj->setAttachableId($newdoorId);
+                $filesObj->setCreatedAt($datime);
+                $filesObj->setUpdatedAt($datime);
+                $em->persist($filesObj);
+                $em->flush();
+            }
+        }
     }
 
     private function getLastControlNumber() {
