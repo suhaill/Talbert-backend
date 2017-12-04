@@ -299,7 +299,7 @@ class CustomerController extends Controller
                 if (empty($custName) && empty($sortBy) && empty($order)) {
                     $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'), $limit, $offset);
                 } else if (!empty($custName) && empty($sortBy) && empty($order)) {
-                    $custIds = $this->getCustomerIdsByName($custName);
+                    $custIds = $this->getCustomerIdsByNameLike($custName);
                     $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds),array('id' => 'DESC'), $limit, $offset);
                 } else if (empty($custName) && !empty($sortBy) && !empty($order)) {
                     if ($sortBy == 'id' || $sortBy == 'createdAt') {
@@ -312,7 +312,7 @@ class CustomerController extends Controller
                     }
                 } else if (!empty($custName) && !empty($sortBy) && !empty($order)) {
                     if ($sortBy == 'id' || $sortBy == 'createdAt') {
-                        $custIds = $this->getCustomerIdsByName($custName);
+                        $custIds = $this->getCustomerIdsByNameLike($custName);
                         $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), array($sortBy => $order), $limit, $offset);
                     } else {
                         $custIds = $this->getSortedCustomerIds($custName, $sortBy, $order);
@@ -718,6 +718,21 @@ class CustomerController extends Controller
             $addressId = null;
         }
         return $addressId;
+    }
+
+    private function getCustomerIdsByNameLike($custName) {
+        $conn = $this->getDoctrine()->getConnection('default');
+        $SQL="select user_id from profiles WHERE fname LIKE '$custName%'";
+        $stmt=$conn->prepare($SQL);
+        $stmt->execute();
+        $result = $stmt->fetchAll();
+        $data = array();
+        $i=0;
+        foreach ($result as $pD) {
+            $data[] = $pD['user_id'];
+            $i++;
+        }
+        return $data;
     }
 
     private function getCustomerIdsByName($custName) {

@@ -449,12 +449,16 @@ class VeneerController extends Controller
             $veneer->setUpdatedAt($createdAt);
             
         }
-        elseif($type == 'plywood')
+        else if($type == 'plywood')
         {
             $plywood =  $this->getDoctrine()->getRepository('AppBundle:Plywood')->find($id);
             $plywood->setIsActive(0);
             $plywood->setUpdatedAt($createdAt);
             
+        } else {
+            $door =  $this->getDoctrine()->getRepository('AppBundle:Doors')->find($id);
+            $door->setStatus(0);
+            $door->setUpdatedAt($createdAt);
         }
 
         try{

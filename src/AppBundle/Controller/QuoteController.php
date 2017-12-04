@@ -92,7 +92,7 @@ class QuoteController extends Controller
     public function getQuotesAction() {
         $arrApi = array();
         $statusCode = 200;
-            $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array(),array('id'=>'desc'));
+            $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold','Approved')),array('id'=>'desc'));
             if (empty($quotes) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no quote.';
@@ -974,7 +974,7 @@ class QuoteController extends Controller
         $lineItem = array();
         $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $qId,'isActive'=>1));
         $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
-        $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $qId));
+        $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $qId, 'status'=> 1));
         $i=0;
         if (!empty($plywoodRecords) || !empty($veneerRecords) || !empty($doorRecords)) {
             if (!empty($plywoodRecords)) {
