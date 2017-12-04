@@ -533,6 +533,13 @@ class Doors
     private $comment;
 
     /**
+     * @var bool
+     *
+     * @ORM\Column(name="status", type="boolean")
+     */
+    private $status;
+
+    /**
      * @ORM\Column(type="datetime")
      */
     private $createdAt;
@@ -2285,6 +2292,22 @@ class Doors
     public function getComment()
     {
         return $this->comment;
+    }
+
+    /**
+     * @param mixed $status
+     */
+    public function setStatus($status)
+    {
+        $this->status = $status;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getStatus()
+    {
+        return $this->status;
     }
 
     /**

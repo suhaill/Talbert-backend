@@ -166,6 +166,7 @@ class DoorController extends Controller
                 $arrApi['data']['blockingUpCharge'] = $doorExists->getBlockingUpcharge();
                 $arrApi['data']['lumFee'] = $doorExists->getLumFee();
                 $arrApi['data']['comment'] = $doorExists->getComment();
+                $arrApi['data']['status'] = $doorExists->getStatus();
                 $skinData = $this->getSkinDetailsbyDoorId($doorId);
                 if (!empty($skinData)) {
                     $arrApi['data']['skinType'] = $skinData->getSkinType();
@@ -447,6 +448,7 @@ class DoorController extends Controller
         $door->setComment($comment);
         $door->setCreatedAt($datime);
         $door->setUpdatedAt($datime);
+        $door->setStatus(1);
         $em->persist($door);
         $em->flush();
         return $door->getId();
