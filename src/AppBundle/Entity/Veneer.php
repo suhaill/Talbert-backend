@@ -189,7 +189,7 @@ class Veneer
     /**
      * @var string
      *
-     * @ORM\Column(name="ven_waste", type="string", length=10, nullable=true, options={"default" = 0})
+     * @ORM\Column(name="ven_waste", type="string", length=10, nullable=true, options={"default" = 1})
      */
     private $venWaste;
 
@@ -210,7 +210,7 @@ class Veneer
     /**
      * @var string
      *
-     * @ORM\Column(name="core_waste", type="string", length=10, nullable=true, options={"default" = 0})
+     * @ORM\Column(name="core_waste", type="string", length=10, nullable=true, options={"default" = 1})
      */
     private $coreWaste;
 
@@ -231,7 +231,7 @@ class Veneer
     /**
      * @var string
      *
-     * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true, options={"default" = 0})
+     * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true, options={"default" = 1})
      */
     private $backrWaste;
 
@@ -252,7 +252,7 @@ class Veneer
     /**
      * @var string
      *
-     * @ORM\Column(name="running_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="running_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $runningWaste;
 
