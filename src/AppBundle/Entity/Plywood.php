@@ -389,7 +389,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="ven_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="ven_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $venWaste;
 
@@ -410,7 +410,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="core_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="core_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $coreWaste;
 
@@ -431,7 +431,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $backrWaste;
 
@@ -452,7 +452,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="finish_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="finish_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $finishWaste;
 
@@ -473,7 +473,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="edgeint_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="edgeint_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $edgeintWaste;
 
@@ -494,7 +494,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="edgev_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="edgev_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $edgevWaste;
 
@@ -515,7 +515,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="finishedge_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="finishedge_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $finishEdgeWaste;
 
@@ -536,7 +536,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="milling_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="milling_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $millingWaste;
 
@@ -557,7 +557,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="running_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="running_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $runningWaste;
 
