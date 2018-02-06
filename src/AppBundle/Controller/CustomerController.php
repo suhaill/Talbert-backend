@@ -383,8 +383,8 @@ class CustomerController extends Controller
                 $addresses->setCity($val['city']);
                 $addresses->setStateId($val['state']);
                 $addresses->setZip($val['zip']);
-                $addresses->setDeliveryCharge($val['deliveryCharge']);
-                $addresses->setSalesTaxRate($val['salesTaxRate']);
+                $addresses->setDeliveryCharge($this->formateDeliveryCharge($val['deliveryCharge']));
+                $addresses->setSalesTaxRate($this->formateSalestax($val['salesTaxRate']));
                 $addresses->setAddressType('shipping');
                 $addresses->setStatus(1);
                 $addresses->setUserId($userId);
@@ -495,8 +495,8 @@ class CustomerController extends Controller
             $addresses->setCity($val['city']);
             $addresses->setStateId($val['state']);
             $addresses->setZip($val['zip']);
-            $addresses->setDeliveryCharge($val['deliveryCharge']);
-            $addresses->setSalesTaxRate($val['salesTaxRate']);
+            $addresses->setDeliveryCharge($this->formateDeliveryCharge($val['deliveryCharge']));
+            $addresses->setSalesTaxRate($this->formateSalestax($val['salesTaxRate']));
             $addresses->setAddressType('shipping');
             $addresses->setStatus(1);
             $addresses->setUserId($lastUserId);
@@ -504,6 +504,16 @@ class CustomerController extends Controller
             $em->persist($addresses);
             $em->flush();
         }
+    }
+
+    private function formateDeliveryCharge($dc) {
+        $arrExp = array('$',',');
+        $arrRep = array('','');
+        return str_replace($arrExp, $arrRep, $dc);
+    }
+
+    private function formateSalestax($st) {
+        return str_replace('%', '', $st);
     }
 
     private function saveDiscountData($prdArr, $lastUserId) {
