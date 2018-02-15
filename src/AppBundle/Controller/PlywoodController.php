@@ -50,6 +50,7 @@ class PlywoodController extends Controller
             $coreType = trim($getJson->get('coretype'));
             $thickness = trim($getJson->get('corethickness'));
             $finish = trim($getJson->get('finish'));
+            $facPaint = trim($getJson->get('facPaint'));
             $uvCuredId = trim($getJson->get('uvcured'));
             $uvColorId = trim($getJson->get('uvcolor'));
             $sheenId = trim($getJson->get('sheen'));
@@ -103,7 +104,7 @@ class PlywoodController extends Controller
             if (empty($quantity) || empty($speciesId) || empty($patternId) || 
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
-            || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId) || empty($lumberFee) ) {
+            || empty($thickness) || empty($finish) || empty($facPaint) || empty($uvCuredId) || empty($sheenId) || empty($lumberFee) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
@@ -114,7 +115,7 @@ class PlywoodController extends Controller
                 $statusCode = 200;
                 $lastInserted = $this->savePlywoodData($quantity, $speciesId, 
                 $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
-                $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId,$uvColorId, $sheenId,
+                $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish, $facPaint, $uvCuredId,$uvColorId, $sheenId,
                 $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
                 $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
                 $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype);
@@ -134,7 +135,7 @@ class PlywoodController extends Controller
 
     private function savePlywoodData($quantity, $speciesId, 
     $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
-    $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId,$uvColorId, $sheenId,
+    $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint, $uvCuredId,$uvColorId, $sheenId,
     $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
     $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
     $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype)
@@ -157,6 +158,7 @@ class PlywoodController extends Controller
         $plywood->setCoreType($coreType);
         $plywood->setThickness($thickness);
         $plywood->setFinish($finish);
+        $plywood->setFacPaint($facPaint);
         $plywood->setUvCuredId($uvCuredId);
 
         $plywood->setUvColorId($uvColorId); 
@@ -339,6 +341,7 @@ class PlywoodController extends Controller
                             $arrApi['data']['finishThickId'] = $plywood-> getFinishThickId();
                             $arrApi['data']['thickness'] = $plywood->getThickness();
                             $arrApi['data']['finish'] = $plywood->getFinish();
+                            $arrApi['data']['facPaint'] = $plywood->getFacPaint();
                             $arrApi['data']['uvCuredId'] = $plywood->getUvCuredId();
                             $arrApi['data']['uvColorId'] = $plywood->getUvColorId();
                             $arrApi['data']['sheenId'] = $plywood->getSheenId();
@@ -504,6 +507,7 @@ class PlywoodController extends Controller
             $coreType = trim($getJson->get('coretype'));
             $thickness = trim($getJson->get('corethickness'));
             $finish = trim($getJson->get('finish'));
+            $facPaint = trim($getJson->get('facPaint'));
             $uvCuredId = trim($getJson->get('uvcured'));
             $uvColorId = trim($getJson->get('uvcolor'));
             $sheenId = trim($getJson->get('sheen'));
@@ -560,7 +564,7 @@ class PlywoodController extends Controller
             if (empty($id) || empty($quantity) || empty($speciesId) || empty($patternId) || 
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
-            || empty($thickness) || empty($finish) || empty($uvCuredId) || empty($sheenId) || empty($topEdge) || empty($edgeMaterialId) 
+            || empty($thickness) || empty($finish) || empty($facPaint) || empty($uvCuredId) || empty($sheenId) || empty($topEdge) || empty($edgeMaterialId)
             || empty($lumberFee)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
@@ -572,7 +576,7 @@ class PlywoodController extends Controller
                 $statusCode = 200;
                 $this->editPlywoodData($id,$quantity, $speciesId, 
                 $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
-                $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId,$uvColorId, $sheenId,
+                $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint,$uvCuredId,$uvColorId, $sheenId,
                 $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
                 $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
                 $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$fileId,$createdAt);
@@ -661,7 +665,7 @@ class PlywoodController extends Controller
 
     private function editPlywoodData($id,$quantity, $speciesId, 
     $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
-    $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$uvCuredId,$uvColorId, $sheenId,
+    $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint,$uvCuredId,$uvColorId, $sheenId,
     $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
     $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
     $milling,$millingDescription,$cost,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$fileId,$createdAt) 
@@ -687,6 +691,7 @@ class PlywoodController extends Controller
         $plywood->setCoreType($coreType);
         $plywood->setThickness($thickness);
         $plywood->setFinish($finish);
+        $plywood->setFacPaint($facPaint);
         $plywood->setUvCuredId($uvCuredId);
         $plywood->setUvColorId($uvColorId);
         $plywood->setSheenId($sheenId);

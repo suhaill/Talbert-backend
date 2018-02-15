@@ -134,6 +134,13 @@ class Plywood
     private $finish;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="facPaint", type="integer")
+     */
+    private $facPaint;
+
+    /**
      * @var int
      *
      * @ORM\Column(name="uvCuredId", type="integer")
@@ -1023,6 +1030,22 @@ class Plywood
     public function getFinish()
     {
         return $this->finish;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFacPaint()
+    {
+        return $this->facPaint;
+    }
+
+    /**
+     * @param string $facPaint
+     */
+    public function setFacPaint($facPaint)
+    {
+        $this->facPaint = $facPaint;
     }
 
     /**
