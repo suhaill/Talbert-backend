@@ -60,7 +60,7 @@ class UserController extends Controller
                             $token = $this->get('lexik_jwt_authentication.encoder')
                                 ->encode([
                                     'username' => $user->getUsername(),
-                                    'exp' => time() + 3600 // 1 hour expiration
+                                    'exp' => time() + $this->getParameter('jwt_timeout') // 1 hour expiration
                                 ]);
                             $arrApi['status'] = 1;
                             $arrApi['message'] = 'Successfully logged in.';
