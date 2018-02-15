@@ -86,29 +86,52 @@ class QuoteController extends Controller
     /**
      * @Route("/api/quote/getQuotesList")
      * @Security("is_granted('ROLE_USER')")
-     * @Method("GET")
+     * @Method("POST")
      * params: None
      */
-    public function getQuotesAction() {
+    public function getQuotesAction(Request $request) {
         $arrApi = array();
         $statusCode = 200;
-            $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold','Approved')),array('id'=>'desc'));
-            if (empty($quotes) ) {
-                $arrApi['status'] = 0;
-                $arrApi['message'] = 'There is no quote.';
-                $statusCode = 422;
-            } else {
-                $arrApi['status'] = 1;
-                $arrApi['message'] = 'Successfully retreived the quote list.';
-                for($i=0;$i<count($quotes);$i++) {
-                    $arrApi['data']['quotes'][$i]['id'] = $quotes[$i]->getId();
-                    $arrApi['data']['quotes'][$i]['estimateNumber'] = 'E-'.$quotes[$i]->getControlNumber().'-'.$quotes[$i]->getVersion();
-                    $arrApi['data']['quotes'][$i]['customername'] = $this->getCustomerNameById($quotes[$i]->getCustomerId());
-                    $arrApi['data']['quotes'][$i]['status'] = $quotes[$i]->getStatus();
-                    $arrApi['data']['quotes'][$i]['estDate'] = $this->getEstimateDateFormate($quotes[$i]->getEstimateDate());
-                }
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $columnName = trim($data->get('columnName'));
+        $orderBy = trim($data->get('orderBy'));
+        $requestColumnName='';
+        if($columnName=='' || $columnName=='customer'){
+            $requestColumnName=$columnName;
+            $requestOrderBy=$orderBy;
+            $columnName='id';
+            $orderBy='DESC';
+        }
+        if($columnName=='estimatorId'){
+            $sortArray=['controlNumber'=>$orderBy];
+        } else {
+            $sortArray=[$columnName=>$orderBy];
+        }
+        $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold','Approved')),$sortArray);
+        if (empty($quotes) ) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'There is no quote.';
+            $statusCode = 422;
+        } else {
+            $arrApi['status'] = 1;
+            $arrApi['message'] = 'Successfully retreived the quote list.';
+            $quoteList=[];
+            for($i=0;$i<count($quotes);$i++) {
+                $quoteList[$i]['id'] = $quotes[$i]->getId();
+                $quoteList[$i]['estimateNumber'] = 'E-'.$quotes[$i]->getControlNumber().'-'.$quotes[$i]->getVersion();
+                $quoteList[$i]['customername'] = strtoupper($this->getCustomerNameById($quotes[$i]->getCustomerId()));
+                $quoteList[$i]['status'] = $quotes[$i]->getStatus();
+                $quoteList[$i]['estDate'] = $this->getEstimateDateFormate($quotes[$i]->getEstimateDate());
             }
-         return new JsonResponse($arrApi, $statusCode);
+            
+            if($requestColumnName=='customer'){
+                $arrApi['data']['quotes'] = $this->__arraySortByColumn($quoteList, 'customername',$requestOrderBy);
+            } else {
+                $arrApi['data']['quotes'] = $quoteList;
+            }
+        }
+        return new JsonResponse($arrApi, $statusCode);
     }
 
     /**
@@ -1282,4 +1305,47 @@ class QuoteController extends Controller
         }
         return $subtotal;
     }
+    
+    private function __arraySortByColumn($array, $index, $order, $natsort=FALSE, $case_sensitive=FALSE) {
+        if (is_array($array) && count($array) > 0) {
+            foreach (array_keys($array) as $key) {
+                $temp[$key] = $array[$key][$index];
+            }
+            
+            if (!$natsort) {                
+                if ($order == 'ASC') {
+                    asort($temp);
+                } else {
+                    arsort($temp);
+                }
+            } else {
+                if ($case_sensitive === true) {
+                    natsort($temp);
+                } else {
+                    natcasesort($temp);
+                }
+                if ($order != 'ASC') {
+                    $temp = array_reverse($temp, TRUE);
+                }
+            }
+            foreach (array_keys($temp) as $key) {
+                if (is_numeric($key)) {
+                    $sorted[] = $array[$key];
+                } else {
+                    $sorted[$key] = $array[$key];
+                }
+            }
+            return $sorted;
+        }
+        return $sorted;
+//        if(!empty($arr)){
+//            $sort_col = array();
+//            foreach ($arr as $key=> $row) {
+//                $sort_col[$key] = $row[$col];
+//            }
+//            array_multisort($sort_col, $dir, $arr);
+//        }        
+//        return $arr;
+    }
+
 }

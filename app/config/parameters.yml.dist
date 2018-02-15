@@ -22,3 +22,4 @@ parameters:
     servername: ~
     serverurl: ~
     jwt_key_pass_phrase: ~
+    jwt_timeout: 8640
