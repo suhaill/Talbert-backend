@@ -302,13 +302,6 @@ class Plywood
     private $millingDescription;
 
     /**
-     * @var float
-     *
-     * @ORM\Column(name="cost", type="float")
-     */
-    private $cost;
-
-    /**
      * @var int
      *
      * @ORM\Column(name="unitMesureCostId", type="integer")
@@ -1599,30 +1592,6 @@ class Plywood
     public function getMillingDescription()
     {
         return $this->millingDescription;
-    }
-
-    /**
-     * Set cost
-     *
-     * @param float $cost
-     *
-     * @return Plywood
-     */
-    public function setCost($cost)
-    {
-        $this->cost = $cost;
-
-        return $this;
-    }
-
-    /**
-     * Get cost
-     *
-     * @return float
-     */
-    public function getCost()
-    {
-        return $this->cost;
     }
 
     /**
