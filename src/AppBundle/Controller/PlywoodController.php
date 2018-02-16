@@ -642,6 +642,9 @@ class PlywoodController extends Controller
         $plyData->setEdgevCost($data['edgeVCostPly']);
         $plyData->setEdgevWaste($data['edgeVWastePly']);
         $plyData->setSubTotalEdgev($data['subTotalEdgeIntV']);
+        $plyData->setFinishEdgeCost($data['finishEdgeCostPly']);
+        $plyData->setFinishEdgeWaste($data['finishEdgeWastePly']);
+        $plyData->setSubTotalFinishEdge($data['subTotalFinishEdge']);
         $plyData->setMillingCost($data['millingCostPly']);
         $plyData->setMillingWaste($data['millingVWastePly']);
         $plyData->setSubTotalMilling($data['subTotalMilling']);
