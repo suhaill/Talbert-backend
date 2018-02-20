@@ -576,6 +576,8 @@ class VeneerController extends Controller
                 ->addSelect(['b.name as backerName'])
                 ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "v.grainDirectionId = gd.id")
                 ->addSelect(['gd.name as grainDirectionName'])
+                ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+                ->addSelect(['o.orderDate as orderDate','o.estNumber as estNumber'])
                 ->where('v.quoteId = '.$quoteId)
                 ->getQuery()
                 ->getResult();
