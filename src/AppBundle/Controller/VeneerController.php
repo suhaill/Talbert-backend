@@ -19,6 +19,8 @@ use AppBundle\Entity\Files;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 
 class VeneerController extends Controller
 {
@@ -537,5 +539,61 @@ class VeneerController extends Controller
         $em->flush();
         return 1;
     }
-
+    
+    /**
+     * @Route("api/veneer/getVeneerDataByQuoteId")
+     * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
+     * 
+     * Date: 20-02-2018
+     * Author: Mohit Kumar
+     */
+    public function getVeneerDataByQuoteId(Request $request){
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+//        $userId=!empty($data->get('user_id'))?trim($data->get('user_id')):'';
+        $quoteId=!empty($data->get('quote_id'))?trim($data->get('quote_id')):'';
+        if(!empty($quoteId)){
+            $query = $this->getDoctrine()->getManager();
+            $result = $query->createQueryBuilder()
+                ->select(['v.quantity','v.width','v.length','v.comments','v.sequenced'])
+                ->from('AppBundle:Veneer', 'v')
+                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
+                ->addSelect(['q.refNum'])
+                ->leftJoin('AppBundle:User', 'u', 'WITH', "q.customerId = u.id and u.userType='customer' and u.roleId=11")
+                ->addSelect(['u.username'])
+                ->leftJoin('AppBundle:Species', 's', 'WITH', "v.speciesId = s.id")
+                ->addSelect(['s.name as SpecieName'])
+                ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "v.patternId = p.id")
+                ->addSelect(['p.name as patternName'])
+                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
+                ->addSelect(['t.name as thicknessName'])
+                ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
+                ->addSelect(['fg.name as faceGradeName'])
+                ->leftJoin('AppBundle:Backer', 'b', 'WITH', "v.backer = b.id")
+                ->addSelect(['b.name as backerName'])
+                ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "v.grainDirectionId = gd.id")
+                ->addSelect(['gd.name as grainDirectionName'])
+                ->where('v.quoteId = '.$quoteId)
+                ->getQuery()
+                ->getResult();
+//                ->getSQL();
+            if (empty($result) ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'There is no quote.';
+                $statusCode = 422;
+            } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived the quote list.';
+                $arrApi['data']['veneer']=$result;
+            }
+        } else {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Quote Id is missing.';
+            $statusCode = 422;
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
 }
