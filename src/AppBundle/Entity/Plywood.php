@@ -206,6 +206,75 @@ class Plywood
     /**
      * @var int
      *
+     * @ORM\Column(name="edgeSameOnB", type="integer", options={"default":0})
+     */
+    private $edgeSameOnB;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="edgeSameOnR", type="integer", options={"default":0})
+     */
+    private $edgeSameOnR;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="edgeSameOnL", type="integer", options={"default":0})
+     */
+    private $edgeSameOnL;
+
+    /**
+     * @return int
+     */
+    public function getEdgeSameOnB()
+    {
+        return $this->edgeSameOnB;
+    }
+
+    /**
+     * @param int $edgeSameOnB
+     */
+    public function setEdgeSameOnB($edgeSameOnB)
+    {
+        $this->edgeSameOnB = $edgeSameOnB;
+    }
+
+    /**
+     * @return int
+     */
+    public function getEdgeSameOnR()
+    {
+        return $this->edgeSameOnR;
+    }
+
+    /**
+     * @param int $edgeSameOnR
+     */
+    public function setEdgeSameOnR($edgeSameOnR)
+    {
+        $this->edgeSameOnR = $edgeSameOnR;
+    }
+
+    /**
+     * @return int
+     */
+    public function getEdgeSameOnL()
+    {
+        return $this->edgeSameOnL;
+    }
+
+    /**
+     * @param int $edgeSameOnL
+     */
+    public function setEdgeSameOnL($edgeSameOnL)
+    {
+        $this->edgeSameOnL = $edgeSameOnL;
+    }
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="topEdge", type="integer")
      */
     private $topEdge;
