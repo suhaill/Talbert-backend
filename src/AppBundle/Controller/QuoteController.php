@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use AppBundle\Entity\Quotes;
+use AppBundle\Entity\Orders;
 use AppBundle\Entity\Veneer;
 use AppBundle\Entity\Doors;
 use AppBundle\Entity\Skins;
@@ -434,8 +435,93 @@ class QuoteController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    /**
+     * @Route("/api/quote/approveQuote")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     */
+    public function approveQuoteAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $qId = $data->get('qId');
+        $estNo = $data->get('estNo');
+        $approveBy = $data->get('approvedBy');
+        $via = $data->get('via');
+        $other = $data->get('other');
+        $custPO = $data->get('custPO');
+        $datime = new \DateTime('now');
+        if (empty($qId) || empty($estNo) || empty($approveBy) || empty($via) || empty($custPO)) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Parameter missing';
+            $statusCode = 422;
+        } else {
+            $arrApi['status'] = 1;
+            $arrApi['message'] = 'Successfully Saved';
+            $orderExists = $this->checkIfOrderAlreadyExists($qId);
+            if ($orderExists) {
+                $this->updateOrderData($qId, $estNo, $approveBy, $via, $other, $datime, $custPO);
+            } else {
+                $this->saveOrderData($qId, $estNo, $approveBy, $via, $other, $datime, $custPO);
+            }
+            $this->updateQuoteStatus($qId, 'Approved', $datime);
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
 
     //Reusable codes
+
+    private function updateOrderData($qId, $estNo, $approveBy, $via, $other, $datime, $custPO) {
+        $em = $this->getDoctrine()->getManager();
+        $order = $em->getRepository(Orders::class)->findOneBy(array('quoteId'=> $qId));
+        if (!empty($order)) {
+            $order->setEstNumber($estNo);
+            $order->setApprovedBy($approveBy);
+            $order->setVia($via);
+            $order->setOther($other);
+            $order->setOrderDate($datime);
+            $order->setPoNumber($custPO);
+            $em->persist($order);
+            $em->flush();
+        }
+    }
+
+    private function checkIfOrderAlreadyExists($qId) {
+        $em = $this->getDoctrine()->getManager();
+        $order = $em->getRepository(Orders::class)->findOneBy(array('quoteId'=> $qId));
+        if (!empty($order)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private function saveOrderData($qId, $estNo, $approveBy, $via, $other, $datime, $custPO) {
+        $em = $this->getDoctrine()->getManager();
+        $orders = new Orders();
+        $orders->setQuoteId($qId);
+        $orders->setEstNumber($estNo);
+        $orders->setApprovedBy($approveBy);
+        $orders->setVia($via);
+        $orders->setOther($other);
+        $orders->setOrderDate($datime);
+        $orders->setPoNumber($custPO);
+        $em->persist($orders);
+        $em->flush();
+    }
+
+    private function updateQuoteStatus($qId, $status, $datime) {
+        $em = $this->getDoctrine()->getManager();
+        $quote = $em->getRepository(Quotes::class)->findOneById($qId);
+        if (!empty($quote)) {
+            $quote->setStatus($status);
+            $quote->setUpdatedAt($datime);
+            $em->persist($quote);
+            $em->flush();
+        }
+    }
 
     private function createQuoteLineitemPDF($html,$pdfName, $request) {
         $fs = new Filesystem();

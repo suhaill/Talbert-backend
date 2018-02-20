@@ -22,11 +22,39 @@ class Orders
     private $id;
 
     /**
+     * @var int
+     *
+     * @ORM\Column(name="quote_id", type="integer")
+     */
+    private $quoteId;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="est_number", type="string", length=20, nullable=true)
      */
     private $estNumber;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="approved_by", type="string", length=50, nullable=true)
+     */
+    private $approvedBy;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="via", type="string", length=20, nullable=true)
+     */
+    private $via;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="other", type="string", length=50, nullable=true)
+     */
+    private $other;
 
     /**
      * @var \DateTime
@@ -65,6 +93,70 @@ class Orders
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return int
+     */
+    public function getQuoteId()
+    {
+        return $this->quoteId;
+    }
+
+    /**
+     * @param int $quoteId
+     */
+    public function setQuoteId($quoteId)
+    {
+        $this->quoteId = $quoteId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getApprovedBy()
+    {
+        return $this->approvedBy;
+    }
+
+    /**
+     * @param string $approvedBy
+     */
+    public function setApprovedBy($approvedBy)
+    {
+        $this->approvedBy = $approvedBy;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVia()
+    {
+        return $this->via;
+    }
+
+    /**
+     * @param string $via
+     */
+    public function setVia($via)
+    {
+        $this->via = $via;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOther()
+    {
+        return $this->other;
+    }
+
+    /**
+     * @param string $other
+     */
+    public function setOther($other)
+    {
+        $this->other = $other;
     }
 
     /**
