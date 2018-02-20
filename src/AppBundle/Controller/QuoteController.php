@@ -447,10 +447,10 @@ class QuoteController extends Controller
         $data = $jsontoarraygenerator->getJson($request);
         $qId = $data->get('qId');
         $estNo = $data->get('estNo');
-        $approveBy = $data->get('approvedBy');
-        $via = $data->get('via');
-        $other = $data->get('other');
-        $custPO = $data->get('custPO');
+        $approveBy = trim($data->get('approvedBy'));
+        $via = trim($data->get('via'));
+        $other = trim($data->get('other'));
+        $custPO = trim($data->get('custPO'));
         $datime = new \DateTime('now');
         if (empty($qId) || empty($estNo) || empty($approveBy) || empty($via) || empty($custPO)) {
             $arrApi['status'] = 0;
@@ -458,7 +458,7 @@ class QuoteController extends Controller
             $statusCode = 422;
         } else {
             $arrApi['status'] = 1;
-            $arrApi['message'] = 'Successfully Saved';
+            $arrApi['message'] = 'Order generated successfully';
             $orderExists = $this->checkIfOrderAlreadyExists($qId);
             if ($orderExists) {
                 $this->updateOrderData($qId, $estNo, $approveBy, $via, $other, $datime, $custPO);
