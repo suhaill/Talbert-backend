@@ -59,7 +59,7 @@ class Orders
     /**
      * @var \DateTime
      *
-     * @ORM\Column(name="order_date", type="datetime", nullable=true)
+     * @ORM\Column(name="order_date", type="string", length=30, nullable=true)
      */
     private $orderDate;
 
@@ -80,7 +80,7 @@ class Orders
     /**
      * @var \DateTime
      *
-     * @ORM\Column(name="ship_date", type="datetime", nullable=true)
+     * @ORM\Column(name="ship_date", type="string", length=30, nullable=true)
      */
     private $shipDate;
 
@@ -262,7 +262,7 @@ class Orders
      *
      * @return Orders
      */
-    public function setShipDate($shipDate)
+        public function setShipDate($shipDate)
     {
         $this->shipDate = $shipDate;
 
