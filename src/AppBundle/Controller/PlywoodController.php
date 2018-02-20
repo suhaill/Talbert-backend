@@ -762,5 +762,91 @@ class PlywoodController extends Controller
         return $baseurl.'/api/fileDownload/'.$fileId;
 
     }
+    
+    /**
+     * @Route("api/plywood/getPlywoodDataByQuoteId")
+     * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
+     * 
+     * Date: 20-02-2018
+     * Author: Mohit Kumar
+     */
+    public function getPlywoodDataByQuoteId(Request $request){
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+//        $userId=!empty($data->get('user_id'))?trim($data->get('user_id')):'';
+        $quoteId=!empty($data->get('quote_id'))?trim($data->get('quote_id')):'';
+        if(!empty($quoteId)){
+            $query = $this->getDoctrine()->getManager();
+            $result = $query->createQueryBuilder()
+                ->select(['v.quantity','v.plywoodWidth as width','v.plywoodLength as length','v.comments','v.speciesId','v.topEdge','v.bottomEdge',
+                    'v.rightEdge','v.leftEdge'])
+                ->from('AppBundle:Plywood', 'v')
+                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
+                ->addSelect(['q.refNum'])
+                ->leftJoin('AppBundle:User', 'u', 'WITH', "q.customerId = u.id and u.userType='customer' and u.roleId=11")
+                ->addSelect(['u.username'])
+                ->leftJoin('AppBundle:Species', 's', 'WITH', "v.speciesId = s.id")
+                ->addSelect(['s.name as SpecieName'])
+                ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "v.patternId = p.id")
+                ->addSelect(['p.name as patternName'])
+                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
+                ->addSelect(['t.name as thicknessName'])
+                ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
+                ->addSelect(['fg.name as faceGradeName'])
+                ->leftJoin('AppBundle:Backer', 'b', 'WITH', "v.backerId = b.id")
+                ->addSelect(['b.name as backerName'])
+                ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "v.grainDirectionId = gd.id")
+                ->addSelect(['gd.name as grainDirectionName'])
+                ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+                ->addSelect(['o.orderDate as orderDate','o.estNumber as estNumber'])
+                ->leftJoin('AppBundle:EdgeFinish', 'tef', 'WITH', "v.topEdge = tef.id")
+                ->addSelect(['tef.name as topEdgeName'])
+                ->leftJoin('AppBundle:EdgeFinish', 'bef', 'WITH', "v.bottomEdge = bef.id")
+                ->addSelect(['bef.name as bottomEdgeName'])
+                ->leftJoin('AppBundle:EdgeFinish', 'ref', 'WITH', "v.rightEdge = ref.id")
+                ->addSelect(['ref.name as rightEdgeName'])
+                ->leftJoin('AppBundle:EdgeFinish', 'lef', 'WITH', "v.leftEdge = lef.id")
+                ->addSelect(['lef.name as leftEdgeName'])
+                    
+                ->leftJoin('AppBundle:SizeEdgeMaterial', 'tem', 'WITH', "v.edgeMaterialId = tem.id")
+                ->addSelect(['tem.name as topEdgeMaterialName'])
+                ->leftJoin('AppBundle:SizeEdgeMaterial', 'bem', 'WITH', "v.bedgeMaterialId = bem.id")
+                ->addSelect(['bem.name as bottomEdgeMaterialName'])
+                ->leftJoin('AppBundle:SizeEdgeMaterial', 'rem', 'WITH', "v.redgeMaterialId = rem.id")
+                ->addSelect(['rem.name as rightEdgeMaterialName'])
+                ->leftJoin('AppBundle:SizeEdgeMaterial', 'lem', 'WITH', "v.ledgeMaterialId = lem.id")
+                ->addSelect(['lem.name as leftEdgeMaterialName'])
+                    
+                ->leftJoin('AppBundle:Species', 'ts', 'WITH', "v.edgeFinishSpeciesId = ts.id")
+                ->addSelect(['ts.name as topSpeciesName'])
+                ->leftJoin('AppBundle:Species', 'bs', 'WITH', "v.bedgeFinishSpeciesId = bs.id")
+                ->addSelect(['bs.name as bottomSpeciesName'])
+                ->leftJoin('AppBundle:Species', 'rs', 'WITH', "v.redgeFinishSpeciesId = rs.id")
+                ->addSelect(['rs.name as rightSpeciesName'])
+                ->leftJoin('AppBundle:Species', 'ls', 'WITH', "v.ledgeFinishSpeciesId = ls.id")
+                ->addSelect(['ls.name as leftSpeciesName'])
+                ->where('v.quoteId = '.$quoteId)
+                ->getQuery()
+                ->getResult();
+//                ->getSQL();
+            if (empty($result) ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'There is no quote.';
+                $statusCode = 422;
+            } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived the quote list.';
+                $arrApi['data']['plywood']=$result;
+            }
+        } else {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Quote Id is missing.';
+            $statusCode = 422;
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
 
 }
