@@ -38,6 +38,29 @@ class Orders
     /**
      * @var string
      *
+     * @ORM\Column(name="order_number", type="string", length=20, nullable=true)
+     */
+    private $orderNumber;
+
+    /**
+     * @return string
+     */
+    public function getOrderNumber()
+    {
+        return $this->orderNumber;
+    }
+
+    /**
+     * @param string $orderNumber
+     */
+    public function setOrderNumber($orderNumber)
+    {
+        $this->orderNumber = $orderNumber;
+    }
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="approved_by", type="string", length=50, nullable=true)
      */
     private $approvedBy;
