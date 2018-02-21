@@ -449,6 +449,7 @@ class QuoteController extends Controller
         $data = $jsontoarraygenerator->getJson($request);
         $qId = $data->get('qId');
         $estNo = $data->get('estNo');
+        $orderNum = $this->getOrderNumber($estNo);
         $approveBy = trim($data->get('approvedBy'));
         $via = trim($data->get('via'));
         $other = trim($data->get('other'));
@@ -465,9 +466,9 @@ class QuoteController extends Controller
             $orderDate = $this->getOrderDate($qId);
             $orderExists = $this->checkIfOrderAlreadyExists($qId);
             if ($orderExists) {
-                $this->updateOrderData($qId, $estNo, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate);
+                $this->updateOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate);
             } else {
-                $this->saveOrderData($qId, $estNo, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate);
+                $this->saveOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate);
             }
             $this->updateQuoteStatus($qId, 'Approved', $datime);
         }
@@ -477,11 +478,16 @@ class QuoteController extends Controller
 
     //Reusable codes
 
-    private function updateOrderData($qId, $estNo, $approveBy, $via, $other, $datime, $custPO, $deliveryDate) {
+    private function getOrderNumber($estNo) {
+        return str_replace('E', 'O' , $estNo);
+    }
+
+    private function updateOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $datime, $custPO, $deliveryDate) {
         $em = $this->getDoctrine()->getManager();
         $order = $em->getRepository(Orders::class)->findOneBy(array('quoteId'=> $qId));
         if (!empty($order)) {
             $order->setEstNumber($estNo);
+            $order->setOrderNumber($orderNum);
             $order->setApprovedBy($approveBy);
             $order->setVia($via);
             $order->setOther($other);
@@ -519,11 +525,12 @@ class QuoteController extends Controller
         }
     }
 
-    private function saveOrderData($qId, $estNo, $approveBy, $via, $other, $datime, $custPO, $deliveryDate) {
+    private function saveOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $datime, $custPO, $deliveryDate) {
         $em = $this->getDoctrine()->getManager();
         $orders = new Orders();
         $orders->setQuoteId($qId);
         $orders->setEstNumber($estNo);
+        $orders->setOrderNumber($orderNum);
         $orders->setApprovedBy($approveBy);
         $orders->setVia($via);
         $orders->setOther($other);
