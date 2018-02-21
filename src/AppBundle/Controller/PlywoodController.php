@@ -176,7 +176,7 @@ class PlywoodController extends Controller
         $plywood->setEdgeSameOnB($edgeSameOnB);
         $plywood->setEdgeSameOnR($edgeSameOnR);
         $plywood->setEdgeSameOnL($edgeSameOnL);
-        
+
         $plywood->setTopEdge($topEdge);
         $plywood->setEdgeMaterialId($edgeMaterialId);
         $plywood->setEdgeFinishSpeciesId($edgeFinishSpeciesId);
@@ -390,6 +390,8 @@ class PlywoodController extends Controller
                                 for ($i=0; $i< count($tags); $i++) {
                                     $arrApi['data']['autoNumber'][$i]['autoNumber'] = $tags[$i]; 
                                 }
+                            } else {
+                                $arrApi['data']['autoNumber'] = null;
                             }
                             //die();
                            // $arrApi['data']['autoNumber'] = $plywood->getAutoNumber();
@@ -489,11 +491,9 @@ class PlywoodController extends Controller
      * Security("is_granted('ROLE_USER')")
      */
      public function editPlywoodAction(Request $request) {
-        
         $arrApi = [];
         $statusCode = 200;
         try {
-
             $jsontoarraygenerator = new JsonToArrayGenerator();
             $getJson = $jsontoarraygenerator->getJson($request);
             $id = trim($getJson->get('id'));
@@ -551,6 +551,7 @@ class PlywoodController extends Controller
             $unitMesureCostId = trim($getJson->get('unitmeasurecost'));
             $isLabels = trim($getJson->get('isLabels'));
             $numberLabels = trim($getJson->get('labels'));
+//            print_r($numberLabels);die;
             $lumberFee = trim($getJson->get('lumberfee'));
             $autoNumberArr = $getJson->get('autoNumber');
             $autoNumberstring = '';
@@ -716,7 +717,6 @@ class PlywoodController extends Controller
         $plywood->setEdgeSameOnB($edgeSameOnB);
         $plywood->setEdgeSameOnR($edgeSameOnR);
         $plywood->setEdgeSameOnL($edgeSameOnL);
-
         $plywood->setTopEdge($topEdge);
         $plywood->setEdgeMaterialId($edgeMaterialId);
         $plywood->setEdgeFinishSpeciesId($edgeFinishSpeciesId);
