@@ -1024,8 +1024,9 @@ class QuoteController extends Controller
                 ->getRepository('AppBundle:Profile')
                 ->findOneBy(array('userId' => $customer_id));
             $customerName =  $profileObj->getFname();
-            if (!empty($customerName)) {
-                return $customerName;
+            $custArr = explode(' ', $customerName);
+            if (!empty($custArr)) {
+                return $custArr[0];
             }
         }
     }
