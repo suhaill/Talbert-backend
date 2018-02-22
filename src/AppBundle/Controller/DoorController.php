@@ -80,7 +80,6 @@ class DoorController extends Controller
      * @Route("/api/doors/getDoorDetailsbyId")
      * @Security("is_granted('ROLE_USER')")
      * @Method("GET")
-     * params: Various
      */
     public function getDoorDetailsAction(Request $request) {
         $arrApi = array();
