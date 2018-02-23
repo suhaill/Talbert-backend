@@ -41,7 +41,7 @@ class SalesmanController extends Controller
                     $userId = $users[$i]->getId();
                     if (!empty($userId)) {
                         $arrApi['data']['salesmans'][$i]['id'] = $users[$i]->getId();
-                        $arrApi['data']['salesmans'][$i]['name'] = $this->getFnameById($userId).' '.$this->getLnameById($userId);
+                        $arrApi['data']['salesmans'][$i]['name'] = explode(' ', $this->getFnameById($userId))[0];
                     }
                 }
             }
