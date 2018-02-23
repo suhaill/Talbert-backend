@@ -253,6 +253,21 @@ class DoorController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    /**
+     * @Route("/api/doors/saveDoorCalcData")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     */
+    public function saveDoorCalcDataAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        echo 'everything is working'.$data['doorId'];die;
+
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
     private function updateFilesIdsInFilesTable($fileId_ar, $doorId) {
         if (!empty($fileId_ar)) {
             $fileId_ar = explode(',', $fileId_ar);
