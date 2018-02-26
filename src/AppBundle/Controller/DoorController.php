@@ -263,9 +263,78 @@ class DoorController extends Controller
         $statusCode = 200;
         $jsontoarraygenerator = new JsonToArrayGenerator();
         $data = $jsontoarraygenerator->getJson($request);
-        echo 'everything is working'.$data['doorId'];die;
-
+        //print_r($data);die;
+        if (empty($data['doorId']) || empty($data['qty']) || empty($data['width']) || empty($data['length']) || empty($data['venCost']) || empty($data['venWaste'])) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Parameter missing';
+            $statusCode = 422;
+        } else {
+            $isUpdated = $this->updateDoorCalculatorData($data);
+            if ($isUpdated) {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Success';
+            } else {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Error saving data';
+                $statusCode = 422;
+            }
+        }
         return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function updateDoorCalculatorData($data) {
+        $em   = $this->getDoctrine()->getManager();
+        $door =  $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->findOneBy(array('doorId'=> $data['doorId']));
+        $door->setCustMarkupPer($data['custMarkupPer']);
+        $door->setVenCost($data['venCost']);
+        $door->setVenWaste($data['venWaste']);
+        $door->setSubTotalVen($data['subTotVen']);
+        $door->setCoreCost($data['corCost']);
+        $door->setCoreWaste($data['corWaste']);
+        $door->setSubTotalCore($data['subTotCo']);
+        $door->setBackrCost($data['bakrCost']);
+        $door->setBackrWaste($data['bakrWaste']);
+        $door->setSubTotalBackr($data['subTotBackr']);
+        $door->setFinishCost($data['finishCostPly']);
+        $door->setFinishWaste($data['finishWastePly']);
+        $door->setSubTotalFinish($data['subTotalFinish']);
+        $door->setEdgeintCost($data['edgeIntCostPly']);
+        $door->setEdgeintWaste($data['edgeIntWastePly']);
+        $door->setSubTotalEdgeint($data['subTotalEdgeIntPly']);
+        $door->setEdgevCost($data['edgeVCostPly']);
+        $door->setEdgevWaste($data['edgeVWastePly']);
+        $door->setSubTotalEdgev($data['subTotalEdgeIntV']);
+        $door->setFinishEdgeCost($data['finishEdgeCostPly']);
+        $door->setFinishEdgeWaste($data['finishEdgeWastePly']);
+        $door->setSubTotalFinishEdge($data['subTotalFinishEdge']);
+//        $door->setMillingCost($data['']);
+//        $door->setMillingWaste($data['']);
+//        $door->setSubTotalMilling($data['']);
+        $door->setRunningCost($data['rfCostP']);
+        $door->setRunningWaste($data['rfWasteP']);
+        $door->setSubTotalrunning($data['rfSubTotP']);
+        $door->setFlatPrice($data['flatPriceCost']);
+        $door->setDoorFrame($data['doorFrameCost']);
+        $door->setLouvers($data['louversCost']);
+        $door->setLightOpening($data['lightOpeningCost']);
+        $door->setSurfaceMachining($data['surfaceMachiningCost']);
+        $door->setStyles($data['stylesCost']);
+        $door->setMachining($data['machiningCost']);
+        $door->setFacePreps($data['facePrepsCost']);
+        $door->setGlass($data['glassCost']);
+        $door->setBlocking($data['blockingCost']);
+        $door->setTotalcostPerPiece($data['totalCostPerPiece']);
+        $door->setMarkup($data['markup']);
+        $door->setSellingPrice($data['sellingPrice']);
+        $door->setLineitemTotal($data['lineitemTotal']);
+        $door->setMachineSetup($data['machnStp']);
+        $door->setMachineTooling($data['machnTlng']);
+        $door->setPreFinishSetup($data['preFnshStp']);
+        $door->setColorMatch($data['clrMatch']);
+        $door->setTotalCost($data['totalCost']);
+        $em->persist($door);
+        $em->flush();
+        return true;
     }
 
     private function updateFilesIdsInFilesTable($fileId_ar, $doorId) {
