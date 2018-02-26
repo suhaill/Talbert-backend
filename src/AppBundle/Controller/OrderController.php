@@ -1126,4 +1126,46 @@ class OrderController extends Controller
         }
         return $subtotal;
     }
+    
+    private function __arraySortByColumn($array, $index, $order, $natsort=FALSE, $case_sensitive=FALSE) {
+        if (is_array($array) && count($array) > 0) {
+            foreach (array_keys($array) as $key) {
+                $temp[$key] = $array[$key][$index];
+            }
+            
+            if (!$natsort) {                
+                if ($order == 'ASC') {
+                    asort($temp);
+                } else {
+                    arsort($temp);
+                }
+            } else {
+                if ($case_sensitive === true) {
+                    natsort($temp);
+                } else {
+                    natcasesort($temp);
+                }
+                if ($order != 'ASC') {
+                    $temp = array_reverse($temp, TRUE);
+                }
+            }
+            foreach (array_keys($temp) as $key) {
+                if (is_numeric($key)) {
+                    $sorted[] = $array[$key];
+                } else {
+                    $sorted[$key] = $array[$key];
+                }
+            }
+            return $sorted;
+        }
+        return $sorted;
+//        if(!empty($arr)){
+//            $sort_col = array();
+//            foreach ($arr as $key=> $row) {
+//                $sort_col[$key] = $row[$col];
+//            }
+//            array_multisort($sort_col, $dir, $arr);
+//        }        
+//        return $arr;
+    }
 }
