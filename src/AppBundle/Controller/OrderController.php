@@ -169,7 +169,7 @@ class OrderController extends Controller
                 }
             }
             $this->updateQuoteData($quoteId);
-            $quoteData = $this->getQuoteDataById($quoteId);
+            $quoteData = $this->getOrderDataById($quoteId);
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'This order does not exists';
@@ -228,7 +228,7 @@ class OrderController extends Controller
         try {
             $quoteId = $request->query->get('id');
             $datime = new \DateTime('now');
-            $quoteData = $this->getQuoteDataById($quoteId);
+            $quoteData = $this->getOrderDataById($quoteId);
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'This order does not exists';
@@ -646,6 +646,33 @@ class OrderController extends Controller
         return str_replace($shortCodes, $values, $message);
     }
     
+    private function getPlywoodIds($ply) {
+        $ids = array();
+        for ($i=0;$i<count($ply);$i++) {
+            $ids[] = $ply[$i]->getId();
+        }
+        return $ids;
+    }
+    
+    private function getVeneerIds($ven) {
+        $ids = array();
+        for ($i=0;$i<count($ven);$i++) {
+            $ids[] = $ven[$i]->getId();
+        }
+        return $ids;
+    }
+    
+    private function wordLimit($text) {
+         if (!empty($text)) {
+             if (strlen($text) > 20) {
+               $txt = substr($text, 0,20).'...';
+             } else {
+                 $txt = $text;
+             }
+             return $txt;
+         }
+    }
+    
     private function getLineitemAttachmentsList($request, $qId) {
         $attachmentArr = array();
         $ply = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId'=>$qId));
@@ -711,6 +738,10 @@ class OrderController extends Controller
         return $urlArr;
     }
     
+    private function strignfyCHKArr($chkVal) {
+        return implode(',', $chkVal);
+    }
+    
     private function saveSentEmailDetails($qId, $currUserId, $cmt, $chkVal, $datime) {
         $custId = $this->getCustomerIdByQuoteId($qId);
         $chkBxVal = $this->strignfyCHKArr($chkVal);
@@ -732,4 +763,248 @@ class OrderController extends Controller
         $dateArr =  explode('-', explode('T',$date)[0]);
         return $d = $dateArr[1].'/'.$dateArr[2].'/'.$dateArr[0];
     }
+    
+    private function getOrderDataById($qId) {
+        return $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId);
+    }
+    
+    private function getSpeciesNameById($species_id) {
+        $productRecord = $this->getDoctrine()->getRepository('AppBundle:Species')->findOneById($species_id);
+        if (!empty($productRecord)) {
+            return $productRecord->getName();
+        }
+    }
+    
+    private function getPatternNameById($pattern_id) {
+        $patternRecord = $this->getDoctrine()->getRepository('AppBundle:Pattern')->findOneById($pattern_id);
+        if (!empty($patternRecord)) {
+            return $patternRecord->getName();
+        }
+    }
+
+    private function getGradeNameById($gId) {
+        $gradeRecord = $this->getDoctrine()->getRepository('AppBundle:FaceGrade')->findOneById($gId);
+        if (!empty($gradeRecord)) {
+            return $gradeRecord->getName();
+        }
+    }
+
+    private function getBackNameById($bId) {
+        $backRecord = $this->getDoctrine()->getRepository('AppBundle:Backer')->findOneById($bId);
+        if (!empty($backRecord)) {
+            return $backRecord->getName();
+        }
+    }
+
+    private function getThicknessNameById($tId) {
+        $thicknessRecord = $this->getDoctrine()->getRepository('AppBundle:Thickness')->findOneById($tId);
+        if (!empty($thicknessRecord)) {
+            return $thicknessRecord->getName();
+        }
+    }
+
+    private function getCoreNameById($cId) {
+        $cTypeRecord = $this->getDoctrine()->getRepository('AppBundle:CoreType')->findOneById($cId);
+        if (!empty($cTypeRecord)) {
+            return $cTypeRecord->getName();
+        }
+    }
+
+    private function getEdgeNameById($eId) {
+        $eFinishRecord = $this->getDoctrine()->getRepository('AppBundle:EdgeFinish')->findOneById($eId);
+        if (!empty($eFinishRecord)) {
+            return $eFinishRecord->getName();
+        }
+    }
+
+    
+    private function getVeneerslistbyQuoteId($qId) {
+        $lineItem = array();
+        $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $qId,'isActive'=>1));
+        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
+        $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $qId, 'status'=> 1));
+        $i=0;
+        if (!empty($plywoodRecords) || !empty($veneerRecords) || !empty($doorRecords)) {
+            if (!empty($plywoodRecords)) {
+                foreach ($plywoodRecords as $p) {
+                    $lineItem[$i]['id'] = $p->getId();
+                    $lineItem[$i]['type'] = 'plywood';
+                    $lineItem[$i]['url'] = 'line-item/edit-plywood';
+                    $lineItem[$i]['quantity'] = $p->getQuantity();
+                    $lineItem[$i]['species'] = $this->getSpeciesNameById($p->getSpeciesId());
+                    $lineItem[$i]['pattern'] = $this->getPatternNameById($p->getPatternId());
+                    $lineItem[$i]['grade'] = $this->getGradeNameById($p->getGradeId());
+                    $lineItem[$i]['back'] = $this->getBackNameById($p->getBackerId());
+                    $lineItem[$i]['thickness'] = $this->getThicknessNameById($p->getThicknessId());
+                    $lineItem[$i]['width'] = $p->getPlywoodWidth();
+                    $lineItem[$i]['length'] = $p->getPlywoodLength();
+                    $lineItem[$i]['core'] = $this->getCoreNameById($p->getCoreType());
+                    $lineItem[$i]['edge'] = $this->getEdgeNameById($p->getEdgeDetail());
+                    $lineItem[$i]['unitPrice'] = $p->getTotalcostPerPiece();
+                    $lineItem[$i]['totalPrice'] = $p->getTotalCost();
+                    $i++;
+                }
+            }
+            if (!empty($veneerRecords)) {
+                foreach ($veneerRecords as $v) {
+                    $lineItem[$i]['id'] = $v->getId();
+                    $lineItem[$i]['type'] = 'veneer';
+                    $lineItem[$i]['url'] = 'line-item/edit-veneer';
+                    $lineItem[$i]['quantity'] = $v->getQuantity();
+                    $lineItem[$i]['species'] = $this->getSpeciesNameById($v->getSpeciesId());
+                    $lineItem[$i]['pattern'] = $this->getPatternNameById($v->getPatternId());
+                    $lineItem[$i]['grade'] = $this->getGradeNameById($v->getGradeId());
+                    $lineItem[$i]['back'] = $this->getBackNameById($v->getBacker());
+                    $lineItem[$i]['thickness'] = $this->getThicknessNameById($v->getThicknessId());
+                    $lineItem[$i]['width'] = $v->getWidth();
+                    $lineItem[$i]['length'] = $v->getLength();
+                    $lineItem[$i]['core'] = $this->getCoreNameById($v->getCoreTypeId());
+                    $lineItem[$i]['edge'] = 'NA';
+                    $lineItem[$i]['unitPrice'] = $v->getTotCostPerPiece();
+                    $lineItem[$i]['totalPrice'] = $v->getTotalCost();
+                    $i++;
+                }
+            }
+            if (!empty($doorRecords)) {
+                foreach ($doorRecords as $d) {
+                    $lineItem[$i]['id'] = $d->getId();
+                    $lineItem[$i]['type'] = 'door';
+                    $lineItem[$i]['url'] = 'door/edit-door';
+                    $lineItem[$i]['quantity'] = $d->getQty();
+                    $lineItem[$i]['species'] = $this->getSpeciesNameById($this->getSpeciesIdByDoorId($d->getId()));
+                    $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d->getId()));
+                    $lineItem[$i]['grade'] = $this->getGradeNameById($this->getGradeIdByDoorId($d->getId()));
+                    $lineItem[$i]['back'] = 'NA';//$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
+                    $lineItem[$i]['thickness'] = 'NA';//$this->getThicknessNameById($d->getThicknessId());
+                    $lineItem[$i]['width'] = $d->getWidth();
+                    $lineItem[$i]['length'] = $d->getLength();
+                    $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
+                    $lineItem[$i]['edge'] = 'NA';
+                    $lineItem[$i]['unitPrice'] = '0';
+                    $lineItem[$i]['totalPrice'] = '0';
+                    $i++;
+                }
+            }
+            return $lineItem;
+        }
+    }
+    
+    private function getCustomerEmailById($customer_id) {
+        if (!empty($customer_id)) {
+            $profileObj = $this->getDoctrine()
+                ->getRepository('AppBundle:Profile')
+                ->findOneBy(array('userId' => $customer_id));
+            $customerName =  $profileObj->getEmail();
+            if (!empty($customerName)) {
+                return $customerName;
+            }
+        }
+    }
+    
+    private function getSalesmanNameById($salesman_id) {
+        if (!empty($salesman_id)) {
+            $profileObj = $this->getDoctrine()
+                ->getRepository('AppBundle:Profile')
+                ->findOneBy(array('userId' => $salesman_id));
+            $customerName =  $profileObj->getFname();
+            if (!empty($customerName)) {
+                return $customerName;
+            }
+        }
+    }
+    
+    private function getShipMethodNamebyId($hipmethod_id) {
+        $shippmethodRecord = $this->getDoctrine()->getRepository('AppBundle:ShippingMethods')->findOneById($hipmethod_id);
+        if (!empty($shippmethodRecord)) {
+            return $shippmethodRecord->getName();
+        }
+    }
+    
+    private function getBillAddById($cust_id) {
+        $addArr = array();
+        $addData = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findOneBy(array('userId' => $cust_id));
+        if (!empty($addData)) {
+            $addArr['street'] = $addData->getStreet();
+            $addArr['state'] = $this->getStateNamebyId($addData->getStateId());
+            $addArr['city'] = $addData->getCity();
+            $addArr['zip'] = $addData->getZip();
+            return $addArr;
+        }
+    }
+
+    private function getShippingAddById($add_id) {
+        $addArr = array();
+        $addData = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findOneById($add_id);
+        if (!empty($addData)) {
+            $addArr['nickname'] = $addData->getNickname();
+            $addArr['street'] = $addData->getStreet();
+            $addArr['state'] = $this->getStateNamebyId($addData->getStateId());
+            $addArr['city'] = $addData->getCity();
+            $addArr['zip'] = $addData->getZip();
+            return $addArr;
+        }
+    }
+
+    private function getStateNamebyId($state_id) {
+        $stateRecord = $this->getDoctrine()->getRepository('AppBundle:State')->findOneById($state_id);
+        if (!empty($stateRecord)) {
+            return $stateRecord->getStateName();
+        }
+    }
+    
+    private function cloneAttachments($doorId, $newdoorId, $type, $datime) {
+        $files = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('attachabletype' => $type, 'attachableid' => $doorId));
+        if (!empty($files)) {
+            $em = $this->getDoctrine()->getManager();
+            for ($i=0; $i< count($files); $i++) {
+                $filesObj = new Files();
+                $filesObj->setFileName($files[$i]->getFileName());
+                $filesObj->setOriginalName($files[$i]->getOriginalName());
+                $filesObj->setAttachableType($files[$i]->getAttachableType());
+                $filesObj->setAttachableId($newdoorId);
+                $filesObj->setCreatedAt($datime);
+                $filesObj->setUpdatedAt($datime);
+                $em->persist($filesObj);
+                $em->flush();
+            }
+        }
+    }
+    
+    private function cloneSkinData($clonedQuoteId, $oldDoorId, $newDoorId, $datime) {
+        $skinData = $this->getDoctrine()->getRepository('AppBundle:Skins')->findBy(array('doorId' => $oldDoorId));
+        if (!empty($skinData)) {
+            $em = $this->getDoctrine()->getManager();
+            for ($i=0; $i< count($skinData); $i++) {
+                $skin = new Skins();
+                $skin->setQuoteId($clonedQuoteId);
+                $skin->setDoorId($newDoorId);
+                $skin->setSkinType($skinData[$i]->getSkinType());
+                $skin->setSpecies($skinData[$i]->getSpecies());
+                $skin->setGrain($skinData[$i]->getGrain());
+                $skin->setGrainDir($skinData[$i]->getGrainDir());
+                $skin->setPattern($skinData[$i]->getPattern());
+                $skin->setGrade($skinData[$i]->getGrade());
+                $skin->setLeedReqs($skinData[$i]->getLeedReqs());
+                $skin->setManufacturer($skinData[$i]->getManufacturer());
+                $skin->setColor($skinData[$i]->getColor());
+                $skin->setEdge($skinData[$i]->getEdge());
+                $skin->setThickness($skinData[$i]->getThickness());
+                $skin->setSkinTypeBack($skinData[$i]->getSkinTypeBack());
+                $skin->setBackSpecies($skinData[$i]->getBackSpecies());
+                $skin->setBackGrain($skinData[$i]->getBackGrain());
+                $skin->setBackGrainDir($skinData[$i]->getBackGrainDir());
+                $skin->setBackPattern($skinData[$i]->getBackPattern());
+                $skin->setBackGrade($skinData[$i]->getBackGrade());
+                $skin->setBackLeedReqs($skinData[$i]->getBackLeedReqs());
+                $skin->setBackManufacturer($skinData[$i]->getBackManufacturer());
+                $skin->setBackColor($skinData[$i]->getBackColor());
+                $skin->setBackEdge($skinData[$i]->getBackEdge());
+                $skin->setBackThickness($skinData[$i]->getBackThickness());
+                $em->persist($skin);
+                $em->flush();
+                $this->cloneAttachments($oldDoorId, $newDoorId, 'door', $datime);
+            }
+        }
+    }
+
 }
