@@ -109,7 +109,7 @@ class QuoteController extends Controller
         } else {
             $sortArray=[$columnName=>$orderBy];
         }
-        $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold','Approved')),$sortArray);
+        $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold')),$sortArray);
         if (empty($quotes) ) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'There is no quote.';
