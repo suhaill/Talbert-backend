@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\DoorCalculator;
 use AppBundle\Service\JsonToArrayGenerator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -45,6 +46,7 @@ class DoorController extends Controller
         $length = trim($data->get('length'));
         $thickness = trim($data->get('thickness'));
         $lumFee = trim($data->get('lumFee'));
+        $createdAt = new \DateTime('now');
         if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($lumFee)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Please fill all the fields.';
@@ -68,12 +70,67 @@ class DoorController extends Controller
                         $this->cloneFilesIdsInFilesTable($doorId, $isDoorSaved);
                     } else {
                         $this->updateFilesIdsInFilesTable($fileIds, $isDoorSaved);
+                        $this->addDefaultCalcData($isDoorSaved, $createdAt);
                     }
                     $this->saveDoorSkinData($data,$isDoorSaved);
                 }
             }
         }
         return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function addDefaultCalcData($doorId, $createdAt) {
+        $em = $this->getDoctrine()->getManager();
+        $door = new DoorCalculator();
+        $door->setDoorId($doorId);
+        $door->setCustMarkupPer(25);
+        $door->setVenCost(0.00);
+        $door->setVenWaste(1);
+        $door->setSubTotalVen(0.00);
+        $door->setCoreCost(0.00);
+        $door->setCoreWaste(1);
+        $door->setSubTotalCore(0.00);
+        $door->setBackrCost(0.00);
+        $door->setBackrWaste(1);
+        $door->setSubTotalBackr(0.00);
+        $door->setFinishCost(0.00);
+        $door->setFinishWaste(1);
+        $door->setSubTotalFinish(0.00);
+        $door->setEdgeintCost(0.00);
+        $door->setEdgeintWaste(1);
+        $door->setSubTotalEdgeint(0.00);
+        $door->setEdgevCost(0.00);
+        $door->setEdgevWaste(1);
+        $door->setSubTotalEdgev(0.00);
+        $door->setFinishEdgeCost(0.00);
+        $door->setFinishEdgeWaste(1);
+        $door->setSubTotalFinishEdge(0.00);
+        $door->setRunningCost(0.00);
+        $door->setRunningWaste(1);
+        $door->setSubTotalrunning(0.00);
+        $door->setFlatPrice(0.00);
+        $door->setDoorFrame(0.00);
+        $door->setLouvers(0.00);
+        $door->setLightOpening(0.00);
+        $door->setSurfaceMachining(0.00);
+        $door->setStyles(0.00);
+        $door->setMachining(0.00);
+        $door->setFacePreps(0.00);
+        $door->setGlass(0.00);
+        $door->setBlocking(0.00);
+        $door->setTotalcostPerPiece(0.00);
+        $door->setMarkup(0.00);
+        $door->setSellingPrice(0.00);
+        $door->setLineitemTotal(0.00);
+        $door->setMachineSetup(0.00);
+        $door->setMachineTooling(0.00);
+        $door->setPreFinishSetup(0.00);
+        $door->setColorMatch(0.00);
+        $door->setTotalCost(0.00);
+        $door->setCreatedAt($createdAt);
+        $door->setUpdatedAt($createdAt);
+        $em->persist($door);
+        $em->flush();
     }
 
     /**
@@ -202,6 +259,7 @@ class DoorController extends Controller
                     $arrApi['data']['files'][$i]['fileLink'] = $this->getFileUrl( $allfiles[$i]->getId(),$request );
                 }
                 $arrApi['data']['filestring'] = rtrim($filestring,',');
+                $arrApi['data']['calc'] = $this->getCalcDataByDoorId($doorId);
             }
         }
         return new JsonResponse($arrApi, $statusCode);
@@ -263,7 +321,6 @@ class DoorController extends Controller
         $statusCode = 200;
         $jsontoarraygenerator = new JsonToArrayGenerator();
         $data = $jsontoarraygenerator->getJson($request);
-        //print_r($data);die;
         if (empty($data['doorId']) || empty($data['qty']) || empty($data['width']) || empty($data['length']) || empty($data['venCost']) || empty($data['venWaste'])) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Parameter missing';
@@ -291,7 +348,7 @@ class DoorController extends Controller
         $door->setSubTotalVen($data['subTotVen']);
         $door->setCoreCost($data['corCost']);
         $door->setCoreWaste($data['corWaste']);
-        $door->setSubTotalCore($data['subTotCo']);
+        $door->setSubTotalCore($data['subTotCor']);
         $door->setBackrCost($data['bakrCost']);
         $door->setBackrWaste($data['bakrWaste']);
         $door->setSubTotalBackr($data['subTotBackr']);
@@ -726,5 +783,56 @@ class DoorController extends Controller
 
     private function checkIfDoorExists($doorId) {
         return $this->getDoctrine()->getRepository('AppBundle:Doors')->findOneById($doorId);
+    }
+
+    private function getCalcDataByDoorId($doorId) {
+        $data = array();
+        $em   = $this->getDoctrine()->getManager();
+        $door =  $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->findOneBy(array('doorId'=> $doorId));
+        $data['custMarkup'] = $door->getCustMarkupPer();
+        $data['venCost'] = $door->getVenCost();
+        $data['venWaste'] = $door->getVenWaste();
+        $data['subTotVen'] = $door->getSubTotalVen();
+        $data['coreCost'] = $door->getCoreCost();
+        $data['coreWaste'] = $door->getCoreWaste();
+        $data['subTotCore'] = $door->getSubTotalCore();
+        $data['backrCost'] = $door->getBackrCost();
+        $data['backrWaste'] = $door->getBackrWaste();
+        $data['subTotBackr'] = $door->getSubTotalBackr();
+        $data['finishCost'] = $door->getFinishCost();
+        $data['finishWaste'] = $door->getFinishWaste();
+        $data['subTotFinish'] = $door->getSubTotalFinish();
+        $data['edgeIntCost'] = $door->getEdgeintCost();
+        $data['edgeIntWaste'] = $door->getEdgeintWaste();
+        $data['SubTotEdgeInt'] = $door->getSubTotalEdgeint();
+        $data['edgevCost'] = $door->getEdgevCost();
+        $data['edgevWaste'] = $door->getEdgevWaste();
+        $data['subTotEdgeV'] = $door->getSubTotalEdgev();
+        $data['finishEdgeCost'] = $door->getFinishEdgeCost();
+        $data['finishEdgeWaste'] = $door->getFinishEdgeWaste();
+        $data['subTotFinishEdge'] = $door->getSubTotalFinishEdge();
+        $data['runningCost'] = $door->getRunningCost();
+        $data['runningWaste'] = $door->getRunningWaste();
+        $data['SubTotRunn'] = $door->getSubTotalrunning();
+        $data['flatPrice'] = $door->getFlatPrice();
+        $data['doorFrame'] = $door->getDoorFrame();
+        $data['louvers'] = $door->getLouvers();
+        $data['lightOpen'] = $door->getLightOpening();
+        $data['surMach'] = $door->getSurfaceMachining();
+        $data['styles'] = $door->getStyles();
+        $data['machining'] = $door->getMachining();
+        $data['facePreps'] = $door->getFacePreps();
+        $data['glass'] = $door->getGlass();
+        $data['blocking'] = $door->getBlocking();
+        $data['totCostPerPiece'] = $door->getTotalcostPerPiece();
+        $data['markup'] = $door->getMarkup();
+        $data['sellingPrice'] = $door->getSellingPrice();
+        $data['lineItemTot'] = $door->getLineitemTotal();
+        $data['machineSetup'] = $door->getMachineSetup();
+        $data['machineTooling'] = $door->getMachineTooling();
+        $data['preFinishSetup'] = $door->getPreFinishSetup();
+        $data['colorMatch'] = $door->getColorMatch();
+        $data['totCost'] = $door->getTotalCost();
+        return $data;
     }
 }
