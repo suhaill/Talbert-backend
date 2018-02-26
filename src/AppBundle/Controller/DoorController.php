@@ -69,6 +69,7 @@ class DoorController extends Controller
                     if ($addOrClone == 'clone') {
                         $this->cloneFilesIdsInFilesTable($doorId, $isDoorSaved);
                     } else {
+                        $arrApi['data']['lastInsertId'] = $isDoorSaved;
                         $this->updateFilesIdsInFilesTable($fileIds, $isDoorSaved);
                         $this->addDefaultCalcData($isDoorSaved, $createdAt);
                     }
@@ -77,60 +78,6 @@ class DoorController extends Controller
             }
         }
         return new JsonResponse($arrApi, $statusCode);
-    }
-
-    private function addDefaultCalcData($doorId, $createdAt) {
-        $em = $this->getDoctrine()->getManager();
-        $door = new DoorCalculator();
-        $door->setDoorId($doorId);
-        $door->setCustMarkupPer(25);
-        $door->setVenCost(0.00);
-        $door->setVenWaste(1);
-        $door->setSubTotalVen(0.00);
-        $door->setCoreCost(0.00);
-        $door->setCoreWaste(1);
-        $door->setSubTotalCore(0.00);
-        $door->setBackrCost(0.00);
-        $door->setBackrWaste(1);
-        $door->setSubTotalBackr(0.00);
-        $door->setFinishCost(0.00);
-        $door->setFinishWaste(1);
-        $door->setSubTotalFinish(0.00);
-        $door->setEdgeintCost(0.00);
-        $door->setEdgeintWaste(1);
-        $door->setSubTotalEdgeint(0.00);
-        $door->setEdgevCost(0.00);
-        $door->setEdgevWaste(1);
-        $door->setSubTotalEdgev(0.00);
-        $door->setFinishEdgeCost(0.00);
-        $door->setFinishEdgeWaste(1);
-        $door->setSubTotalFinishEdge(0.00);
-        $door->setRunningCost(0.00);
-        $door->setRunningWaste(1);
-        $door->setSubTotalrunning(0.00);
-        $door->setFlatPrice(0.00);
-        $door->setDoorFrame(0.00);
-        $door->setLouvers(0.00);
-        $door->setLightOpening(0.00);
-        $door->setSurfaceMachining(0.00);
-        $door->setStyles(0.00);
-        $door->setMachining(0.00);
-        $door->setFacePreps(0.00);
-        $door->setGlass(0.00);
-        $door->setBlocking(0.00);
-        $door->setTotalcostPerPiece(0.00);
-        $door->setMarkup(0.00);
-        $door->setSellingPrice(0.00);
-        $door->setLineitemTotal(0.00);
-        $door->setMachineSetup(0.00);
-        $door->setMachineTooling(0.00);
-        $door->setPreFinishSetup(0.00);
-        $door->setColorMatch(0.00);
-        $door->setTotalCost(0.00);
-        $door->setCreatedAt($createdAt);
-        $door->setUpdatedAt($createdAt);
-        $em->persist($door);
-        $em->flush();
     }
 
     /**
@@ -834,5 +781,59 @@ class DoorController extends Controller
         $data['colorMatch'] = $door->getColorMatch();
         $data['totCost'] = $door->getTotalCost();
         return $data;
+    }
+
+    private function addDefaultCalcData($doorId, $createdAt) {
+        $em = $this->getDoctrine()->getManager();
+        $door = new DoorCalculator();
+        $door->setDoorId($doorId);
+        $door->setCustMarkupPer(25);
+        $door->setVenCost(0.00);
+        $door->setVenWaste(1);
+        $door->setSubTotalVen(0.00);
+        $door->setCoreCost(0.00);
+        $door->setCoreWaste(1);
+        $door->setSubTotalCore(0.00);
+        $door->setBackrCost(0.00);
+        $door->setBackrWaste(1);
+        $door->setSubTotalBackr(0.00);
+        $door->setFinishCost(0.00);
+        $door->setFinishWaste(1);
+        $door->setSubTotalFinish(0.00);
+        $door->setEdgeintCost(0.00);
+        $door->setEdgeintWaste(1);
+        $door->setSubTotalEdgeint(0.00);
+        $door->setEdgevCost(0.00);
+        $door->setEdgevWaste(1);
+        $door->setSubTotalEdgev(0.00);
+        $door->setFinishEdgeCost(0.00);
+        $door->setFinishEdgeWaste(1);
+        $door->setSubTotalFinishEdge(0.00);
+        $door->setRunningCost(0.00);
+        $door->setRunningWaste(1);
+        $door->setSubTotalrunning(0.00);
+        $door->setFlatPrice(0.00);
+        $door->setDoorFrame(0.00);
+        $door->setLouvers(0.00);
+        $door->setLightOpening(0.00);
+        $door->setSurfaceMachining(0.00);
+        $door->setStyles(0.00);
+        $door->setMachining(0.00);
+        $door->setFacePreps(0.00);
+        $door->setGlass(0.00);
+        $door->setBlocking(0.00);
+        $door->setTotalcostPerPiece(0.00);
+        $door->setMarkup(0.00);
+        $door->setSellingPrice(0.00);
+        $door->setLineitemTotal(0.00);
+        $door->setMachineSetup(0.00);
+        $door->setMachineTooling(0.00);
+        $door->setPreFinishSetup(0.00);
+        $door->setColorMatch(0.00);
+        $door->setTotalCost(0.00);
+        $door->setCreatedAt($createdAt);
+        $door->setUpdatedAt($createdAt);
+        $em->persist($door);
+        $em->flush();
     }
 }
