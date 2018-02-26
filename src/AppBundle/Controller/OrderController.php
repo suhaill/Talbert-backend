@@ -15,6 +15,7 @@ use Symfony\Component\Serializer\Serializer;
 use PDO;
 use Symfony\Component\Security\Core\User\UserInterface;
 use AppBundle\Entity\Orders;
+use AppBundle\Entity\Quotes;
 
 class OrderController extends Controller
 {
