@@ -1006,5 +1006,12 @@ class OrderController extends Controller
             }
         }
     }
-
+    
+    
+    private function getCustomerIdByQuoteId($qId) {
+        $quoteRecord = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findById($qId);
+        if (!empty($quoteRecord)) {
+            return $quoteRecord[0]->getCustomerId();
+        }
+    }
 }
