@@ -16,6 +16,7 @@ use PDO;
 use Symfony\Component\Security\Core\User\UserInterface;
 use AppBundle\Entity\Orders;
 use AppBundle\Entity\Quotes;
+use AppBundle\Entity\Profile;
 
 class OrderController extends Controller
 {
@@ -139,6 +140,7 @@ class OrderController extends Controller
                 $quoteList[$i]['id'] = $quotes[$i]->getId();
                 $quoteList[$i]['estimateNumber'] = 'E-'.$quotes[$i]->getControlNumber().'-'.$quotes[$i]->getVersion();
                 $quoteList[$i]['customername'] = strtoupper($this->getCustomerNameById($quotes[$i]->getCustomerId()));
+                $quoteList[$i]['companyname'] = strtoupper($this->getCompanyById($quotes[$i]->getCustomerId()));
                 $quoteList[$i]['status'] = $quotes[$i]->getStatus();
                 $quoteList[$i]['estDate'] = $this->getEstimateDateFormate($quotes[$i]->getEstimateDate());
             }
@@ -1168,5 +1170,12 @@ class OrderController extends Controller
 //            array_multisort($sort_col, $dir, $arr);
 //        }        
 //        return $arr;
+    }
+    
+    private function getCompanyById($userid) {
+        $profileObj = $this->getDoctrine()
+            ->getRepository('AppBundle:Profile')
+            ->findOneBy(array('userId' => $userid));
+        return $profileObj->getCompany();
     }
 }
