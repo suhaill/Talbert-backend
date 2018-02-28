@@ -166,7 +166,7 @@ class OrderController extends Controller
         try {
             $quoteId = $request->query->get('id');
             if (empty($quoteId)) {
-                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array(),array('id'=>'desc'));
+                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=>['Approved']),array('id'=>'desc'));
                 if (!empty($quotes)) {
                     $quoteId = $quotes[0]->getId();
                 }
