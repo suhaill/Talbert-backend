@@ -21,6 +21,7 @@ use AppBundle\Entity\Veneer;
 use AppBundle\Entity\Doors;
 use AppBundle\Entity\Skins;
 use AppBundle\Entity\Files;
+use AppBundle\Entity\Profile;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -110,6 +111,7 @@ class QuoteController extends Controller
             $sortArray=[$columnName=>$orderBy];
         }
         $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold')),$sortArray);
+        
         if (empty($quotes) ) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'There is no quote.';
@@ -122,6 +124,7 @@ class QuoteController extends Controller
                 $quoteList[$i]['id'] = $quotes[$i]->getId();
                 $quoteList[$i]['estimateNumber'] = 'E-'.$quotes[$i]->getControlNumber().'-'.$quotes[$i]->getVersion();
                 $quoteList[$i]['customername'] = strtoupper($this->getCustomerNameById($quotes[$i]->getCustomerId()));
+                $quoteList[$i]['companyname'] = strtoupper($this->getCompanyById($quotes[$i]->getCustomerId()));
                 $quoteList[$i]['status'] = $quotes[$i]->getStatus();
                 $quoteList[$i]['estDate'] = $this->getEstimateDateFormate($quotes[$i]->getEstimateDate());
             }
@@ -147,7 +150,7 @@ class QuoteController extends Controller
         try {
             $quoteId = $request->query->get('id');
             if (empty($quoteId)) {
-                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array(),array('id'=>'desc'));
+                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold')),array('id'=>'desc'));
                 if (!empty($quotes)) {
                     $quoteId = $quotes[0]->getId();
                 }
@@ -1463,6 +1466,13 @@ class QuoteController extends Controller
 //            array_multisort($sort_col, $dir, $arr);
 //        }        
 //        return $arr;
+    }
+    
+    private function getCompanyById($userid) {
+        $profileObj = $this->getDoctrine()
+            ->getRepository('AppBundle:Profile')
+            ->findOneBy(array('userId' => $userid));
+        return $profileObj->getCompany();
     }
 
 }

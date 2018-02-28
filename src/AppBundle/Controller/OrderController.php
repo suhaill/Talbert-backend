@@ -15,6 +15,8 @@ use Symfony\Component\Serializer\Serializer;
 use PDO;
 use Symfony\Component\Security\Core\User\UserInterface;
 use AppBundle\Entity\Orders;
+use AppBundle\Entity\Quotes;
+use AppBundle\Entity\Profile;
 
 class OrderController extends Controller
 {
@@ -138,6 +140,7 @@ class OrderController extends Controller
                 $quoteList[$i]['id'] = $quotes[$i]->getId();
                 $quoteList[$i]['estimateNumber'] = 'E-'.$quotes[$i]->getControlNumber().'-'.$quotes[$i]->getVersion();
                 $quoteList[$i]['customername'] = strtoupper($this->getCustomerNameById($quotes[$i]->getCustomerId()));
+                $quoteList[$i]['companyname'] = strtoupper($this->getCompanyById($quotes[$i]->getCustomerId()));
                 $quoteList[$i]['status'] = $quotes[$i]->getStatus();
                 $quoteList[$i]['estDate'] = $this->getEstimateDateFormate($quotes[$i]->getEstimateDate());
             }
@@ -163,7 +166,7 @@ class OrderController extends Controller
         try {
             $quoteId = $request->query->get('id');
             if (empty($quoteId)) {
-                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array(),array('id'=>'desc'));
+                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=>['Approved']),array('id'=>'desc'));
                 if (!empty($quotes)) {
                     $quoteId = $quotes[0]->getId();
                 }
@@ -1006,5 +1009,194 @@ class OrderController extends Controller
             }
         }
     }
+    
+    
+    private function getCustomerIdByQuoteId($qId) {
+        $quoteRecord = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findById($qId);
+        if (!empty($quoteRecord)) {
+            return $quoteRecord[0]->getCustomerId();
+        }
+    }
+    
+    private function updateQuoteData($quoteId) {
+        $salesTaxRate = 0;
+        $salesTaxAmount = 0;
+        $quoteSubTotal = $this->getPlywoodSubTotalByQuoteId($quoteId) + $this->getVeneerSubTotalByQuoteId($quoteId);
+        $quoteData = $this->getOrderDataById($quoteId);
+        $shipAddId = $quoteData->getShipAddId();
+        $expFee = $quoteData->getExpFee();
+        $discount = $quoteData->getDiscount();
+        if (!empty($shipAddId)) {
+            $salesTaxRate = $this->getSalesTaxRateByAddId($shipAddId);
+        }
+        $salesTaxAmount = (($quoteSubTotal + $expFee - $discount ) * ($salesTaxRate)) / 100;
+        $shipCharge = $this->getShippingChargeByAddId($shipAddId);
+        $lumFee = $this->getPlywoodLumberFeeByQuoteId($quoteId) + $this->getVeneerLumberFeeByQuoteId($quoteId);
+        $projectTotal = ($quoteSubTotal + $expFee - $discount + $salesTaxAmount + $shipCharge + $lumFee);
+        $this->saveQuoteCalculatedData($quoteId, $quoteSubTotal, $salesTaxAmount, $shipCharge, $lumFee, $projectTotal);
+    }
+    
+    private function saveQuoteCalculatedData($quoteId, $quoteSubTotal, $salesTaxAmount, $shipCharge, $lumFee, $projectTotal) {
+        $em = $this->getDoctrine()->getManager();
+        $quote = $em->getRepository(Quotes::class)->findOneById($quoteId);
+        $datime = new \DateTime('now');
+        if (!empty($quote)) {
+            $quote->setQuoteTot($quoteSubTotal);
+            $quote->setSalesTax($salesTaxAmount);
+            $quote->setShipCharge($shipCharge);
+            $quote->setLumFee($lumFee);
+            $quote->setProjectTot($projectTotal);
+            $quote->setUpdatedAt($datime);
+            $em->persist($quote);
+            $em->flush();
+        }
+    }
+    
+    private function getVeneerLumberFeeByQuoteId($quoteId) {
+        $lumFee = 0;
+        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+        if (!empty($veneerRecords)) {
+            $i=0;
+            foreach ($veneerRecords as $v) {
+                $lumFee += ($v->getTotalCost() * $v->getLumberFee()) / 100;
+                $i++;
+            }
+        } else {
+            $lumFee = 0;
+        }
+        return  $lumFee;
+    }
+    
+    private function getPlywoodLumberFeeByQuoteId($quoteId) {
+        $lumFee = 0;
+        $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+        if (!empty($plywoodRecords)) {
+            $i=0;
+            foreach ($plywoodRecords as $p) {
+                $lumFee += ($p->getTotalCost() * $p->getLumberFee()) / 100;
+                $i++;
+            }
+        } else {
+            $lumFee = 0;
+        }
+        return $lumFee;
+    }
+    
+    private function getShippingChargeByAddId($shipAddId) {
+        $shipCharge = 0;
+        $add = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findById($shipAddId);
+        if (!empty($add)) {
+            $shipCharge = $add[0]->getDeliveryCharge();
+        }
+        return $shipCharge;
+    }
+    
+    private function getSalesTaxRateByAddId($shipAddId) {
+        $salesTaxRate = 0;
+        $add = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findById($shipAddId);
+        if (!empty($add)) {
+            $salesTaxRate = $add[0]->getSalesTaxRate();
+        }
+        return $salesTaxRate;
+    }
+    
+    private function getPlywoodSubTotalByQuoteId($quoteId) {
+        $subtotal = '';
+        $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+        if (!empty($plywoodRecords)) {
+            $i=0;
+            foreach ($plywoodRecords as $p) {
+                $subtotal += $p->getTotalCost();
+                $i++;
+            }
+        } else {
+            $subtotal = 0;
+        }
+        return $subtotal;
+    }
+    
+    private function getVeneerSubTotalByQuoteId($quoteId) {
+        $subtotal = '';
+        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+        if (!empty($veneerRecords)) {
+            $i=0;
+            foreach ($veneerRecords as $v) {
+                $subtotal += $v->getTotalCost();
+                $i++;
+            }
+        } else {
+            $subtotal = 0;
+        }
+        return $subtotal;
+    }
+    
+    private function __arraySortByColumn($array, $index, $order, $natsort=FALSE, $case_sensitive=FALSE) {
+        if (is_array($array) && count($array) > 0) {
+            foreach (array_keys($array) as $key) {
+                $temp[$key] = $array[$key][$index];
+            }
+            
+            if (!$natsort) {                
+                if ($order == 'ASC') {
+                    asort($temp);
+                } else {
+                    arsort($temp);
+                }
+            } else {
+                if ($case_sensitive === true) {
+                    natsort($temp);
+                } else {
+                    natcasesort($temp);
+                }
+                if ($order != 'ASC') {
+                    $temp = array_reverse($temp, TRUE);
+                }
+            }
+            foreach (array_keys($temp) as $key) {
+                if (is_numeric($key)) {
+                    $sorted[] = $array[$key];
+                } else {
+                    $sorted[$key] = $array[$key];
+                }
+            }
+            return $sorted;
+        }
+        return $sorted;
+//        if(!empty($arr)){
+//            $sort_col = array();
+//            foreach ($arr as $key=> $row) {
+//                $sort_col[$key] = $row[$col];
+//            }
+//            array_multisort($sort_col, $dir, $arr);
+//        }        
+//        return $arr;
+    }
+    
+    private function getCompanyById($userid) {
+        $profileObj = $this->getDoctrine()
+            ->getRepository('AppBundle:Profile')
+            ->findOneBy(array('userId' => $userid));
+        return $profileObj->getCompany();
+    }
+    
+    private function getSpeciesIdByDoorId($doorId) {
+        $skinRecord = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId' => $doorId));
+        if (!empty($skinRecord)) {
+            return $skinRecord->getSpecies();
+        }
+    }
+    
+    private function getPatternIdByDoorId($doorId) {
+        $skinRecord = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId' => $doorId));
+        if (!empty($skinRecord)) {
+            return $skinRecord->getPattern();
+        }
+    }
 
+    private function getGradeIdByDoorId($doorId) {
+        $skinRecord = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId' => $doorId));
+        if (!empty($skinRecord)) {
+            return $skinRecord->getGrade();
+        }
+    }
 }

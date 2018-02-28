@@ -84,7 +84,7 @@ class Quotes
     /**
      * @var string
      *
-     * @ORM\Column(name="control_number", type="string", length=20, nullable=true)
+     * @ORM\Column(name="control_number", type="integer", nullable=true)
      */
     private $controlNumber;
 
