@@ -1178,4 +1178,25 @@ class OrderController extends Controller
             ->findOneBy(array('userId' => $userid));
         return $profileObj->getCompany();
     }
+    
+    private function getSpeciesIdByDoorId($doorId) {
+        $skinRecord = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId' => $doorId));
+        if (!empty($skinRecord)) {
+            return $skinRecord->getSpecies();
+        }
+    }
+    
+    private function getPatternIdByDoorId($doorId) {
+        $skinRecord = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId' => $doorId));
+        if (!empty($skinRecord)) {
+            return $skinRecord->getPattern();
+        }
+    }
+
+    private function getGradeIdByDoorId($doorId) {
+        $skinRecord = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId' => $doorId));
+        if (!empty($skinRecord)) {
+            return $skinRecord->getGrade();
+        }
+    }
 }
