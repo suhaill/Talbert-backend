@@ -87,9 +87,23 @@ class Plywood
     /**
      * @var float
      *
+     * @ORM\Column(name="widthFraction", type="float")
+     */
+    private $widthFraction;
+
+    /**
+     * @var float
+     *
      * @ORM\Column(name="plywoodLength", type="float")
      */
     private $plywoodLength;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="lengthFraction", type="float")
+     */
+    private $lengthFraction;
 
     /**
      * @var int
@@ -97,6 +111,13 @@ class Plywood
      * @ORM\Column(name="finishThickId", type="float")
      */
     private $finishThickId;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="finishThickType", type="string", length=10)
+     */
+    private $finishThickType;
 
     /**
      * @var int
@@ -376,6 +397,27 @@ class Plywood
      * @ORM\Column(name="unitMesureCostId", type="integer")
      */
     private $unitMesureCostId;
+
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="running", type="boolean")
+     */
+    private $running;
+
+    /**
+     * @var array
+     *
+     * @ORM\Column(name="runningDescription", type="text" ,)
+     */
+    private $runningDescription;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="unitMesureCostIdR", type="integer")
+     */
+    private $unitMesureCostIdR;
 
     /**
      * @var bool
@@ -927,6 +969,22 @@ class Plywood
     }
 
     /**
+     * @return float
+     */
+    public function getWidthFraction()
+    {
+        return $this->widthFraction;
+    }
+
+    /**
+     * @param float $widthFraction
+     */
+    public function setWidthFraction($widthFraction)
+    {
+        $this->widthFraction = $widthFraction;
+    }
+
+    /**
      * Set plywoodLength
      *
      * @param float $plywoodLength
@@ -951,6 +1009,22 @@ class Plywood
     }
 
     /**
+     * @return float
+     */
+    public function getLengthFraction()
+    {
+        return $this->lengthFraction;
+    }
+
+    /**
+     * @param float $lengthFraction
+     */
+    public function setLengthFraction($lengthFraction)
+    {
+        $this->lengthFraction = $lengthFraction;
+    }
+
+    /**
      * Set finishThickId
      *
      * @param integer $finishThickId
@@ -972,6 +1046,22 @@ class Plywood
     public function getFinishThickId()
     {
         return $this->finishThickId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFinishThickType()
+    {
+        return $this->finishThickType;
+    }
+
+    /**
+     * @param string $finishThickType
+     */
+    public function setFinishThickType($finishThickType)
+    {
+        $this->finishThickType = $finishThickType;
     }
 
     /**
@@ -1685,6 +1775,54 @@ class Plywood
     public function getUnitMesureCostId()
     {
         return $this->unitMesureCostId;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRunning()
+    {
+        return $this->running;
+    }
+
+    /**
+     * @param bool $running
+     */
+    public function setRunning($running)
+    {
+        $this->running = $running;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRunningDescription()
+    {
+        return $this->runningDescription;
+    }
+
+    /**
+     * @param array $runningDescription
+     */
+    public function setRunningDescription($runningDescription)
+    {
+        $this->runningDescription = $runningDescription;
+    }
+
+    /**
+     * @return int
+     */
+    public function getUnitMesureCostIdR()
+    {
+        return $this->unitMesureCostIdR;
+    }
+
+    /**
+     * @param int $unitMesureCostIdR
+     */
+    public function setUnitMesureCostIdR($unitMesureCostIdR)
+    {
+        $this->unitMesureCostIdR = $unitMesureCostIdR;
     }
 
     /**
