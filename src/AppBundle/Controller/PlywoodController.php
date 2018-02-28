@@ -44,8 +44,11 @@ class PlywoodController extends Controller
             $gradeId = trim($getJson->get('facegrade'));
             $thicknessId = trim($getJson->get('thickness'));
             $plywoodWidth = trim($getJson->get('width'));
+            $widthFraction = trim($getJson->get('widthFraction'));
             $plywoodLength = trim($getJson->get('length'));
+            $lengthFraction = trim($getJson->get('lengthFraction'));
             $finishThickId = trim($getJson->get('finishthick'));
+            $finishThicktype = trim($getJson->get('finishThicktype'));
             $isSequenced = trim($getJson->get('sequenced'));
             $coreType = trim($getJson->get('coretype'));
             $thickness = trim($getJson->get('corethickness'));
@@ -79,6 +82,9 @@ class PlywoodController extends Controller
             $milling = trim($getJson->get('milling'));
             $millingDescription = trim($getJson->get('millingDescription'));
             $unitMesureCostId = trim($getJson->get('unitmeasurecost'));
+            $running = trim($getJson->get('running'));
+            $runningDescription = trim($getJson->get('runningDescription'));
+            $unitMesureCostIdR = trim($getJson->get('unitmeasurecostR'));
             $isLabels = trim($getJson->get('isLabels'));
             $numberLabels = trim($getJson->get('labels'));
             $lumberFee = trim($getJson->get('lumberfee'));
@@ -116,11 +122,11 @@ class PlywoodController extends Controller
                 $arrApi['message'] = 'Successfully saved plywood data.';
                 $statusCode = 200;
                 $lastInserted = $this->savePlywoodData($quantity, $speciesId, 
-                $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
-                $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish, $facPaint, $uvCuredId,$uvColorId, $sheenId,
+                $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth,$widthFraction,
+                $plywoodLength,$lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish, $facPaint, $uvCuredId,$uvColorId, $sheenId,
                 $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
                 $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
-                $milling,$millingDescription,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL);
+                $milling,$millingDescription,$unitMesureCostId,$running,$runningDescription,$unitMesureCostIdR,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL);
                 $arrApi['lastInserted'] = $lastInserted;
             }
 
@@ -136,11 +142,11 @@ class PlywoodController extends Controller
     }
 
     private function savePlywoodData($quantity, $speciesId, 
-    $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
-    $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint, $uvCuredId,$uvColorId, $sheenId,
+    $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth,$widthFraction,
+    $plywoodLength,$lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint, $uvCuredId,$uvColorId, $sheenId,
     $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
     $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
-    $milling,$millingDescription,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL)
+    $milling,$millingDescription,$unitMesureCostId,$running,$runningDescription,$unitMesureCostIdR,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL)
     {
         $em = $this->getDoctrine()->getManager();
         $plywood = new Plywood();
@@ -153,8 +159,11 @@ class PlywoodController extends Controller
         $plywood->setGradeId($gradeId);
         $plywood->setThicknessId($thicknessId);
         $plywood->setPlywoodWidth($plywoodWidth);
+        $plywood->setWidthFraction($widthFraction);
         $plywood->setPlywoodLength($plywoodLength);
+        $plywood->setLengthFraction($lengthFraction);
         $plywood->setFinishThickId($finishThickId);
+        $plywood->setFinishThickType($finishThicktype);
         $plywood->setBackerId($backerId);
         $plywood->setIsSequenced($isSequenced);
         $plywood->setCoreType($coreType);
@@ -196,6 +205,11 @@ class PlywoodController extends Controller
         $plywood->setMilling($milling);
         $plywood->setMillingDescription($millingDescription);
         $plywood->setUnitMesureCostId($unitMesureCostId);
+
+        $plywood->setRunning($running);
+        $plywood->setRunningDescription($runningDescription);
+        $plywood->setUnitMesureCostIdR($unitMesureCostIdR);
+
         $plywood->setIsLabels($isLabels);
         $plywood->setNumberLabels($numberLabels);
         $plywood->setLumberFee($lumberFee); 
@@ -340,9 +354,12 @@ class PlywoodController extends Controller
                             $arrApi['data']['gradeId'] = $plywood->getGradeId();
                             $arrApi['data']['thicknessId'] = $plywood->getThicknessId();
                             $arrApi['data']['width'] = $plywood->getPlywoodWidth();
-                            
+                            $arrApi['data']['widthFraction'] = $plywood->getWidthFraction();
                             $arrApi['data']['length'] = $plywood->getPlywoodLength();
-                            $arrApi['data']['finishThickId'] = $plywood-> getFinishThickId();
+                            $arrApi['data']['lengthFraction'] = $plywood->getLengthFraction();
+
+                            $arrApi['data']['finishThickId'] = $plywood->getFinishThickId();
+                            $arrApi['data']['finishThicktype'] = $plywood->getFinishThickType();
                             $arrApi['data']['thickness'] = $plywood->getThickness();
                             $arrApi['data']['finish'] = $plywood->getFinish();
                             $arrApi['data']['facPaint'] = $plywood->getFacPaint();
@@ -381,6 +398,11 @@ class PlywoodController extends Controller
                             $arrApi['data']['milling'] = $plywood->getMilling();
                             $arrApi['data']['millingDescription'] = $plywood->getMillingDescription();
                             $arrApi['data']['unitMesureCostId'] = $plywood->getUnitMesureCostId();
+
+                            $arrApi['data']['running'] = $plywood->isRunning();
+                            $arrApi['data']['runningDescription'] = $plywood->getRunningDescription();
+                            $arrApi['data']['unitMesureCostIdR'] = $plywood->getUnitMesureCostIdR();
+
                             $arrApi['data']['isLabels'] = $plywood->getIsLabels();
                             $arrApi['data']['numberLabels'] = $plywood->getNumberLabels();
                             //echo $arrApi['data']['autoNumber'];
@@ -506,9 +528,11 @@ class PlywoodController extends Controller
             $gradeId = trim($getJson->get('facegrade'));
             $thicknessId = trim($getJson->get('thickness'));
             $plywoodWidth = trim($getJson->get('width'));
+            $widthFraction = trim($getJson->get('widthFraction'));
             $plywoodLength = trim($getJson->get('length'));
+            $lengthFraction = trim($getJson->get('lengthFraction'));
             $finishThickId = trim($getJson->get('finishthick'));
-           
+            $finishThicktype = trim($getJson->get('finishThicktype'));
             $isSequenced = trim($getJson->get('sequenced'));
             $coreType = trim($getJson->get('coretype'));
             $thickness = trim($getJson->get('corethickness'));
@@ -544,33 +568,28 @@ class PlywoodController extends Controller
 
             $leftEdge = trim($getJson->get('ledgefinish'));
             $ledgeMaterialId = trim($getJson->get('lsizeedgematerial')); 
-            $ledgeFinishSpeciesId = trim($getJson->get('ledgefinishspecies')); 
-            
+            $ledgeFinishSpeciesId = trim($getJson->get('ledgefinishspecies'));
             $milling = trim($getJson->get('milling'));
             $millingDescription = trim($getJson->get('millingDescription'));
             $unitMesureCostId = trim($getJson->get('unitmeasurecost'));
+            $running = trim($getJson->get('running'));
+            $runningDescription = trim($getJson->get('runningDescription'));
+            $unitmeasurecostR = trim($getJson->get('unitmeasurecostR'));
             $isLabels = trim($getJson->get('isLabels'));
             $numberLabels = trim($getJson->get('labels'));
 //            print_r($numberLabels);die;
             $lumberFee = trim($getJson->get('lumberfee'));
             $autoNumberArr = $getJson->get('autoNumber');
             $autoNumberstring = '';
-            
             foreach($autoNumberArr as $val) {
-                
                $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
-               
             }
             $autoNumberstring = rtrim($autoNumberstring,',');
-            
-           
             $autoNumber = $autoNumberstring;
-
             //$autoNumber = trim($getJson->get('autoNumber'));
             $comments = trim($getJson->get('comment'));
             $createdAt = new \DateTime('now');
             $fileId = trim($getJson->get('fileId'));
-
             if (empty($id) || empty($quantity) || empty($speciesId) || empty($patternId) || 
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
@@ -585,11 +604,11 @@ class PlywoodController extends Controller
                 $arrApi['message'] = 'Successfully saved plywood data.';
                 $statusCode = 200;
                 $this->editPlywoodData($id,$quantity, $speciesId, 
-                $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
-                $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint,$uvCuredId,$uvColorId, $sheenId,
+                $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth,$widthFraction,
+                $plywoodLength,$lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint,$uvCuredId,$uvColorId, $sheenId,
                 $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
                 $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
-                $milling,$millingDescription,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$fileId,$createdAt,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL);
+                $milling,$millingDescription,$unitMesureCostId,$running,$runningDescription,$unitmeasurecostR,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$fileId,$createdAt,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL);
             
             }
 
@@ -677,11 +696,11 @@ class PlywoodController extends Controller
 
 
     private function editPlywoodData($id,$quantity, $speciesId, 
-    $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth, 
-    $plywoodLength,$finishThickId,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint,$uvCuredId,$uvColorId, $sheenId,
+    $patternId, $grainDirectionId, $gradeId, $thicknessId, $plywoodWidth,$widthFraction,
+    $plywoodLength,$lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint,$uvCuredId,$uvColorId, $sheenId,
     $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
     $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
-    $milling,$millingDescription,$unitMesureCostId,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$fileId,$createdAt,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL)
+    $milling,$millingDescription,$unitMesureCostId,$running,$runningDescription,$unitmeasurecostR,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$fileId,$createdAt,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL)
     {
         $em = $this->getDoctrine()->getManager();
         $plywood =  $this->getDoctrine()->getRepository('AppBundle:Plywood')->find($id);
@@ -697,8 +716,11 @@ class PlywoodController extends Controller
         $plywood->setGradeId($gradeId);
         $plywood->setThicknessId($thicknessId);
         $plywood->setPlywoodWidth($plywoodWidth);
+        $plywood->setWidthFraction($widthFraction);
+        $plywood->setLengthFraction($lengthFraction);
         $plywood->setPlywoodLength($plywoodLength);
         $plywood->setFinishThickId($finishThickId);
+        $plywood->setFinishThickType($finishThicktype);
         $plywood->setBackerId($backerId);
         $plywood->setIsSequenced($isSequenced);
         $plywood->setCoreType($coreType);
@@ -736,6 +758,9 @@ class PlywoodController extends Controller
         $plywood->setMilling($milling);
         $plywood->setMillingDescription($millingDescription);
         $plywood->setUnitMesureCostId($unitMesureCostId);
+        $plywood->setRunning($running);
+        $plywood->setRunningDescription($runningDescription);
+        $plywood->setUnitMesureCostIdR($unitmeasurecostR);
         $plywood->setIsLabels($isLabels);
         $plywood->setNumberLabels($numberLabels);
         $plywood->setLumberFee($lumberFee); 

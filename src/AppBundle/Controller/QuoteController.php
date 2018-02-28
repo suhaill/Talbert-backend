@@ -294,7 +294,7 @@ class QuoteController extends Controller
             $expFee = trim($data->get('expFee'));
             $discount = trim($data->get('discount'));
             $datime = new \DateTime('now');
-            if (empty($qDate) || empty($quoteAddedby) || empty($custId) || empty($refNo) || empty($salsManId) || empty($job) || empty($termId) || empty($shipMethod) || empty($shipAddId) || empty($leadTime) || empty($status) || empty($datime) || empty($deliveryDate)) {
+            if (empty($qDate) || empty($quoteAddedby) || empty($custId) || empty($refNo) || empty($salsManId) || empty($job) || empty($termId) || empty($shipMethod) || empty($shipAddId) || empty($leadTime) || empty($status) || empty($datime)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Parameter missing';
                 $statusCode = 422;
