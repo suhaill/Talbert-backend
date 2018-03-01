@@ -530,14 +530,16 @@ class DropdowndataController extends Controller
      public function getsubspeciesAction($id,Request $request)
      {
          
-        if($id)
-        {
-           $subspecies = $this->getDoctrine()->getRepository('AppBundle:Subspecies')->findBy(array('speciesId' => $id));
-        }
-        else
-        {   
-            $subspecies = $this->getDoctrine()->getRepository('AppBundle:Subspecies')->findAll();
-        }
+//        if($id)
+//        {
+//           $subspecies = $this->getDoctrine()->getRepository('AppBundle:Subspecies')->findBy(array('speciesId' => $id));
+//        }
+//        else
+//        {
+//            $subspecies = $this->getDoctrine()->getRepository('AppBundle:Subspecies')->findAll();
+//        }
+
+         $subspecies = $this->getDoctrine()->getRepository('AppBundle:Subspecies')->findAll();
 
         $arrApi = array();
         $statusCode = 200;
