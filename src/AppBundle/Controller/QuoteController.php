@@ -465,7 +465,7 @@ class QuoteController extends Controller
         } else {
             $arrApi['status'] = 1;
             $arrApi['message'] = 'Order generated successfully';
-            $deliveryDate = $this->getDeliveryDate($qId);
+            $deliveryDate = trim($data->get('deliveryDate'));
             $orderDate = $this->getOrderDate($qId);
             $orderExists = $this->checkIfOrderAlreadyExists($qId);
             if ($orderExists) {
@@ -473,7 +473,7 @@ class QuoteController extends Controller
             } else {
                 $this->saveOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate);
             }
-            $this->updateQuoteStatus($qId, 'Approved', $datime);
+            $this->updateQuoteStatus($qId, 'Approved', $deliveryDate, $datime);
         }
         return new JsonResponse($arrApi, $statusCode);
     }
@@ -544,12 +544,13 @@ class QuoteController extends Controller
         $em->flush();
     }
 
-    private function updateQuoteStatus($qId, $status, $datime) {
+    private function updateQuoteStatus($qId, $status, $deliveryDate, $datime) {
         $em = $this->getDoctrine()->getManager();
         $quote = $em->getRepository(Quotes::class)->findOneById($qId);
         if (!empty($quote)) {
             $quote->setStatus($status);
             $quote->setUpdatedAt($datime);
+            $quote->setDeliveryDate($deliveryDate);
             $em->persist($quote);
             $em->flush();
         }
