@@ -340,7 +340,92 @@ class CustomerController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    /**
+     * @Route("/api/customer/importCustomers")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     */
+    public function importCustomersAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        try {
+            $jsontoarraygenerator = new JsonToArrayGenerator();
+            $data = $jsontoarraygenerator->getJson($request);
+            $passwd = password_hash('123456', PASSWORD_DEFAULT);
+            $datime = new \DateTime('now');
+            if (!empty($data)) {
+                for ($i=0;$i<count($data); $i++) {
+                    $comment = (empty($data[$i]['Note'])) ? '' : $data[$i]['Note'];
+                    $lastUserId = $this->saveCustomerData($data[$i]['Contact'].($i+1), $passwd, 11, 1, $datime, 'customer');
+                    $lstPrfId = $this->saveProfileData($lastUserId, $data[$i]['Customer'], $data[$i]['Contact'], $data[$i]['Email'], $data[$i]['Phone']);
+                    $this->saveCustomerProfile($data[$i]['Term'], $comment, $lastUserId);
+                    $this->saveBillingAddress($data[$i]['Street1'], $data[$i]['City'], $data[$i]['State'], $data[$i]['Zip'], $lastUserId, $datime);
+                    $this->saveShipAdd($data[$i]['Nickname'], $data[$i]['StreetShip'], $data[$i]['CityShip'], $data[$i]['StateShip'], $data[$i]['ZipShip'], $data[$i]['DelChrgShip'], $data[$i]['SlsTxRtShip'], $lastUserId, $datime);
+                    $this->saveDisDataImp($data[$i]['Dis'], $lastUserId);
+                }
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully imported';
+            } else {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'File is empty';
+                $statusCode = 422;
+            }
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
     // Reusable methods
+
+    private function saveShipAdd($nickname, $street, $city, $state, $zip, $deliveryCharge, $salestaxRate, $lastUserId, $datime) {
+        $em = $this->getDoctrine()->getManager();
+        $addresses = new Addresses();
+        $addresses->setNickname($nickname);
+        $addresses->setStreet($street);
+        $addresses->setCity($city);
+        $addresses->setStateId($state);
+        $addresses->setZip($zip);
+        $addresses->setDeliveryCharge($deliveryCharge);
+        $addresses->setSalesTaxRate($salestaxRate);
+        $addresses->setAddressType('shipping');
+        $addresses->setStatus(1);
+        $addresses->setUserId($lastUserId);
+        $addresses->setUpdatedAt($datime);
+        $em->persist($addresses);
+        $em->flush();
+    }
+
+    private function saveDisDataImp($prdName, $lastUserId) {
+        $rate = 10;
+        $sts = 1;
+        $em = $this->getDoctrine()->getManager();
+        $dis = new Discounts();
+        $dis->setProductName($prdName);
+        $dis->setUserId($lastUserId);
+        $dis->setRate($rate);
+        $dis->setStatus($sts);
+        $em->persist($dis);
+        $em->flush();
+    }
+
+//    private function saveCustomerDataFromFile($data, $passwd, $datime) {
+//        for ($i=0;$i<count($data); $i++) {
+//            $em = $this->getDoctrine()->getManager();
+//            $user = new User();
+//            $user->setUsername('customer');
+//            $user->setPassword($passwd);
+//            $user->setRoleId(11);
+//            $user->setIsActive(1);
+//            $user->setCreatedAt($datime);
+//            $user->setUpdatedAt($datime);
+//            $user->setUserType('customer');
+//            $em->persist($user);
+//            $em->flush();
+//            echo $user->getId();
+//        }
+//
+//    }
 
     private function updateUserRecord($isActive, $company, $fName, $phone, $datime, $userId) {
         $em = $this->getDoctrine()->getManager();
