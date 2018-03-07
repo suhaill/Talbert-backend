@@ -101,7 +101,10 @@ class DoorController extends Controller
                 $arrApi['data']['pair'] = $doorExists->getPair();
                 $arrApi['data']['swing'] = $doorExists->getSwing();
                 $arrApi['data']['width'] = $doorExists->getWidth();
+                $arrApi['data']['widthFraction'] = $doorExists->getWidthFraction();
+                $arrApi['data']['netsize'] = $doorExists->isNetSize();
                 $arrApi['data']['length'] = $doorExists->getLength();
+                $arrApi['data']['lengthFraction'] = $doorExists->getLengthFraction();
                 $arrApi['data']['dthickness'] = $doorExists->getThickness();
                 $arrApi['data']['doorUse'] = $doorExists->getDoorUse();
                 $arrApi['data']['construction'] = $doorExists->getConstruction();
@@ -388,7 +391,10 @@ class DoorController extends Controller
         $pair = trim($data->get('pair'));
         $swing = trim($data->get('swing'));
         $width = trim($data->get('width'));
+        $widthFraction = trim($data->get('widthFraction'));
+        $netsize = trim($data->get('netsize'));
         $length = trim($data->get('length'));
+        $lengthFraction = trim($data->get('lengthFraction'));
         $thickness = trim($data->get('thickness'));
         $use = trim($data->get('use'));
         $construction = trim($data->get('construction'));
@@ -465,7 +471,10 @@ class DoorController extends Controller
         $door->setPair($pair);
         $door->setSwing($swing);
         $door->setWidth($width);
+        $door->setWidthFraction($widthFraction);
+        $door->setIsNetSize($netsize);
         $door->setLength($length);
+        $door->setLengthFraction($lengthFraction);
         $door->setThickness($thickness);
         $door->setDoorUse($use);
         $door->setConstruction($construction);
@@ -598,7 +607,6 @@ class DoorController extends Controller
     }
 
     private function updateDoorData($data) {
-        //print_r($data);die;
         $em = $this->getDoctrine()->getManager();
         $door = $em->getRepository(Doors::class)->find($data->get('doorId'));
         $datime = new \DateTime('now');
@@ -606,7 +614,10 @@ class DoorController extends Controller
         $door->setPair($data->get('pair'));
         $door->setSwing($data->get('swing'));
         $door->setWidth($data->get('width'));
+        $door->setWidthFraction($data->get('widthFraction'));
+        $door->setIsNetSize($data->get('netsize'));
         $door->setLength($data->get('length'));
+        $door->setLengthFraction($data->get('lengthFraction'));
         $door->setThickness($data->get('thickness'));
         $door->setDoorUse($data->get('use'));
         $door->setConstruction($data->get('construction'));

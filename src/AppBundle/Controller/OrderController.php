@@ -138,7 +138,7 @@ class OrderController extends Controller
             $quoteList=[];
             for($i=0;$i<count($quotes);$i++) {
                 $quoteList[$i]['id'] = $quotes[$i]->getId();
-                $quoteList[$i]['estimateNumber'] = 'E-'.$quotes[$i]->getControlNumber().'-'.$quotes[$i]->getVersion();
+                $quoteList[$i]['estimateNumber'] = 'O-'.$quotes[$i]->getControlNumber().'-'.$quotes[$i]->getVersion();
                 $quoteList[$i]['customername'] = strtoupper($this->getCustomerNameById($quotes[$i]->getCustomerId()));
                 $quoteList[$i]['companyname'] = strtoupper($this->getCompanyById($quotes[$i]->getCustomerId()));
                 $quoteList[$i]['status'] = $quotes[$i]->getStatus();

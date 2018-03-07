@@ -85,6 +85,13 @@ class Veneer
     private $width;
 
     /**
+     * @var float
+     *
+     * @ORM\Column(name="widthFraction", type="float")
+     */
+    private $widthFraction;
+
+    /**
      * @var bool
      *
      * @ORM\Column(name="is_net_size", type="boolean")
@@ -97,6 +104,13 @@ class Veneer
      * @ORM\Column(name="length", type="float")
      */
     private $length;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="lengthFraction", type="float")
+     */
+    private $lengthFraction;
 
     /**
      * @var int
@@ -554,6 +568,22 @@ class Veneer
     }
 
     /**
+     * @return float
+     */
+    public function getWidthFraction()
+    {
+        return $this->widthFraction;
+    }
+
+    /**
+     * @param float $widthFraction
+     */
+    public function setWidthFraction($widthFraction)
+    {
+        $this->widthFraction = $widthFraction;
+    }
+
+    /**
      * Set isNetSize
      *
      * @param boolean $isNetSize
@@ -599,6 +629,22 @@ class Veneer
     public function getLength()
     {
         return $this->length;
+    }
+
+    /**
+     * @return float
+     */
+    public function getLengthFraction()
+    {
+        return $this->lengthFraction;
+    }
+
+    /**
+     * @param float $lengthFraction
+     */
+    public function setLengthFraction($lengthFraction)
+    {
+        $this->lengthFraction = $lengthFraction;
     }
 
     /**

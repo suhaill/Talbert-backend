@@ -48,8 +48,10 @@ class VeneerController extends Controller
             $gradeId = trim($getJson->get('facegrade'));
             $thicknessId = trim($getJson->get('thickness'));
             $width = trim($getJson->get('width'));
+            $widthFraction = trim($getJson->get('widthFraction'));
             $isNetSize = trim($getJson->get('netsize'));
             $length = trim($getJson->get('length'));
+            $lengthFraction = trim($getJson->get('lengthFraction'));
             $coreTypeId = trim($getJson->get('coretype'));
             $backer = trim($getJson->get('backer'));
             $isFlexSanded = trim($getJson->get('flexsanded'));
@@ -77,7 +79,7 @@ class VeneerController extends Controller
                 $lastInserted = $this->saveVeneerData($quantity, $speciesId, 
                 $pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize, 
                 $length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,
-                $comments,$createdAt,$fileId,$quoteId,$formtype);
+                $comments,$createdAt,$fileId,$quoteId,$formtype,$widthFraction,$lengthFraction);
                 $arrApi['lastInserted'] = $lastInserted;
             
             }
@@ -89,7 +91,7 @@ class VeneerController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    private function saveVeneerData($quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$createdAt,$fileId,$quoteId,$formtype=null)
+    private function saveVeneerData($quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$createdAt,$fileId,$quoteId,$formtype=null,$widthFraction,$lengthFraction)
     {
         $em = $this->getDoctrine()->getManager();
         $veneer = new Veneer();
@@ -102,8 +104,10 @@ class VeneerController extends Controller
         $veneer->setGradeId($gradeId);
         $veneer->setThicknessId($thicknessId);
         $veneer->setWidth($width);
+        $veneer->setWidthFraction($widthFraction);
         $veneer->setIsNetSize($isNetSize);
         $veneer->setLength($length);
+        $veneer->setLengthFraction($lengthFraction);
         $veneer->setCoreTypeId($coreTypeId);
         $veneer->setBacker($backer);
         $veneer->setIsFlexSanded($isFlexSanded);
@@ -233,8 +237,10 @@ class VeneerController extends Controller
                             $arrApi['data']['gradeId'] = $veneer->getGradeId();
                             $arrApi['data']['thicknessId'] = $veneer->getThicknessId();
                             $arrApi['data']['width'] = $veneer->getWidth();
+                            $arrApi['data']['widthFraction'] = $veneer->getWidthFraction();
                             $arrApi['data']['isNetSize'] = $veneer->getIsNetSize();
                             $arrApi['data']['length'] = $veneer->getLength();
+                            $arrApi['data']['lengthFraction'] = $veneer->getLengthFraction();
                             $arrApi['data']['coreTypeId'] = $veneer->getCoreTypeId();
                             $arrApi['data']['backer'] = $veneer->getBacker();
                             $arrApi['data']['isFlexSanded'] = $veneer->getIsFlexSanded();
@@ -326,8 +332,10 @@ class VeneerController extends Controller
             $gradeId = trim($getJson->get('facegrade'));
             $thicknessId = trim($getJson->get('thickness'));
             $width = trim($getJson->get('width'));
+            $widthFraction = trim($getJson->get('widthFraction'));
             $isNetSize = trim($getJson->get('netsize'));
             $length = trim($getJson->get('length'));
+            $lengthFraction = trim($getJson->get('lengthFraction'));
             $coreTypeId = trim($getJson->get('coretype'));
             $backer = trim($getJson->get('backer'));
             $isFlexSanded = trim($getJson->get('flexsanded'));
@@ -347,15 +355,13 @@ class VeneerController extends Controller
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
             } else {
-
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully saved veneer data.';
                 $statusCode = 200;
                 $this->editVeneerData($id,$quantity, $speciesId,
                 $pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize, 
                 $length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,
-                $comments,$fileId,$createdAt);
-            
+                $comments,$fileId,$createdAt,$widthFraction,$lengthFraction);
             }
         }
         catch(Exception $e) {
@@ -365,7 +371,7 @@ class VeneerController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    private function editVeneerData($id,$quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$fileId,$createdAt) 
+    private function editVeneerData($id,$quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$fileId,$createdAt,$widthFraction,$lengthFraction)
     {
         $em = $this->getDoctrine()->getManager();
         $veneer =  $this->getDoctrine()->getRepository('AppBundle:Veneer')->find($id);
@@ -380,8 +386,10 @@ class VeneerController extends Controller
         $veneer->setGradeId($gradeId);
         $veneer->setThicknessId($thicknessId);
         $veneer->setWidth($width);
+        $veneer->setWidthFraction($widthFraction);
         $veneer->setIsNetSize($isNetSize);
         $veneer->setLength($length);
+        $veneer->setLengthFraction($lengthFraction);
         $veneer->setCoreTypeId($coreTypeId);
         $veneer->setBacker($backer);
         $veneer->setIsFlexSanded($isFlexSanded);
