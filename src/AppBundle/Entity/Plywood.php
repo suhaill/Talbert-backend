@@ -92,6 +92,13 @@ class Plywood
     private $widthFraction;
 
     /**
+     * @var bool
+     *
+     * @ORM\Column(name="is_net_size", type="boolean")
+     */
+    private $isNetSize;
+
+    /**
      * @var float
      *
      * @ORM\Column(name="plywoodLength", type="float")
@@ -982,6 +989,22 @@ class Plywood
     public function setWidthFraction($widthFraction)
     {
         $this->widthFraction = $widthFraction;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNetSize()
+    {
+        return $this->isNetSize;
+    }
+
+    /**
+     * @param bool $isNetSize
+     */
+    public function setIsNetSize($isNetSize)
+    {
+        $this->isNetSize = $isNetSize;
     }
 
     /**

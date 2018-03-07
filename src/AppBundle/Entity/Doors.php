@@ -57,11 +57,32 @@ class Doors
     private $width;
 
     /**
+     * @var float
+     *
+     * @ORM\Column(name="widthFraction", type="float")
+     */
+    private $widthFraction;
+
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="is_net_size", type="boolean")
+     */
+    private $isNetSize;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="length", type="string", length=10)
      */
     private $length;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="lengthFraction", type="float")
+     */
+    private $lengthFraction;
 
     /**
      * @var string
@@ -679,6 +700,38 @@ class Doors
     }
 
     /**
+     * @return float
+     */
+    public function getWidthFraction()
+    {
+        return $this->widthFraction;
+    }
+
+    /**
+     * @param float $widthFraction
+     */
+    public function setWidthFraction($widthFraction)
+    {
+        $this->widthFraction = $widthFraction;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNetSize()
+    {
+        return $this->isNetSize;
+    }
+
+    /**
+     * @param bool $isNetSize
+     */
+    public function setIsNetSize($isNetSize)
+    {
+        $this->isNetSize = $isNetSize;
+    }
+
+    /**
      * Set length
      *
      * @param string $length
@@ -700,6 +753,22 @@ class Doors
     public function getLength()
     {
         return $this->length;
+    }
+
+    /**
+     * @return float
+     */
+    public function getLengthFraction()
+    {
+        return $this->lengthFraction;
+    }
+
+    /**
+     * @param float $lengthFraction
+     */
+    public function setLengthFraction($lengthFraction)
+    {
+        $this->lengthFraction = $lengthFraction;
     }
 
     /**
