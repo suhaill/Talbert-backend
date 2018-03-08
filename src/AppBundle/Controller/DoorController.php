@@ -68,6 +68,7 @@ class DoorController extends Controller
                     $arrApi['message'] = 'Successfully saved door.';
                     if ($addOrClone == 'clone') {
                         $this->cloneFilesIdsInFilesTable($doorId, $isDoorSaved);
+                        $this->addDefaultCalcData($isDoorSaved, $createdAt);
                     } else {
                         $arrApi['data']['lastInsertId'] = $isDoorSaved;
                         $this->updateFilesIdsInFilesTable($fileIds, $isDoorSaved);
