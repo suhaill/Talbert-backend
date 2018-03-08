@@ -6,6 +6,7 @@ use AppBundle\Entity\Addresses;
 use AppBundle\Entity\CustomerProfiles;
 use AppBundle\Entity\Discounts;
 use AppBundle\Service\JsonToArrayGenerator;
+use function GuzzleHttp\Promise\is_fulfilled;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -353,22 +354,34 @@ class CustomerController extends Controller
             $data = $jsontoarraygenerator->getJson($request);
             $passwd = password_hash('123456', PASSWORD_DEFAULT);
             $datime = new \DateTime('now');
-            if (!empty($data)) {
-                for ($i=0;$i<count($data); $i++) {
-                    $comment = (empty($data[$i]['Note'])) ? '' : $data[$i]['Note'];
-                    $lastUserId = $this->saveCustomerData($data[$i]['Contact'].($i+1), $passwd, 11, 1, $datime, 'customer');
-                    $lstPrfId = $this->saveProfileData($lastUserId, $data[$i]['Customer'], $data[$i]['Contact'], $data[$i]['Email'], $data[$i]['Phone']);
-                    $this->saveCustomerProfile($data[$i]['Term'], $comment, $lastUserId);
-                    $this->saveBillingAddress($data[$i]['Street1'], $data[$i]['City'], $data[$i]['State'], $data[$i]['Zip'], $lastUserId, $datime);
-                    $this->saveShipAdd($data[$i]['Nickname'], $data[$i]['StreetShip'], $data[$i]['CityShip'], $data[$i]['StateShip'], $data[$i]['ZipShip'], $data[$i]['DelChrgShip'], $data[$i]['SlsTxRtShip'], $lastUserId, $datime);
-                    $this->saveDisDataImp($data[$i]['Dis'], $lastUserId);
-                }
-                $arrApi['status'] = 1;
-                $arrApi['message'] = 'Successfully imported';
-            } else {
+            $isDataCorrect = $this->checkIfAllRequiredDataIsThere($data);
+            if ($isDataCorrect == 2 ) {
                 $arrApi['status'] = 0;
-                $arrApi['message'] = 'File is empty';
-                $statusCode = 422;
+                $arrApi['message'] = 'Please fill all the details';
+            } elseif ($isDataCorrect == 3 ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Unique username is required';
+            } elseif ($isDataCorrect == 4 ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Unique email is required';
+            } else {
+                if (!empty($data)) {
+                    for ($i=0;$i<count($data); $i++) {
+                        $comment = (empty($data[$i]['Note'])) ? '' : $data[$i]['Note'];
+                        $lastUserId = $this->saveCustomerData($data[$i]['Contact'], $passwd, 11, 1, $datime, 'customer');
+                        $lstPrfId = $this->saveProfileData($lastUserId, $data[$i]['Customer'], $data[$i]['Contact'], $data[$i]['Email'], $data[$i]['Phone']);
+                        $this->saveCustomerProfile($data[$i]['Term'], $comment, $lastUserId);
+                        $this->saveBillingAddress($data[$i]['Street1'], $data[$i]['City'], $data[$i]['State'], $data[$i]['Zip'], $lastUserId, $datime);
+                        $this->saveShipAdd($data[$i]['Nickname'], $data[$i]['StreetShip'], $data[$i]['CityShip'], $data[$i]['StateShip'], $data[$i]['ZipShip'], $data[$i]['DelChrgShip'], $data[$i]['SlsTxRtShip'], $lastUserId, $datime);
+                        $this->saveDisDataImp($data[$i]['Dis'], $lastUserId);
+                    }
+                    $arrApi['status'] = 1;
+                    $arrApi['message'] = 'Successfully imported';
+                } else {
+                    $arrApi['status'] = 0;
+                    $arrApi['message'] = 'File is empty';
+                    $statusCode = 422;
+                }
             }
         }
         catch(Exception $e) {
@@ -377,6 +390,32 @@ class CustomerController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
     // Reusable methods
+
+    private function checkIfAllRequiredDataIsThere($data) {
+        //print_r($data);die;
+        for ($i = 0; $i < count($data); $i++) {
+            if ( empty($data[$i]['Customer']) || empty($data[$i]['Contact']) || empty($data[$i]['Phone']) || empty($data[$i]['Email']) || empty($data[$i]['Term']) || empty($data[$i]['Street1']) || empty($data[$i]['City']) || empty($data[$i]['State']) || empty($data[$i]['Zip']) || empty($data[$i]['Nickname']) || empty($data[$i]['StreetShip']) || empty($data[$i]['CityShip']) || empty($data[$i]['StateShip']) || empty($data[$i]['ZipShip']) || empty($data[$i]['DelChrgShip']) || empty($data[$i]['SlsTxRtShip']) || empty($data[$i]['Dis']) ) {
+                return 2;
+            } else if ($this->checkIfUsernameExists($data[$i]['Contact'])){
+                return 3;
+            } else if ($this->checkIfEmailExists($data[$i]['Email'])){
+                return 4;
+            } else {
+            }
+        }
+        return 1;
+    }
+
+    private function checkIfUsernameExists($username) {
+        $usernameData = $this->getDoctrine()
+            ->getRepository('AppBundle:User')
+            ->findOneBy(array('username' => $username));
+        if (count($usernameData) > 0 ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     private function saveShipAdd($nickname, $street, $city, $state, $zip, $deliveryCharge, $salestaxRate, $lastUserId, $datime) {
         $em = $this->getDoctrine()->getManager();
@@ -408,24 +447,6 @@ class CustomerController extends Controller
         $em->persist($dis);
         $em->flush();
     }
-
-//    private function saveCustomerDataFromFile($data, $passwd, $datime) {
-//        for ($i=0;$i<count($data); $i++) {
-//            $em = $this->getDoctrine()->getManager();
-//            $user = new User();
-//            $user->setUsername('customer');
-//            $user->setPassword($passwd);
-//            $user->setRoleId(11);
-//            $user->setIsActive(1);
-//            $user->setCreatedAt($datime);
-//            $user->setUpdatedAt($datime);
-//            $user->setUserType('customer');
-//            $em->persist($user);
-//            $em->flush();
-//            echo $user->getId();
-//        }
-//
-//    }
 
     private function updateUserRecord($isActive, $company, $fName, $phone, $datime, $userId) {
         $em = $this->getDoctrine()->getManager();
