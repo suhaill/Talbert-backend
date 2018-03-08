@@ -31,10 +31,8 @@ class PlywoodController extends Controller
         $arrApi = [];
         $statusCode = 200;
         try {
-
             $jsontoarraygenerator = new JsonToArrayGenerator();
             $getJson = $jsontoarraygenerator->getJson($request);
-
             $quantity = trim($getJson->get('quantity'));
             $speciesId = trim($getJson->get('species'));
             //$grainPatternId = trim($getJson->get('grainpattern'));
@@ -108,7 +106,6 @@ class PlywoodController extends Controller
             $fileId = trim($getJson->get('fileId'));
             $quoteId = trim($getJson->get('quoteId'));
             $formtype = trim($getJson->get('formtype'));
-
 
             if (empty($quantity) || empty($speciesId) || empty($patternId) || 
             empty($grainDirectionId) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth) 
