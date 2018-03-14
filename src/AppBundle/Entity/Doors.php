@@ -92,6 +92,27 @@ class Doors
     private $thickness;
 
     /**
+     * @var int
+     *
+     * @ORM\Column(name="finishThickId", type="float")
+     */
+    private $finishThickId;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="finishThickType", type="string", length=10)
+     */
+    private $finishThickType;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="panelThickness", type="string", length=100)
+     */
+    private $panelThickness;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="door_use", type="string", length=20)
@@ -793,6 +814,54 @@ class Doors
     public function getThickness()
     {
         return $this->thickness;
+    }
+
+    /**
+     * @return int
+     */
+    public function getFinishThickId()
+    {
+        return $this->finishThickId;
+    }
+
+    /**
+     * @param int $finishThickId
+     */
+    public function setFinishThickId($finishThickId)
+    {
+        $this->finishThickId = $finishThickId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFinishThickType()
+    {
+        return $this->finishThickType;
+    }
+
+    /**
+     * @param string $finishThickType
+     */
+    public function setFinishThickType($finishThickType)
+    {
+        $this->finishThickType = $finishThickType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPanelThickness()
+    {
+        return $this->panelThickness;
+    }
+
+    /**
+     * @param string $panelThickness
+     */
+    public function setPanelThickness($panelThickness)
+    {
+        $this->panelThickness = $panelThickness;
     }
 
     /**

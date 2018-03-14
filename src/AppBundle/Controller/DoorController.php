@@ -30,7 +30,6 @@ class DoorController extends Controller
      * @Route("/api/doors/addDoor")
      * @Security("is_granted('ROLE_USER')")
      * @Method("POST")
-     * params: Various
      */
     public function addDoorAction(Request $request) {
         $arrApi = array();
@@ -45,9 +44,12 @@ class DoorController extends Controller
         $width = trim($data->get('width'));
         $length = trim($data->get('length'));
         $thickness = trim($data->get('thickness'));
+        $finishthick = trim($data->get('finishthick'));
+        $finishThicktype = trim($data->get('finishThicktype'));
+        $finalthickness = trim($data->get('corethickness'));
         $lumFee = trim($data->get('lumFee'));
         $createdAt = new \DateTime('now');
-        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($lumFee)) {
+        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($lumFee) || empty($finishthick) || empty($finishThicktype) || empty($finalthickness)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Please fill all the fields.';
             $statusCode = 422;
@@ -107,6 +109,9 @@ class DoorController extends Controller
                 $arrApi['data']['length'] = $doorExists->getLength();
                 $arrApi['data']['lengthFraction'] = $doorExists->getLengthFraction();
                 $arrApi['data']['dthickness'] = $doorExists->getThickness();
+                $arrApi['data']['finishThick'] = $doorExists->getFinishThickId();
+                $arrApi['data']['finishThicktype'] = $doorExists->getFinishThickType();
+                $arrApi['data']['panelThickness'] = $doorExists->getPanelThickness();
                 $arrApi['data']['doorUse'] = $doorExists->getDoorUse();
                 $arrApi['data']['construction'] = $doorExists->getConstruction();
                 $arrApi['data']['fireRating'] = $doorExists->getFireRating();
@@ -234,8 +239,11 @@ class DoorController extends Controller
         $width = trim($data->get('width'));
         $length = trim($data->get('length'));
         $thickness = trim($data->get('thickness'));
+        $finishthick = trim($data->get('finishthick'));
+        $finishThicktype = trim($data->get('finishThicktype'));
+        $finalthickness = trim($data->get('corethickness'));
         $lumFee = trim($data->get('lumFee'));
-        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($lumFee)) {
+        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($lumFee)  || empty($finishthick) || empty($finishThicktype) || empty($finalthickness)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Please fill all the fields.';
             $statusCode = 422;
@@ -397,6 +405,9 @@ class DoorController extends Controller
         $length = trim($data->get('length'));
         $lengthFraction = trim($data->get('lengthFraction'));
         $thickness = trim($data->get('thickness'));
+        $finishthick = trim($data->get('finishthick'));
+        $finishThicktype = trim($data->get('finishThicktype'));
+        $finalthickness = trim($data->get('corethickness'));
         $use = trim($data->get('use'));
         $construction = trim($data->get('construction'));
         $fireRating = trim($data->get('fireRating'));
@@ -477,6 +488,9 @@ class DoorController extends Controller
         $door->setLength($length);
         $door->setLengthFraction($lengthFraction);
         $door->setThickness($thickness);
+        $door->setFinishThickId($finishthick);
+        $door->setFinishThickType($finishThicktype);
+        $door->setPanelThickness($finalthickness);
         $door->setDoorUse($use);
         $door->setConstruction($construction);
         $door->setFireRating($fireRating);
@@ -620,6 +634,9 @@ class DoorController extends Controller
         $door->setLength($data->get('length'));
         $door->setLengthFraction($data->get('lengthFraction'));
         $door->setThickness($data->get('thickness'));
+        $door->setFinishThickId($data->get('finishthick'));
+        $door->setFinishThickType($data->get('finishThicktype'));
+        $door->setPanelThickness($data->get('corethickness'));
         $door->setDoorUse($data->get('use'));
         $door->setConstruction($data->get('construction'));
         $door->setFireRating($data->get('fireRating'));
