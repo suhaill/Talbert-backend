@@ -170,6 +170,7 @@ class QuoteController extends Controller
                 $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
                 $arrApi['data']['version'] = $quoteData->getVersion();
                 $arrApi['data']['customer'] = $this->getCustomerNameById($quoteData->getCustomerId());
+                $arrApi['data']['company'] = $this->getCustomerCompanyById($quoteData->getCustomerId());
                 $arrApi['data']['userEmail'] = $this->getCustomerEmailById($quoteData->getEstimatorId());
                 $arrApi['data']['customerEmail'] = $this->getCustomerEmailById($quoteData->getCustomerId());
                 $arrApi['data']['customerId'] = $quoteData->getCustomerId();
@@ -1042,6 +1043,20 @@ class QuoteController extends Controller
         }
     }
 
+    private function getCustomerCompanyById($customer_id) {
+        $com = '';
+        if (!empty($customer_id)) {
+            $profileObj = $this->getDoctrine()
+                ->getRepository('AppBundle:Profile')
+                ->findOneBy(array('userId' => $customer_id));
+            if (!empty($profileObj->getCompany())) {
+                $com = $profileObj->getCompany();
+            }
+        }
+        return $com;
+    }
+
+
     private function getCustomerEmailById($customer_id) {
         if (!empty($customer_id)) {
             $profileObj = $this->getDoctrine()
@@ -1129,9 +1144,9 @@ class QuoteController extends Controller
                     $lineItem[$i]['quantity'] = $p->getQuantity();
                     $lineItem[$i]['species'] = $this->getSpeciesNameById($p->getSpeciesId());
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($p->getPatternId());
-                    $lineItem[$i]['grade'] = $this->getGradeNameById($p->getGradeId());
+                    $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($p->getGradeId()))[0];
                     $lineItem[$i]['back'] = $this->getBackNameById($p->getBackerId());
-                    $lineItem[$i]['thickness'] = $this->getThicknessNameById($p->getThicknessId());
+                    $lineItem[$i]['thickness'] = $p->getThickness();
                     $lineItem[$i]['width'] = $p->getPlywoodWidth();
                     $lineItem[$i]['length'] = $p->getPlywoodLength();
                     $lineItem[$i]['core'] = $this->getCoreNameById($p->getCoreType());
@@ -1149,7 +1164,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['quantity'] = $v->getQuantity();
                     $lineItem[$i]['species'] = $this->getSpeciesNameById($v->getSpeciesId());
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($v->getPatternId());
-                    $lineItem[$i]['grade'] = $this->getGradeNameById($v->getGradeId());
+                    $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($v->getGradeId()))[0];
                     $lineItem[$i]['back'] = $this->getBackNameById($v->getBacker());
                     $lineItem[$i]['thickness'] = $this->getThicknessNameById($v->getThicknessId());
                     $lineItem[$i]['width'] = $v->getWidth();
@@ -1169,9 +1184,9 @@ class QuoteController extends Controller
                     $lineItem[$i]['quantity'] = $d->getQty();
                     $lineItem[$i]['species'] = $this->getSpeciesNameById($this->getSpeciesIdByDoorId($d->getId()));
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d->getId()));
-                    $lineItem[$i]['grade'] = $this->getGradeNameById($this->getGradeIdByDoorId($d->getId()));
+                    $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($this->getGradeIdByDoorId($d->getId())))[0];
                     $lineItem[$i]['back'] = 'NA';//$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
-                    $lineItem[$i]['thickness'] = 'NA';//$this->getThicknessNameById($d->getThicknessId());
+                    $lineItem[$i]['thickness'] = $d->getPanelThickness();
                     $lineItem[$i]['width'] = $d->getWidth();
                     $lineItem[$i]['length'] = $d->getLength();
                     $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
