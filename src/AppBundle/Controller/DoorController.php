@@ -70,7 +70,7 @@ class DoorController extends Controller
                     $arrApi['message'] = 'Successfully saved door.';
                     if ($addOrClone == 'clone') {
                         $this->cloneFilesIdsInFilesTable($doorId, $isDoorSaved);
-                        $this->addDefaultCalcData($isDoorSaved, $createdAt);
+                        $this->cloneCalcData($doorId, $isDoorSaved, $createdAt);
                     } else {
                         $arrApi['data']['lastInsertId'] = $isDoorSaved;
                         $this->updateFilesIdsInFilesTable($fileIds, $isDoorSaved);
@@ -810,6 +810,61 @@ class DoorController extends Controller
         $data['colorMatch'] = $door->getColorMatch();
         $data['totCost'] = $door->getTotalCost();
         return $data;
+    }
+
+    private function cloneCalcData($doorId, $newDoorId, $createdAt) {
+        $em   = $this->getDoctrine()->getManager();
+        $doorCalCData =  $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->findOneBy(array('doorId'=> $doorId));
+        $doorCalculator = new DoorCalculator();
+        $doorCalculator->setDoorId($newDoorId);
+        $doorCalculator->setCustMarkupPer($doorCalCData->getCustMarkupPer());
+        $doorCalculator->setVenCost($doorCalCData->getVenCost());
+        $doorCalculator->setVenWaste($doorCalCData->getVenWaste());
+        $doorCalculator->setSubTotalVen($doorCalCData->getSubTotalVen());
+        $doorCalculator->setCoreCost($doorCalCData->getCoreCost());
+        $doorCalculator->setCoreWaste($doorCalCData->getCoreWaste());
+        $doorCalculator->setSubTotalCore($doorCalCData->getSubTotalCore());
+        $doorCalculator->setBackrCost($doorCalCData->getBackrCost());
+        $doorCalculator->setBackrWaste($doorCalCData->getBackrWaste());
+        $doorCalculator->setSubTotalBackr($doorCalCData->getSubTotalBackr());
+        $doorCalculator->setFinishCost($doorCalCData->getFinishCost());
+        $doorCalculator->setFinishWaste($doorCalCData->getFinishWaste());
+        $doorCalculator->setSubTotalFinish($doorCalCData->getSubTotalFinish());
+        $doorCalculator->setEdgeintCost($doorCalCData->getEdgeintCost());
+        $doorCalculator->setEdgeintWaste($doorCalCData->getEdgeintWaste());
+        $doorCalculator->setSubTotalEdgeint($doorCalCData->getSubTotalEdgeint());
+        $doorCalculator->setEdgevCost($doorCalCData->getEdgevCost());
+        $doorCalculator->setEdgevWaste($doorCalCData->getEdgevWaste());
+        $doorCalculator->setSubTotalEdgev($doorCalCData->getSubTotalEdgev());
+        $doorCalculator->setFinishEdgeCost($doorCalCData->getFinishEdgeCost());
+        $doorCalculator->setFinishEdgeWaste($doorCalCData->getFinishEdgeWaste());
+        $doorCalculator->setSubTotalFinishEdge($doorCalCData->getSubTotalFinishEdge());
+        $doorCalculator->setRunningCost($doorCalCData->getRunningCost());
+        $doorCalculator->setRunningWaste($doorCalCData->getRunningWaste());
+        $doorCalculator->setSubTotalrunning($doorCalCData->getSubTotalrunning());
+        $doorCalculator->setFlatPrice($doorCalCData->getFlatPrice());
+        $doorCalculator->setDoorFrame($doorCalCData->getDoorFrame());
+        $doorCalculator->setLouvers($doorCalCData->getLouvers());
+        $doorCalculator->setLightOpening($doorCalCData->getLightOpening());
+        $doorCalculator->setSurfaceMachining($doorCalCData->getSurfaceMachining());
+        $doorCalculator->setStyles($doorCalCData->getStyles());
+        $doorCalculator->setMachining($doorCalCData->getMachining());
+        $doorCalculator->setFacePreps($doorCalCData->getFacePreps());
+        $doorCalculator->setGlass($doorCalCData->getGlass());
+        $doorCalculator->setBlocking($doorCalCData->getBlocking());
+        $doorCalculator->setTotalcostPerPiece($doorCalCData->getTotalcostPerPiece());
+        $doorCalculator->setMarkup($doorCalCData->getMarkup());
+        $doorCalculator->setSellingPrice($doorCalCData->getSellingPrice());
+        $doorCalculator->setLineitemTotal($doorCalCData->getLineitemTotal());
+        $doorCalculator->setMachineSetup($doorCalCData->getMachineSetup());
+        $doorCalculator->setMachineTooling($doorCalCData->getMachineTooling());
+        $doorCalculator->setPreFinishSetup($doorCalCData->getPreFinishSetup());
+        $doorCalculator->setColorMatch($doorCalCData->getColorMatch());
+        $doorCalculator->setTotalCost($doorCalCData->getTotalCost());
+        $doorCalculator->setCreatedAt($createdAt);
+        $doorCalculator->setUpdatedAt($createdAt);
+        $em->persist($doorCalculator);
+        $em->flush();
     }
 
     private function addDefaultCalcData($doorId, $createdAt) {
