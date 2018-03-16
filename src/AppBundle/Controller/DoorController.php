@@ -49,7 +49,7 @@ class DoorController extends Controller
         $finalthickness = trim($data->get('corethickness'));
         $lumFee = trim($data->get('lumFee'));
         $createdAt = new \DateTime('now');
-        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($lumFee) || empty($finishthick) || empty($finishThicktype) || empty($finalthickness)) {
+        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($finishthick) || empty($finishThicktype) || empty($finalthickness)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Please fill all the fields.';
             $statusCode = 422;
@@ -251,7 +251,7 @@ class DoorController extends Controller
         $finishThicktype = trim($data->get('finishThicktype'));
         $finalthickness = trim($data->get('corethickness'));
         $lumFee = trim($data->get('lumFee'));
-        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($lumFee)  || empty($finishthick) || empty($finishThicktype) || empty($finalthickness)) {
+        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($finishthick) || empty($finishThicktype) || empty($finalthickness)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Please fill all the fields.';
             $statusCode = 422;
