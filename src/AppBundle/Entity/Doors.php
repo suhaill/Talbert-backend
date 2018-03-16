@@ -540,6 +540,29 @@ class Doors
     private $labels;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="auto_number", type="string", length=255)
+     */
+    private $autoNumber;
+
+    /**
+     * @return string
+     */
+    public function getAutoNumber()
+    {
+        return $this->autoNumber;
+    }
+
+    /**
+     * @param string $autoNumber
+     */
+    public function setAutoNumber($autoNumber)
+    {
+        $this->autoNumber = $autoNumber;
+    }
+
+    /**
      * @var bool
      *
      * @ORM\Column(name="face_preps", type="boolean")

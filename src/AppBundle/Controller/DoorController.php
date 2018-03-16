@@ -49,7 +49,7 @@ class DoorController extends Controller
         $finalthickness = trim($data->get('corethickness'));
         $lumFee = trim($data->get('lumFee'));
         $createdAt = new \DateTime('now');
-        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($lumFee) || empty($finishthick) || empty($finishThicktype) || empty($finalthickness)) {
+        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($finishthick) || empty($finishThicktype) || empty($finalthickness)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Please fill all the fields.';
             $statusCode = 422;
@@ -173,6 +173,14 @@ class DoorController extends Controller
                 $arrApi['data']['verticalRod'] = $doorExists->getVerticalRod();
                 $arrApi['data']['isLabel'] = $doorExists->getIsLabel();
                 $arrApi['data']['labels'] = $doorExists->getLabels();
+                if (!empty($doorExists->getAutoNumber())) {
+                    $tags = explode(',', $doorExists->getAutoNumber());
+                    for ($i=0; $i< count($tags); $i++) {
+                        $arrApi['data']['autoNumber'][$i]['autoNumber'] = $tags[$i];
+                    }
+                } else {
+                    $arrApi['data']['autoNumber'] = null;
+                }
                 $arrApi['data']['facePreps'] = $doorExists->getFacePreps();
                 $arrApi['data']['blockingCharge'] = $doorExists->getBlockingCharge();
                 $arrApi['data']['blockingUpCharge'] = $doorExists->getBlockingUpcharge();
@@ -243,7 +251,7 @@ class DoorController extends Controller
         $finishThicktype = trim($data->get('finishThicktype'));
         $finalthickness = trim($data->get('corethickness'));
         $lumFee = trim($data->get('lumFee'));
-        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($lumFee)  || empty($finishthick) || empty($finishThicktype) || empty($finalthickness)) {
+        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($finishthick) || empty($finishThicktype) || empty($finalthickness)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Please fill all the fields.';
             $statusCode = 422;
@@ -475,6 +483,15 @@ class DoorController extends Controller
         $lumFee = trim($data->get('lumFee'));
         $comment = trim($data->get('comment'));
         $datime = new \DateTime('now');
+        $autoNumberArr = $data->get('autoNumber');
+        $autoNumberstring = '';
+        if($autoNumberArr) {
+            foreach($autoNumberArr as $val) {
+                $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
+            }
+            $autoNumberstring = rtrim($autoNumberstring,',');
+        }
+        $autoNumber = $autoNumberstring;
         //Save data
         $em = $this->getDoctrine()->getManager();
         $door = new Doors();
@@ -552,6 +569,7 @@ class DoorController extends Controller
         $door->setVerticalRod($verticalRod);
         $door->setIsLabel($labelsYesNo);
         $door->setLabels($labels);
+        $door->setAutoNumber($autoNumber);
         $door->setFacePreps($facePreps);
         $door->setBlockingCharge($blockingCharge);
         $door->setBlockingUpcharge($blockingUpcharge);
@@ -698,6 +716,16 @@ class DoorController extends Controller
         $door->setVerticalRod($data->get('verticalRod'));
         $door->setIsLabel($data->get('labelsYesNo'));
         $door->setLabels($data->get('labels'));
+        $autoNumberArr = $data->get('autoNumber');
+        $autoNumberstring = '';
+        if($autoNumberArr) {
+            foreach($autoNumberArr as $val) {
+                $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
+            }
+            $autoNumberstring = rtrim($autoNumberstring,',');
+        }
+        $autoNumber = $autoNumberstring;
+        $door->setAutoNumber($autoNumber);
         $door->setFacePreps($data->get('facePreps'));
         $door->setBlockingCharge($data->get('blockingCharge'));
         $door->setBlockingUpcharge($data->get('blockingUpcharge'));
