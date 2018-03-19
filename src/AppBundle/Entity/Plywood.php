@@ -66,6 +66,13 @@ class Plywood
     /**
      * @var int
      *
+     * @ORM\Column(name="patternMatch", type="integer")
+     */
+    private $patternMatch;
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="gradeId", type="integer")
      */
     private $gradeId;
@@ -867,6 +874,22 @@ class Plywood
         $this->grainDirectionId = $grainDirectionId;
 
         return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPatternMatch()
+    {
+        return $this->patternMatch;
+    }
+
+    /**
+     * @param int $patternMatch
+     */
+    public function setPatternMatch($patternMatch)
+    {
+        $this->patternMatch = $patternMatch;
     }
 
     /**
