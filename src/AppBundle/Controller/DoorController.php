@@ -136,6 +136,9 @@ class DoorController extends Controller
                 $arrApi['data']['lEdge'] = $doorExists->getLeftEdge();
                 $arrApi['data']['lEdgemat'] = $doorExists->getLEdgeMat();
                 $arrApi['data']['lEdgeSp'] = $doorExists->getLEdgeSp();
+                $arrApi['data']['running'] = $doorExists->isRunning();
+                $arrApi['data']['runningDescription'] = $doorExists->getRunningDescription();
+                $arrApi['data']['unitmeasurecostR'] = $doorExists->getUnitMesureCostIdR();
                 $arrApi['data']['lightOpening'] = $doorExists->getLightOpening();
                 $arrApi['data']['lightOpDrop'] = $doorExists->getLightOpDrop();
                 $arrApi['data']['locFromTop'] = $doorExists->getLocationFromTop();
@@ -440,6 +443,9 @@ class DoorController extends Controller
         $leftEdge = trim($data->get('leftEdge'));
         $leftEdgeMaterial = trim($data->get('leftEdgeMaterial'));
         $leftEdgeSpecies = trim($data->get('leftEdgeSpecies'));
+        $running = trim($data->get('running'));
+        $runningDescription = trim($data->get('runningDescription'));
+        $unitmeasurecostR = trim($data->get('unitmeasurecostR'));
         $lightOpening = trim($data->get('lightOpening'));
         $lightOpeningDrop = trim($data->get('lightOpeningDrop'));
         $locationFromTop = trim($data->get('locationFromTop'));
@@ -532,6 +538,9 @@ class DoorController extends Controller
         $door->setLeftEdge($leftEdge);
         $door->setLEdgeMat($leftEdgeMaterial);
         $door->setLEdgeSp($leftEdgeSpecies);
+        $door->setRunning($running);
+        $door->setRunningDescription($runningDescription);
+        $door->setUnitMesureCostIdR($unitmeasurecostR);
         $door->setLightOpening($lightOpening);
         $door->setLightOpDrop($lightOpeningDrop);
         $door->setLocationFromTop($locationFromTop);
@@ -679,6 +688,9 @@ class DoorController extends Controller
         $door->setLeftEdge($data->get('leftEdge'));
         $door->setLEdgeMat($data->get('leftEdgeMaterial'));
         $door->setLEdgeSp($data->get('leftEdgeSpecies'));
+        $door->setRunning($data->get('running'));
+        $door->setRunningDescription($data->get('runningDescription'));
+        $door->setUnitMesureCostIdR($data->get('unitmeasurecostR'));
         $door->setLightOpening($data->get('lightOpening'));
         $door->setLightOpDrop($data->get('lightOpeningDrop'));
         $door->setLocationFromTop($data->get('locationFromTop'));

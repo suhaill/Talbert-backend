@@ -186,6 +186,7 @@ class OrderController extends Controller
                 $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
                 $arrApi['data']['version'] = $quoteData->getVersion();
                 $arrApi['data']['customer'] = $this->getCustomerNameById($quoteData->getCustomerId());
+                $arrApi['data']['company'] = $this->getCustomerCompanyById($quoteData->getCustomerId());
                 $arrApi['data']['userEmail'] = $this->getCustomerEmailById($quoteData->getEstimatorId());
                 $arrApi['data']['customerEmail'] = $this->getCustomerEmailById($quoteData->getCustomerId());
                 $arrApi['data']['customerId'] = $quoteData->getCustomerId();
@@ -1198,5 +1199,18 @@ class OrderController extends Controller
         if (!empty($skinRecord)) {
             return $skinRecord->getGrade();
         }
+    }
+
+    private function getCustomerCompanyById($customer_id) {
+        $com = '';
+        if (!empty($customer_id)) {
+            $profileObj = $this->getDoctrine()
+                ->getRepository('AppBundle:Profile')
+                ->findOneBy(array('userId' => $customer_id));
+            if (!empty($profileObj->getCompany())) {
+                $com = $profileObj->getCompany();
+            }
+        }
+        return $com;
     }
 }

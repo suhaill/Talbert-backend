@@ -283,6 +283,27 @@ class Doors
     /**
      * @var bool
      *
+     * @ORM\Column(name="running", type="boolean")
+     */
+    private $running;
+
+    /**
+     * @var array
+     *
+     * @ORM\Column(name="runningDescription", type="text" ,)
+     */
+    private $runningDescription;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="unitMesureCostIdR", type="integer")
+     */
+    private $unitMesureCostIdR;
+
+    /**
+     * @var bool
+     *
      * @ORM\Column(name="light_opening", type="boolean")
      */
     private $lightOpening;
@@ -1461,6 +1482,54 @@ class Doors
     public function getLEdgeSp()
     {
         return $this->lEdgeSp;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRunning()
+    {
+        return $this->running;
+    }
+
+    /**
+     * @param bool $running
+     */
+    public function setRunning($running)
+    {
+        $this->running = $running;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRunningDescription()
+    {
+        return $this->runningDescription;
+    }
+
+    /**
+     * @param array $runningDescription
+     */
+    public function setRunningDescription($runningDescription)
+    {
+        $this->runningDescription = $runningDescription;
+    }
+
+    /**
+     * @return int
+     */
+    public function getUnitMesureCostIdR()
+    {
+        return $this->unitMesureCostIdR;
+    }
+
+    /**
+     * @param int $unitMesureCostIdR
+     */
+    public function setUnitMesureCostIdR($unitMesureCostIdR)
+    {
+        $this->unitMesureCostIdR = $unitMesureCostIdR;
     }
 
     /**
