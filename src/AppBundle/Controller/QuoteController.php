@@ -1143,7 +1143,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['url'] = 'line-item/edit-plywood';
                     $lineItem[$i]['quantity'] = $p->getQuantity();
                     $lineItem[$i]['species'] = $this->getSpeciesNameById($p->getSpeciesId());
-                    $lineItem[$i]['pattern'] = $this->getPatternNameById($p->getPatternId());
+                    $lineItem[$i]['pattern'] = $this->getPatternNameById($p->getPatternMatch());
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($p->getGradeId()))[0];
                     $lineItem[$i]['back'] = $this->getBackNameById($p->getBackerId());
                     $lineItem[$i]['thickness'] = $p->getFinishThickId();
