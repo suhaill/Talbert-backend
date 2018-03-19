@@ -1146,7 +1146,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($p->getPatternId());
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($p->getGradeId()))[0];
                     $lineItem[$i]['back'] = $this->getBackNameById($p->getBackerId());
-                    $lineItem[$i]['thickness'] = $p->getThickness();
+                    $lineItem[$i]['thickness'] = $p->getFinishThickId();
                     $lineItem[$i]['width'] = $p->getPlywoodWidth();
                     $lineItem[$i]['length'] = $p->getPlywoodLength();
                     $lineItem[$i]['core'] = $this->getCoreNameById($p->getCoreType());
@@ -1186,7 +1186,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d->getId()));
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($this->getGradeIdByDoorId($d->getId())))[0];
                     $lineItem[$i]['back'] = 'NA';//$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
-                    $lineItem[$i]['thickness'] = $d->getPanelThickness();
+                    $lineItem[$i]['thickness'] = $d->getFinishThickId();
                     $lineItem[$i]['width'] = $d->getWidth();
                     $lineItem[$i]['length'] = $d->getLength();
                     $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
