@@ -225,6 +225,7 @@ class PlywoodController extends Controller
         $plywood->setIsActive(1);
         // Calculator data
         $plywood->setCustMarkupPer(25);
+        $plywood->setCalcTW(1);
         $plywood->setVenCost(0);
         $plywood->setVenWaste(1);
         $plywood->setSubTotalVen(0);
@@ -234,6 +235,9 @@ class PlywoodController extends Controller
         $plywood->setBackrCost(0);
         $plywood->setBackrWaste(1);
         $plywood->setSubTotalBackr(0);
+        $plywood->setPanelCost(0);
+        $plywood->setPanelWaste(1);
+        $plywood->setSubTotalPanel(0);
         $plywood->setFinishCost(0);
         $plywood->setFinishWaste(1);
         $plywood->setSubTotalFinish(0);
@@ -461,6 +465,9 @@ class PlywoodController extends Controller
                             $arrApi['data']['backrCost'] = $plywood->getBackrCost();
                             $arrApi['data']['backrWaste'] = $plywood->getBackrWaste();
                             $arrApi['data']['subTotalBackr'] = $plywood->getSubTotalBackr();
+                            $arrApi['data']['panelCost'] = $plywood->getPanelCost();
+                            $arrApi['data']['panelWaste'] = $plywood->getPanelWaste();
+                            $arrApi['data']['subTotPanel'] = $plywood->getSubTotalPanel();
                             $arrApi['data']['finishCost'] = $plywood->getFinishCost();
                             $arrApi['data']['finishWaste'] = $plywood->getFinishWaste();
                             $arrApi['data']['subTotalWaste'] = $plywood->getSubTotalFinish();
@@ -655,6 +662,7 @@ class PlywoodController extends Controller
         $em = $this->getDoctrine()->getManager();
         $plyData = $em->getRepository(Plywood::class)->find($data['plyId']);
         $plyData->setCustMarkupPer($data['custMarkupPer']);
+        $plyData->setCalcTW($data['calcTW']);
         $plyData->setVenCost($data['venCost']);
         $plyData->setVenWaste($data['venWaste']);
         $plyData->setSubTotalVen($data['subTotVen']);
