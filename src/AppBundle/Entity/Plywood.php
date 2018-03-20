@@ -505,6 +505,13 @@ class Plywood
     private $custMarkupPer;
 
     /**
+     * @var bool
+     *
+     * @ORM\Column(name="calcTW", type="boolean")
+     */
+    private $calcTW;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="ven_cost", type="string", length=10, nullable=true, options={"default":0})
@@ -566,6 +573,27 @@ class Plywood
      * @ORM\Column(name="sub_total_backr", type="string", length=10, nullable=true, options={"default":0})
      */
     private $subTotalBackr;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="panel_cost", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $panelCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="panel_waste", type="string", length=10, nullable=true, options={"default":1})
+     */
+    private $panelWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_panel", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $subTotalPanel;
 
     /**
      * @var string
@@ -2111,6 +2139,22 @@ class Plywood
     }
 
     /**
+     * @return bool
+     */
+    public function isCalcTW()
+    {
+        return $this->calcTW;
+    }
+
+    /**
+     * @param bool $calcTW
+     */
+    public function setCalcTW($calcTW)
+    {
+        $this->calcTW = $calcTW;
+    }
+
+    /**
      * @return string
      */
     public function getVenCost()
@@ -2252,6 +2296,54 @@ class Plywood
     public function setSubTotalBackr($subTotalBackr)
     {
         $this->subTotalBackr = $subTotalBackr;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPanelCost()
+    {
+        return $this->panelCost;
+    }
+
+    /**
+     * @param string $panelCost
+     */
+    public function setPanelCost($panelCost)
+    {
+        $this->panelCost = $panelCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPanelWaste()
+    {
+        return $this->panelWaste;
+    }
+
+    /**
+     * @param string $panelWaste
+     */
+    public function setPanelWaste($panelWaste)
+    {
+        $this->panelWaste = $panelWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalPanel()
+    {
+        return $this->subTotalPanel;
+    }
+
+    /**
+     * @param string $subTotalPanel
+     */
+    public function setSubTotalPanel($subTotalPanel)
+    {
+        $this->subTotalPanel = $subTotalPanel;
     }
 
     /**

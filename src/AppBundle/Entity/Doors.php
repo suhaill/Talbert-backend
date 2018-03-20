@@ -283,6 +283,48 @@ class Doors
     /**
      * @var bool
      *
+     * @ORM\Column(name="milling", type="boolean")
+     */
+    private $milling;
+
+    /**
+     * @var array
+     *
+     * @ORM\Column(name="millingDescription", type="text" ,)
+     */
+    private $millingDescription;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="unitMesureCostId", type="integer")
+     */
+    private $unitMesureCostId;
+
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="running", type="boolean")
+     */
+    private $running;
+
+    /**
+     * @var array
+     *
+     * @ORM\Column(name="runningDescription", type="text" ,)
+     */
+    private $runningDescription;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="unitMesureCostIdR", type="integer")
+     */
+    private $unitMesureCostIdR;
+
+    /**
+     * @var bool
+     *
      * @ORM\Column(name="light_opening", type="boolean")
      */
     private $lightOpening;
@@ -1461,6 +1503,102 @@ class Doors
     public function getLEdgeSp()
     {
         return $this->lEdgeSp;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isMilling()
+    {
+        return $this->milling;
+    }
+
+    /**
+     * @param bool $milling
+     */
+    public function setMilling($milling)
+    {
+        $this->milling = $milling;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMillingDescription()
+    {
+        return $this->millingDescription;
+    }
+
+    /**
+     * @param array $millingDescription
+     */
+    public function setMillingDescription($millingDescription)
+    {
+        $this->millingDescription = $millingDescription;
+    }
+
+    /**
+     * @return int
+     */
+    public function getUnitMesureCostId()
+    {
+        return $this->unitMesureCostId;
+    }
+
+    /**
+     * @param int $unitMesureCostId
+     */
+    public function setUnitMesureCostId($unitMesureCostId)
+    {
+        $this->unitMesureCostId = $unitMesureCostId;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRunning()
+    {
+        return $this->running;
+    }
+
+    /**
+     * @param bool $running
+     */
+    public function setRunning($running)
+    {
+        $this->running = $running;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRunningDescription()
+    {
+        return $this->runningDescription;
+    }
+
+    /**
+     * @param array $runningDescription
+     */
+    public function setRunningDescription($runningDescription)
+    {
+        $this->runningDescription = $runningDescription;
+    }
+
+    /**
+     * @return int
+     */
+    public function getUnitMesureCostIdR()
+    {
+        return $this->unitMesureCostIdR;
+    }
+
+    /**
+     * @param int $unitMesureCostIdR
+     */
+    public function setUnitMesureCostIdR($unitMesureCostIdR)
+    {
+        $this->unitMesureCostIdR = $unitMesureCostIdR;
     }
 
     /**
