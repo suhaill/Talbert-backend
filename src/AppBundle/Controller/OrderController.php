@@ -143,6 +143,7 @@ class OrderController extends Controller
                 $quoteList[$i]['companyname'] = strtoupper($this->getCompanyById($quotes[$i]->getCustomerId()));
                 $quoteList[$i]['status'] = $quotes[$i]->getStatus();
                 $quoteList[$i]['estDate'] = $this->getEstimateDateFormate($quotes[$i]->getEstimateDate());
+                $quoteList[$i]['dueDate'] = $quotes[$i]->getDeliveryDate();
             }
             
             if($requestColumnName=='customer'){
