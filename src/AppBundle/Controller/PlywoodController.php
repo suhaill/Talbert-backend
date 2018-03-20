@@ -834,7 +834,7 @@ class PlywoodController extends Controller
                     'v.rightEdge','v.leftEdge'])
                 ->from('AppBundle:Plywood', 'v')
                 ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
-                ->addSelect(['q.refNum'])
+                ->addSelect(['q.refNum','q.deliveryDate'])
                 ->leftJoin('AppBundle:User', 'u', 'WITH', "q.customerId = u.id and u.userType='customer' and u.roleId=11")
                 ->addSelect(['u.username'])
                 ->leftJoin('AppBundle:Species', 's', 'WITH', "v.speciesId = s.id")
