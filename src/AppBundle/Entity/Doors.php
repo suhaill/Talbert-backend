@@ -283,6 +283,27 @@ class Doors
     /**
      * @var bool
      *
+     * @ORM\Column(name="milling", type="boolean")
+     */
+    private $milling;
+
+    /**
+     * @var array
+     *
+     * @ORM\Column(name="millingDescription", type="text" ,)
+     */
+    private $millingDescription;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="unitMesureCostId", type="integer")
+     */
+    private $unitMesureCostId;
+
+    /**
+     * @var bool
+     *
      * @ORM\Column(name="running", type="boolean")
      */
     private $running;
@@ -1482,6 +1503,54 @@ class Doors
     public function getLEdgeSp()
     {
         return $this->lEdgeSp;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isMilling()
+    {
+        return $this->milling;
+    }
+
+    /**
+     * @param bool $milling
+     */
+    public function setMilling($milling)
+    {
+        $this->milling = $milling;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMillingDescription()
+    {
+        return $this->millingDescription;
+    }
+
+    /**
+     * @param array $millingDescription
+     */
+    public function setMillingDescription($millingDescription)
+    {
+        $this->millingDescription = $millingDescription;
+    }
+
+    /**
+     * @return int
+     */
+    public function getUnitMesureCostId()
+    {
+        return $this->unitMesureCostId;
+    }
+
+    /**
+     * @param int $unitMesureCostId
+     */
+    public function setUnitMesureCostId($unitMesureCostId)
+    {
+        $this->unitMesureCostId = $unitMesureCostId;
     }
 
     /**

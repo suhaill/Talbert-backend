@@ -111,7 +111,7 @@ class PlywoodController extends Controller
             if (empty($quantity) || empty($speciesId) || empty($patternId) || 
             empty($grainDirectionId) || empty($patternMatch) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth)
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
-            || empty($thickness) || empty($finish) || empty($facPaint) || empty($uvCuredId) || empty($sheenId) || empty($lumberFee) ) {
+            || empty($thickness) || empty($finish) || empty($facPaint) || empty($uvCuredId) || empty($sheenId) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
@@ -598,13 +598,11 @@ class PlywoodController extends Controller
             if (empty($id) || empty($quantity) || empty($speciesId) || empty($patternId) || 
             empty($grainDirectionId) || empty($patternMatch) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth)
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
-            || empty($thickness) || empty($finish) || empty($facPaint) || empty($uvCuredId) || empty($sheenId) || empty($topEdge) || empty($edgeMaterialId)
-            || empty($lumberFee)) {
+            || empty($thickness) || empty($finish) || empty($facPaint) || empty($uvCuredId) || empty($sheenId) || empty($topEdge) || empty($edgeMaterialId) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
             } else {
-
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully saved plywood data.';
                 $statusCode = 200;
@@ -614,7 +612,6 @@ class PlywoodController extends Controller
                 $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
                 $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
                 $milling,$millingDescription,$unitMesureCostId,$running,$runningDescription,$unitmeasurecostR,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$fileId,$createdAt,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL);
-            
             }
 
         }
