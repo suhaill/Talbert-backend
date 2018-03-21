@@ -1153,6 +1153,8 @@ class QuoteController extends Controller
                     $lineItem[$i]['edge'] = $this->getEdgeNameById($p->getEdgeDetail());
                     $lineItem[$i]['unitPrice'] = $p->getTotalcostPerPiece();
                     $lineItem[$i]['totalPrice'] = $p->getTotalCost();
+                    $lineItem[$i]['widthFraction'] = $this->float2rat($p->getWidthFraction());
+                    $lineItem[$i]['lengthFraction'] = $this->float2rat($p->getLengthFraction());
                     $i++;
                 }
             }
@@ -1173,6 +1175,8 @@ class QuoteController extends Controller
                     $lineItem[$i]['edge'] = 'NA';
                     $lineItem[$i]['unitPrice'] = $v->getTotCostPerPiece();
                     $lineItem[$i]['totalPrice'] = $v->getTotalCost();
+                    $lineItem[$i]['widthFraction'] = $this->float2rat($v->getWidthFraction());
+                    $lineItem[$i]['lengthFraction'] = $this->float2rat($v->getLengthFraction());
                     $i++;
                 }
             }
@@ -1193,6 +1197,8 @@ class QuoteController extends Controller
                     $lineItem[$i]['edge'] = 'NA';
                     $lineItem[$i]['unitPrice'] = '0';
                     $lineItem[$i]['totalPrice'] = '0';
+                    $lineItem[$i]['widthFraction'] = $this->float2rat($d->getWidthFraction());
+                    $lineItem[$i]['lengthFraction'] = $this->float2rat($d->getLengthFraction());
                     $i++;
                 }
             }
@@ -1489,6 +1495,75 @@ class QuoteController extends Controller
             ->getRepository('AppBundle:Profile')
             ->findOneBy(array('userId' => $userid));
         return $profileObj->getCompany();
+    }
+    
+    private function float2rat($num = 0.0, $err = 0.001)
+    {
+        if ($err <= 0.0 || $err >= 1.0)
+        {
+            $err = 0.001;
+        }
+
+        $sign = ($num > 0) ? 1 : (($num < 0) ? - 1 : 0);
+
+        if ($sign === - 1)
+        {
+            $num = abs($num);
+        }
+
+        if ($sign !== 0)
+        {
+            // $err is the maximum relative $err; convert to absolute
+            $err *= $num;
+        }
+
+        $n = (int) floor($num);
+        $num -= $n;
+
+        if ($num < $err)
+        {
+            return (string) ($sign * $n);
+        }
+
+        if (1 - $err < $num)
+        {
+            return (string) ($sign * ($n + 1));
+        }
+
+        // The lower fraction is 0/1
+        $lower_n = 0;
+        $lower_d = 1;
+
+        // The upper fraction is 1/1
+        $upper_n = 1;
+        $upper_d = 1;
+
+        while (true)
+        {
+            // The middle fraction is ($lower_n + $upper_n) / (lower_d + $upper_d)
+            $middle_n = $lower_n + $upper_n;
+            $middle_d = $lower_d + $upper_d;
+
+            if ($middle_d * ($num + $err) < $middle_n)
+            {
+                // real + $err < middle : middle is our new upper
+                $upper_n = $middle_n;
+                $upper_d = $middle_d;
+            }
+            elseif ($middle_n < ($num - $err) * $middle_d)
+            {
+                // middle < real - $err : middle is our new lower
+                $lower_n = $middle_n;
+                $lower_d = $middle_d;
+            }
+            else
+            {
+                // Middle is our best fraction
+                return (string) (($n * $middle_d + $middle_n) * $sign) . '/' . (string) $middle_d;
+            }
+        }
+
+        return '0'; // should be unreachable.
     }
 
 }
