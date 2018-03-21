@@ -55,7 +55,7 @@ class QuoteController extends Controller
             $leadTime = trim($data->get('lead_time'));
             $status = trim($data->get('status'));
             $datime = new \DateTime('now');
-            if (empty($qDate) || empty($quoteAddedby) || empty($custId) || empty($refNo) || empty($salsManId) || empty($job) || empty($termId) || empty($shipMethod) || empty($shipAddId) || empty($leadTime) || empty($status) || empty($datime)) {
+            if (empty($qDate) || empty($quoteAddedby) || empty($custId) || empty($salsManId) || empty($termId) || empty($shipMethod) || empty($shipAddId) || empty($leadTime) || empty($status) || empty($datime)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the details';
                 $statusCode = 422;
@@ -295,7 +295,7 @@ class QuoteController extends Controller
             $expFee = trim($data->get('expFee'));
             $discount = trim($data->get('discount'));
             $datime = new \DateTime('now');
-            if (empty($qDate) || empty($quoteAddedby) || empty($custId) || empty($refNo) || empty($salsManId) || empty($job) || empty($termId) || empty($shipMethod) || empty($shipAddId) || empty($leadTime) || empty($status) || empty($datime)) {
+            if (empty($qDate) || empty($quoteAddedby) || empty($custId) || empty($salsManId) || empty($termId) || empty($shipMethod) || empty($shipAddId) || empty($leadTime) || empty($status) || empty($datime)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Parameter missing';
                 $statusCode = 422;
@@ -1132,7 +1132,7 @@ class QuoteController extends Controller
     private function getVeneerslistbyQuoteId($qId) {
         $lineItem = array();
         $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $qId,'isActive'=>1));
-        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
+//        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
         $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $qId, 'status'=> 1));
         $i=0;
         if (!empty($plywoodRecords) || !empty($veneerRecords) || !empty($doorRecords)) {
@@ -1158,7 +1158,7 @@ class QuoteController extends Controller
                     $i++;
                 }
             }
-            if (!empty($veneerRecords)) {
+            /*if (!empty($veneerRecords)) {
                 foreach ($veneerRecords as $v) {
                     $lineItem[$i]['id'] = $v->getId();
                     $lineItem[$i]['type'] = 'veneer';
@@ -1179,7 +1179,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($v->getLengthFraction());
                     $i++;
                 }
-            }
+            }*/
             if (!empty($doorRecords)) {
                 foreach ($doorRecords as $d) {
                     $lineItem[$i]['id'] = $d->getId();
