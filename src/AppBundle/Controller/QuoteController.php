@@ -66,7 +66,8 @@ class QuoteController extends Controller
                 } else {
                     $ctrlNo = $lastCtrlNo+1;
                 }
-                $refNocount = $this->checkIfRefNoExists($refNo);
+//                $refNocount = $this->checkIfRefNoExists($refNo);
+                $refNocount=[];
                 if (!empty($refNocount)) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'This reference number already exists';
