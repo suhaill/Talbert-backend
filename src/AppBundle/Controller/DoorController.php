@@ -872,6 +872,7 @@ class DoorController extends Controller
         $data['panelCost'] = $door->getPanelCost();
         $data['panelWaste'] = $door->getPanelWaste();
         $data['subTotalPanel'] = $door->getSubTotalPanel();
+        $data['calCTw'] = $door->getCalcTW();
         return $data;
     }
 
