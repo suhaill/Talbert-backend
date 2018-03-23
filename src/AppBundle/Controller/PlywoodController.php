@@ -89,14 +89,18 @@ class PlywoodController extends Controller
             $numberLabels = trim($getJson->get('labels'));
             $lumberFee = trim($getJson->get('lumberfee'));
             $autoNumberArr = $getJson->get('autoNumber');
+            $quoteId = trim($getJson->get('quoteId'));
             $autoNumberstring = '';
 
             if($autoNumberArr)
             {
+                $i=1;
                 foreach($autoNumberArr as $val) {
-                    
-                   $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
-                   
+                    if(empty($val['autoNumber'])){
+                        $val['autoNumber'] = $quoteId.'-'.$i;
+                    }
+                    $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
+                    $i++;
                 }
                 $autoNumberstring = rtrim($autoNumberstring,',');
             }
@@ -105,7 +109,6 @@ class PlywoodController extends Controller
             $comments = trim($getJson->get('comment'));
             $createdAt = new \DateTime('now');
             $fileId = trim($getJson->get('fileId'));
-            $quoteId = trim($getJson->get('quoteId'));
             $formtype = trim($getJson->get('formtype'));
 
             if (empty($quantity) || empty($speciesId) || empty($patternId) || 

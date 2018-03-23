@@ -502,8 +502,13 @@ class DoorController extends Controller
         $autoNumberArr = $data->get('autoNumber');
         $autoNumberstring = '';
         if($autoNumberArr) {
+            $i=1;
             foreach($autoNumberArr as $val) {
+                if(empty($val['autoNumber'])){
+                    $val['autoNumber'] = $qid.'-'.$i;
+                }
                 $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
+                $i++;
             }
             $autoNumberstring = rtrim($autoNumberstring,',');
         }
