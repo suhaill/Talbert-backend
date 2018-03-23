@@ -618,12 +618,7 @@ class Doors
      */
     private $blockingCharge;
     
-    /**
-     * @var bool
-     *
-     * @ORM\Column(name="calcTW", type="boolean")
-     */
-    private $calcTW;
+    
     /**
      * @var string
      *
@@ -717,25 +712,7 @@ class Doors
         return $this;
     }
     
-    /**
-     * @return bool
-     */
-    public function isCalcTW()
-    {
-        return $this->calcTW;
-    }
     
-    public function getCalcTW()
-    {
-        return $this->calcTW;
-    }
-    /**
-     * @param bool $calcTW
-     */
-    public function setCalcTW($calcTW)
-    {
-        $this->calcTW = $calcTW;
-    }
 
     /**
      * Get quoteId

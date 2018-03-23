@@ -393,8 +393,34 @@ class DoorCalculator
      * @ORM\Column(name="updated_at", type="datetime")
      */
     private $updatedAt;
-
-
+    
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="calcTW", type="boolean")
+     */
+    private $calcTW;
+    
+    /**
+     * @return bool
+     */
+    public function isCalcTW()
+    {
+        return $this->calcTW;
+    }
+    
+    public function getCalcTW()
+    {
+        return $this->calcTW;
+    }
+    /**
+     * @param bool $calcTW
+     */
+    public function setCalcTW($calcTW)
+    {
+        $this->calcTW = $calcTW;
+    }
+    
     /**
      * Get id
      *
