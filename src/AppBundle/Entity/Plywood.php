@@ -2145,7 +2145,11 @@ class Plywood
     {
         return $this->calcTW;
     }
-
+    
+    public function getCalcTW()
+    {
+        return $this->calcTW;
+    }
     /**
      * @param bool $calcTW
      */

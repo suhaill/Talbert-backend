@@ -412,6 +412,7 @@ class PlywoodController extends Controller
 
                             $arrApi['data']['isLabels'] = $plywood->getIsLabels();
                             $arrApi['data']['numberLabels'] = $plywood->getNumberLabels();
+                            $arrApi['data']['calCTw'] = $plywood->getCalcTW();
                             //echo $arrApi['data']['autoNumber'];
                             if (!empty($plywood->getAutoNumber())) {
                                 $tags = explode(',', $plywood->getAutoNumber());
