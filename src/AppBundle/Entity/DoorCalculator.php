@@ -69,6 +69,7 @@ class DoorCalculator
      * @ORM\Column(name="core_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $coreWaste;
+    
 
     /**
      * @var string
@@ -76,6 +77,28 @@ class DoorCalculator
      * @ORM\Column(name="sub_total_core", type="string", length=10, nullable=true, options={"default":0})
      */
     private $subTotalCore;
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="panel_cost", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $panelCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="panel_waste", type="string", length=10, nullable=true, options={"default":1})
+     */
+    private $panelWaste;
+    
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_panel", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $subTotalPanel;
 
     /**
      * @var string
@@ -468,6 +491,53 @@ class DoorCalculator
     public function setSubTotalVen($subTotalVen)
     {
         $this->subTotalVen = $subTotalVen;
+    }
+    /**
+     * @return string
+     */
+    public function getPanelCost()
+    {
+        return $this->panelCost;
+    }
+
+    /**
+     * @param string $panelCost
+     */
+    public function setPanelCost($panelCost)
+    {
+        $this->panelCost = $panelCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPanelWaste()
+    {
+        return $this->panelWaste;
+    }
+
+    /**
+     * @param string $panelWaste
+     */
+    public function setPanelWaste($panelWaste)
+    {
+        $this->panelWaste = $panelWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalPanel()
+    {
+        return $this->subTotalPanel;
+    }
+
+    /**
+     * @param string $subTotalPanel
+     */
+    public function setSubTotalPanel($subTotalPanel)
+    {
+        $this->subTotalPanel = $subTotalPanel;
     }
 
     /**
