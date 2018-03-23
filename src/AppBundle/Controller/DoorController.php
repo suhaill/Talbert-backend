@@ -868,7 +868,10 @@ class DoorController extends Controller
         $data['machineTooling'] = $door->getMachineTooling();
         $data['preFinishSetup'] = $door->getPreFinishSetup();
         $data['colorMatch'] = $door->getColorMatch();
-        $data['totCost'] = $door->getTotalCost();
+        $data['totCost'] = $door->getTotalCost();        
+        $data['panelCost'] = $door->getPanelCost();
+        $data['panelWaste'] = $door->getPanelWaste();
+        $data['subTotalPanel'] = $door->getSubTotalPanel();
         return $data;
     }
 
