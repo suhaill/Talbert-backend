@@ -639,7 +639,7 @@ class PlywoodController extends Controller
         $statusCode = 200;
         $jsontoarraygenerator = new JsonToArrayGenerator();
         $data = $jsontoarraygenerator->getJson($request);
-        if ( empty($data['plyId']) || $data['custMarkupPer'] == null || empty($data['venCost']) || empty($data['venWaste'])) {
+        if ( empty($data['plyId']) || $data['custMarkupPer'] == null) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Please provide all the details.';
             $statusCode = 422;
