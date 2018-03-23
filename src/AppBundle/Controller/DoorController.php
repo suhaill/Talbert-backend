@@ -295,7 +295,8 @@ class DoorController extends Controller
         $statusCode = 200;
         $jsontoarraygenerator = new JsonToArrayGenerator();
         $data = $jsontoarraygenerator->getJson($request);
-        if (empty($data['doorId']) || empty($data['qty']) || empty($data['width']) || empty($data['length']) || empty($data['venCost']) || empty($data['venWaste'])) {
+        if (empty($data['doorId']) || empty($data['qty']) || empty($data['width']) || empty($data['length']) ||
+                empty($data['venCost']) || empty($data['venWaste'])) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Parameter missing';
             $statusCode = 422;
@@ -363,6 +364,9 @@ class DoorController extends Controller
         $door->setPreFinishSetup($data['preFnshStp']);
         $door->setColorMatch($data['clrMatch']);
         $door->setTotalCost($data['totalCost']);
+        $door->setPanelCost($data['panelCost']);
+        $door->setPanelWaste($data['panelWaste']);
+        $door->setSubTotalPanel($data['panelSubTotal']);
         $em->persist($door);
         $em->flush();
         return true;
