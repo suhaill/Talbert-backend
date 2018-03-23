@@ -654,6 +654,13 @@ class Doors
      * @ORM\Column(type="datetime")
      */
     private $updatedAt;
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="coreType", type="integer")
+     */
+    private $coreType;
 
     /**
      * Get id
@@ -664,6 +671,31 @@ class Doors
     {
         return $this->id;
     }
+    
+    /**
+     * Set coreType
+     *
+     * @param integer $coreType
+     *
+     * @return Plywood
+     */
+    public function setCoreType($coreType)
+    {
+        $this->coreType = $coreType;
+
+        return $this;
+    }
+
+    /**
+     * Get coreType
+     *
+     * @return int
+     */
+    public function getCoreType()
+    {
+        return $this->coreType;
+    }
+
 
     /**
      * Set quoteId
