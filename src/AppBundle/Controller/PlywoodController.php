@@ -699,6 +699,9 @@ class PlywoodController extends Controller
         $plyData->setPreFinishSetup($data['preFnshStp']);
         $plyData->setColorMatch($data['clrMatch']);
         $plyData->setTotalCost($data['totalCost']);
+        $plyData->setPanelCost($data['panelCost']);
+        $plyData->setPanelWaste($data['panelWaste']);
+        $plyData->setSubTotalPanel($data['panelSubTotal']);
         $em->persist($plyData);
         $em->flush();
         return 1;
