@@ -179,6 +179,7 @@ class DoorController extends Controller
                 $arrApi['data']['verticalRod'] = $doorExists->getVerticalRod();
                 $arrApi['data']['isLabel'] = $doorExists->getIsLabel();
                 $arrApi['data']['labels'] = $doorExists->getLabels();
+                $arrApi['data']['coreType'] = $doorExists->getCoreType();
                 if (!empty($doorExists->getAutoNumber())) {
                     $tags = explode(',', $doorExists->getAutoNumber());
                     for ($i=0; $i< count($tags); $i++) {
@@ -741,6 +742,7 @@ class DoorController extends Controller
         $door->setIsLabel($data->get('labelsYesNo'));
         $door->setLabels($data->get('labels'));
         $autoNumberArr = $data->get('autoNumber');
+        $door->setCoreType('coretype');
         $autoNumberstring = '';
         if($autoNumberArr) {
             foreach($autoNumberArr as $val) {
