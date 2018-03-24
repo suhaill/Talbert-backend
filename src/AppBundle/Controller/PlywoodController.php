@@ -90,6 +90,59 @@ class PlywoodController extends Controller
             $lumberFee = trim($getJson->get('lumberfee'));
             $autoNumberArr = $getJson->get('autoNumber');
             $quoteId = trim($getJson->get('quoteId'));
+            $custMarkup = trim($getJson->get('custMarkup') ? $getJson->get('custMarkup') : 0);
+            
+            $venCost = trim($getJson->get('venCost') ? $getJson->get('venCost') : 0);
+            $venWaste = trim($getJson->get('venWaste') ? $getJson->get('venWaste') : 0);
+            $subTotalVen = trim($getJson->get('subTotalVen') ? $getJson->get('subTotalVen') : 0);
+            
+            $coreCost = trim($getJson->get('coreCost') ? $getJson->get('coreCost') : 0);
+            $coreWaste = trim($getJson->get('coreWaste') ? $getJson->get('coreWaste') : 0);
+            $subTotalCore = trim($getJson->get('subTotalCore') ? $getJson->get('subTotalCore') : 0);
+            
+            $backrCost = trim($getJson->get('backrCost') ? $getJson->get('backrCost') : 0);
+            $backrWaste = trim($getJson->get('backrWaste') ? $getJson->get('backrWaste') : 0);
+            $subTotalBackr = trim($getJson->get('subTotalBackr') ? $getJson->get('subTotalBackr') : 0);
+            
+            $panelCost = trim($getJson->get('panelCost') ? $getJson->get('panelCost') : 0);
+            $panelWaste = trim($getJson->get('panelWaste') ? $getJson->get('panelWaste') : 0);
+            $subTotPanel = trim($getJson->get('subTotPanel') ? $getJson->get('subTotPanel') : 0);
+            
+            $finishCost = trim($getJson->get('finishCost') ? $getJson->get('finishCost') : 0);
+            $finishWaste = trim($getJson->get('finishWaste') ? $getJson->get('finishWaste') : 0);
+            $subTotalWaste = trim($getJson->get('subTotalWaste') ? $getJson->get('subTotalWaste') : 0);
+            
+            $edgeIntCost = trim($getJson->get('edgeIntCost') ? $getJson->get('edgeIntCost') : 0);
+            $edgeIntWaste = trim($getJson->get('edgeIntWaste') ? $getJson->get('edgeIntWaste') : 0);
+            $subTotalEdgeint = trim($getJson->get('subTotalEdgeint') ? $getJson->get('subTotalEdgeint') : 0);
+            
+            $edgeVCost = trim($getJson->get('edgeVCost') ? $getJson->get('edgeVCost') : 0);
+            $edgeVWaste = trim($getJson->get('edgeVWaste') ? $getJson->get('edgeVWaste') : 0);
+            $subTotalEdgev = trim($getJson->get('subTotalEdgev') ? $getJson->get('subTotalEdgev') : 0);
+
+            $finishEdgeCost = trim($getJson->get('finishEdgeCost') ? $getJson->get('finishEdgeCost') : 0);
+            $finishEdgeWaste = trim($getJson->get('finishEdgeWaste') ? $getJson->get('finishEdgeWaste') : 0);
+            $subTotalFinishEdge = trim($getJson->get('subTotalFinishEdge') ? $getJson->get('subTotalFinishEdge') : 0);
+            
+            $millingCost = trim($getJson->get('millingCost') ? $getJson->get('millingCost') : 0);
+            $millingWaste = trim($getJson->get('millingWaste') ? $getJson->get('millingWaste') : 0);
+            $subTotalmilling = trim($getJson->get('subTotalmilling') ? $getJson->get('subTotalmilling') : 0);
+
+            $rfCostP = trim($getJson->get('rfCostP') ? $getJson->get('rfCostP') : 0);
+            $rfWasteP = trim($getJson->get('rfWasteP') ? $getJson->get('rfWasteP') : 0);
+            $subTotRfP = trim($getJson->get('subTotRfP') ? $getJson->get('subTotRfP') : 0);
+            
+            $totalCostPerPiece = trim($getJson->get('totalCostPerPiece') ? $getJson->get('totalCostPerPiece') : 0);
+            $markup = trim($getJson->get('markup') ? $getJson->get('markup') : 0);
+            $sellingPrice = trim($getJson->get('sellingPrice') ? $getJson->get('sellingPrice') : 0);
+            $lineitemTotal = trim($getJson->get('lineitemTotal') ? $getJson->get('lineitemTotal') : 0);
+            $machineSetup = trim($getJson->get('machineSetup') ? $getJson->get('machineSetup') : 0);
+            $machineTooling = trim($getJson->get('machineTooling') ? $getJson->get('machineTooling') : 0);
+            $preFinishSetup = trim($getJson->get('preFinishSetup') ? $getJson->get('preFinishSetup') : 0);
+            $totalCost = trim($getJson->get('totalCost') ? $getJson->get('totalCost') : 0);
+            $colorMatch = trim($getJson->get('colorMatch') ? $getJson->get('colorMatch') : 0);
+
+            $calCTw = trim($getJson->get('calCTw') ? $getJson->get('custMarkupPly') : 0);
             $autoNumberstring = '';
 
             if($autoNumberArr)
@@ -123,12 +176,17 @@ class PlywoodController extends Controller
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully saved plywood data.';
                 $statusCode = 200;
-                $lastInserted = $this->savePlywoodData($quantity, $speciesId, 
-                $patternId, $grainDirectionId, $patternMatch, $gradeId, $thicknessId, $plywoodWidth,$widthFraction,$netsize,
-                $plywoodLength,$lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish, $facPaint, $uvCuredId,$uvColorId, $sheenId,
-                $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
-                $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
-                $milling,$millingDescription,$unitMesureCostId,$running,$runningDescription,$unitMesureCostIdR,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL);
+                $lastInserted = $this->savePlywoodData(
+                    $quantity, $speciesId, $patternId, $grainDirectionId, $patternMatch, $gradeId,
+                    $thicknessId, $plywoodWidth,$widthFraction, $netsize, $plywoodLength,
+                    $lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType,
+                    $thickness, $finish, $facPaint, $uvCuredId,$uvColorId, $sheenId, $shameOnId,
+                    $coreSameOnbe, $coreSameOnte, $coreSameOnre, $coreSameOnle, $edgeDetail, $topEdge,
+                    $edgeMaterialId, $edgeFinishSpeciesId, $bottomEdge, $bedgeMaterialId,$bedgeFinishSpeciesId, $rightEdge, $redgeMaterialId, $redgeFinishSpeciesId,
+                    $leftEdge, $ledgeMaterialId, $ledgeFinishSpeciesId, $milling, $millingDescription,
+                    $unitMesureCostId, $running, $runningDescription, $unitMesureCostIdR,$isLabels,
+                    $numberLabels, $lumberFee, $autoNumber, $comments, $createdAt, $fileId, $quoteId,
+                    $formtype, $edgeSameOnB, $edgeSameOnR, $edgeSameOn, $custMarkup, $venCost, $venWaste, $subTotalVen, $coreCost, $coreWaste, $subTotalCore, $backrCost, $backrWaste, $subTotalBackr, $panelCost, $panelWaste, $subTotPanel, $finishCost, $finishWaste, $subTotalWaste, $edgeIntCost, $edgeIntWaste, $subTotalEdgeint, $edgeVCost, $edgeVWaste, $subTotalEdgev, $finishEdgeCost, $finishEdgeWaste, $subTotalFinishEdge, $millingCost, $millingWaste, $subTotalmilling, $rfCostP,$rfWasteP, $subTotRfP,$totalCostPerPiece,  $markup, $sellingPrice, $lineitemTotal, $machineSetup, $machineTooling, $preFinishSetup, $totalCost, $calCTw, $colorMatch);
                 $arrApi['lastInserted'] = $lastInserted;
             }
 
@@ -148,7 +206,7 @@ class PlywoodController extends Controller
     $plywoodLength,$lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint, $uvCuredId,$uvColorId, $sheenId,
     $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
     $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
-    $milling,$millingDescription,$unitMesureCostId,$running,$runningDescription,$unitMesureCostIdR,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL)
+    $milling,$millingDescription,$unitMesureCostId,$running,$runningDescription,$unitMesureCostIdR,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL, $custMarkup, $venCost, $venWaste, $subTotalVen, $coreCost, $coreWaste, $subTotalCore, $backrCost, $backrWaste, $subTotalBackr, $panelCost, $panelWaste, $subTotPanel, $finishCost, $finishWaste, $subTotalWaste, $edgeIntCost, $edgeIntWaste, $subTotalEdgeint, $edgeVCost, $edgeVWaste, $subTotalEdgev, $finishEdgeCost, $finishEdgeWaste, $subTotalFinishEdge, $millingCost, $millingWaste, $subTotalmilling, $rfCostP,$rfWasteP, $subTotRfP,$totalCostPerPiece,  $markup, $sellingPrice, $lineitemTotal, $machineSetup, $machineTooling, $preFinishSetup, $totalCost, $calCTw, $colorMatch)
     {
         $em = $this->getDoctrine()->getManager();
         $plywood = new Plywood();
@@ -227,47 +285,60 @@ class PlywoodController extends Controller
         $plywood->setUpdatedAt($createdAt);
         $plywood->setIsActive(1);
         // Calculator data
-        $plywood->setCustMarkupPer(25);
-        $plywood->setCalcTW(1);
-        $plywood->setVenCost(0);
-        $plywood->setVenWaste(1);
-        $plywood->setSubTotalVen(0);
-        $plywood->setCoreCost(0);
-        $plywood->setCoreWaste(1);
-        $plywood->setSubTotalCore(0);
-        $plywood->setBackrCost(0);
-        $plywood->setBackrWaste(1);
-        $plywood->setSubTotalBackr(0);
-        $plywood->setPanelCost(0);
-        $plywood->setPanelWaste(1);
-        $plywood->setSubTotalPanel(0);
-        $plywood->setFinishCost(0);
-        $plywood->setFinishWaste(1);
-        $plywood->setSubTotalFinish(0);
-        $plywood->setEdgeintCost(0);
-        $plywood->setEdgeintWaste(1);
-        $plywood->setSubTotalEdgeint(0);
-        $plywood->setEdgevCost(0);
-        $plywood->setEdgevWaste(1);
-        $plywood->setSubTotalEdgev(0);
-        $plywood->setFinishEdgeCost(0);
-        $plywood->setFinishEdgeWaste(1);
-        $plywood->setSubTotalFinishEdge(0);
-        $plywood->setMillingCost(0);
-        $plywood->setMillingWaste(1);
-        $plywood->setSubTotalMilling(0);
-        $plywood->setRunningCost(0);
-        $plywood->setRunningWaste(1);
-        $plywood->setSubTotalrunning(0);
-        $plywood->setTotalcostPerPiece(0);
-        $plywood->setMarkup(0);
-        $plywood->setSellingPrice(0);
-        $plywood->setLineitemTotal(0);
-        $plywood->setMachineSetup(0);
-        $plywood->setMachineTooling(0);
-        $plywood->setPreFinishSetup(0);
-        $plywood->setColorMatch(0);
-        $plywood->setTotalCost(0);
+         
+        $plywood->setCustMarkupPer($custMarkupPly);
+
+        $plywood->setCalcTW($calCTw);
+        
+        $plywood->setVenCost($veneerCostPly);
+        $plywood->setVenWaste($veneerWastePly);
+        $plywood->setSubTotalVen($subTotalVen);
+        
+        $plywood->setCoreCost($coreCostPly);
+        $plywood->setCoreWaste($coreWastePly);
+        $plywood->setSubTotalCore($subTotalCore);
+        
+        $plywood->setBackrCost($backerCostPly);
+        $plywood->setBackrWaste($backerWastePly);
+        $plywood->setSubTotalBackr($subTotalBackr);
+        
+        $plywood->setPanelCost($panelCost);
+        $plywood->setPanelWaste($panelWaste);
+        $plywood->setSubTotalPanel($subTotPanel);
+
+        $plywood->setFinishCost($finishCostPly);
+        $plywood->setFinishWaste($finishWastePly);
+        $plywood->setSubTotalFinish($subTotalWaste);
+
+        $plywood->setEdgeintCost($edgeIntCostPly);
+        $plywood->setEdgeintWaste($edgeIntWastePly);
+        $plywood->setSubTotalEdgeint($subTotalEdgeint);
+
+        $plywood->setEdgevCost($edgeVCostPly);
+        $plywood->setEdgevWaste($edgeVWastePly);
+        $plywood->setSubTotalEdgev($subTotalEdgev);
+
+        $plywood->setFinishEdgeCost($finishEdgeCostPly);
+        $plywood->setFinishEdgeWaste($finishEdgeWasteP);
+        $plywood->setSubTotalFinishEdge($subTotalFinishEdge);
+
+        $plywood->setMillingCost($millingCostPly);
+        $plywood->setMillingWaste($millingVWastePly);
+        $plywood->setSubTotalMilling($subTotalmilling);
+
+        $plywood->setRunningCost($rfCostP);
+        $plywood->setRunningWaste($rfWasteP);
+        $plywood->setSubTotalrunning($subTotRfP);
+
+        $plywood->setTotalcostPerPiece($totalCostPerPiece);
+        $plywood->setMarkup($markup);
+        $plywood->setSellingPrice($sellingPrice);
+        $plywood->setLineitemTotal($lineitemTotal);
+        $plywood->setMachineSetup($machineSetup);
+        $plywood->setMachineTooling($machineTooling);
+        $plywood->setPreFinishSetup($preFinishSetup);
+        $plywood->setColorMatch($colorMatch);
+        $plywood->setTotalCost(totalCost);
         $em->persist($plywood);
         $em->flush();
 
