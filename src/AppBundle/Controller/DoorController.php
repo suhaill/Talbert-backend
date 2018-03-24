@@ -500,6 +500,7 @@ class DoorController extends Controller
         $comment = trim($data->get('comment'));
         $datime = new \DateTime('now');
         $autoNumberArr = $data->get('autoNumber');
+        $coreType = trim($data->get('coreType'));
         $autoNumberstring = '';
         if($autoNumberArr) {
             $i=1;
@@ -604,6 +605,8 @@ class DoorController extends Controller
         $door->setComment($comment);
         $door->setCreatedAt($datime);
         $door->setUpdatedAt($datime);
+        $door->setCoreThickness($finalthickness);
+        $door->setCoreType($coreType);
         $door->setStatus(1);
         $em->persist($door);
         $em->flush();
