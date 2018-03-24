@@ -64,9 +64,9 @@ class PlywoodController extends Controller
             $coreSameOnle = trim($getJson->get('coresameonle'));
             $backerId = trim($getJson->get('backergrade'));
             $edgeDetail = trim($getJson->get('egdedetail'));
-            $edgeSameOnB = trim($getJson->get('edgeSameOnB'));
-            $edgeSameOnR = trim($getJson->get('edgeSameOnR'));
-            $edgeSameOnL = trim($getJson->get('edgeSameOnL'));
+            $edgeSameOnB = trim($getJson->get('edgeSameOnB')  ? $getJson->get('edgeSameOnL') : 0);
+            $edgeSameOnR = trim($getJson->get('edgeSameOnR')  ? $getJson->get('edgeSameOnL') : 0);
+            $edgeSameOnL = trim($getJson->get('edgeSameOnL') ? $getJson->get('edgeSameOnL') : 0);
             $topEdge = trim($getJson->get('edgefinish'));
             $edgeMaterialId = trim($getJson->get('sizeedgematerial')); 
             $edgeFinishSpeciesId = trim($getJson->get('edgefinishspecies'));
