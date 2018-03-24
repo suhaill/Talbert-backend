@@ -186,7 +186,7 @@ class PlywoodController extends Controller
                     $leftEdge, $ledgeMaterialId, $ledgeFinishSpeciesId, $milling, $millingDescription,
                     $unitMesureCostId, $running, $runningDescription, $unitMesureCostIdR,$isLabels,
                     $numberLabels, $lumberFee, $autoNumber, $comments, $createdAt, $fileId, $quoteId,
-                    $formtype, $edgeSameOnB, $edgeSameOnR, $edgeSameOn, $custMarkup, $venCost, $venWaste, $subTotalVen, $coreCost, $coreWaste, $subTotalCore, $backrCost, $backrWaste, $subTotalBackr, $panelCost, $panelWaste, $subTotPanel, $finishCost, $finishWaste, $subTotalWaste, $edgeIntCost, $edgeIntWaste, $subTotalEdgeint, $edgeVCost, $edgeVWaste, $subTotalEdgev, $finishEdgeCost, $finishEdgeWaste, $subTotalFinishEdge, $millingCost, $millingWaste, $subTotalmilling, $rfCostP,$rfWasteP, $subTotRfP,$totalCostPerPiece,  $markup, $sellingPrice, $lineitemTotal, $machineSetup, $machineTooling, $preFinishSetup, $totalCost, $calCTw, $colorMatch);
+                    $formtype, $edgeSameOnB, $edgeSameOnR, $edgeSameOnL, $custMarkup, $venCost, $venWaste, $subTotalVen, $coreCost, $coreWaste, $subTotalCore, $backrCost, $backrWaste, $subTotalBackr, $panelCost, $panelWaste, $subTotPanel, $finishCost, $finishWaste, $subTotalWaste, $edgeIntCost, $edgeIntWaste, $subTotalEdgeint, $edgeVCost, $edgeVWaste, $subTotalEdgev, $finishEdgeCost, $finishEdgeWaste, $subTotalFinishEdge, $millingCost, $millingWaste, $subTotalmilling, $rfCostP,$rfWasteP, $subTotRfP,$totalCostPerPiece,  $markup, $sellingPrice, $lineitemTotal, $machineSetup, $machineTooling, $preFinishSetup, $totalCost, $calCTw, $colorMatch);
                 $arrApi['lastInserted'] = $lastInserted;
             }
 
