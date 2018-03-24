@@ -605,7 +605,7 @@ class DoorController extends Controller
         $door->setComment($comment);
         $door->setCreatedAt($datime);
         $door->setUpdatedAt($datime);
-        $door->setCoreThickness($finalthickness);
+
         $door->setCoreType($coreType);
         $door->setStatus(1);
         $em->persist($door);
