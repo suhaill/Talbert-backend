@@ -290,40 +290,40 @@ class PlywoodController extends Controller
 
         $plywood->setCalcTW($calCTw);
         
-        $plywood->setVenCost($veneerCostPly);
-        $plywood->setVenWaste($veneerWastePly);
+        $plywood->setVenCost($venCost);
+        $plywood->setVenWaste($venWaste);
         $plywood->setSubTotalVen($subTotalVen);
         
-        $plywood->setCoreCost($coreCostPly);
-        $plywood->setCoreWaste($coreWastePly);
+        $plywood->setCoreCost($coreCost);
+        $plywood->setCoreWaste($coreWaste);
         $plywood->setSubTotalCore($subTotalCore);
         
-        $plywood->setBackrCost($backerCostPly);
-        $plywood->setBackrWaste($backerWastePly);
+        $plywood->setBackrCost($backrCost);
+        $plywood->setBackrWaste($backrWaste);
         $plywood->setSubTotalBackr($subTotalBackr);
         
         $plywood->setPanelCost($panelCost);
         $plywood->setPanelWaste($panelWaste);
         $plywood->setSubTotalPanel($subTotPanel);
-
-        $plywood->setFinishCost($finishCostPly);
-        $plywood->setFinishWaste($finishWastePly);
+        
+        $plywood->setFinishCost($finishCost);
+        $plywood->setFinishWaste($finishWaste);
         $plywood->setSubTotalFinish($subTotalWaste);
 
-        $plywood->setEdgeintCost($edgeIntCostPly);
-        $plywood->setEdgeintWaste($edgeIntWastePly);
+        $plywood->setEdgeintCost($edgeIntCost);
+        $plywood->setEdgeintWaste($edgeIntWaste);
         $plywood->setSubTotalEdgeint($subTotalEdgeint);
 
-        $plywood->setEdgevCost($edgeVCostPly);
-        $plywood->setEdgevWaste($edgeVWastePly);
+        $plywood->setEdgevCost($edgeVCost);
+        $plywood->setEdgevWaste($edgeVWaste);
         $plywood->setSubTotalEdgev($subTotalEdgev);
 
-        $plywood->setFinishEdgeCost($finishEdgeCostPly);
-        $plywood->setFinishEdgeWaste($finishEdgeWasteP);
+        $plywood->setFinishEdgeCost($finishEdgeCost);
+        $plywood->setFinishEdgeWaste($finishEdgeWaste);
         $plywood->setSubTotalFinishEdge($subTotalFinishEdge);
 
-        $plywood->setMillingCost($millingCostPly);
-        $plywood->setMillingWaste($millingVWastePly);
+        $plywood->setMillingCost($millingCost);
+        $plywood->setMillingWaste($millingVWaste);
         $plywood->setSubTotalMilling($subTotalmilling);
 
         $plywood->setRunningCost($rfCostP);
@@ -338,7 +338,7 @@ class PlywoodController extends Controller
         $plywood->setMachineTooling($machineTooling);
         $plywood->setPreFinishSetup($preFinishSetup);
         $plywood->setColorMatch($colorMatch);
-        $plywood->setTotalCost(totalCost);
+        $plywood->setTotalCost($totalCost);
         $em->persist($plywood);
         $em->flush();
 
@@ -531,12 +531,15 @@ class PlywoodController extends Controller
                             $arrApi['data']['filestring'] = rtrim($filestring,',');
                             // Calculator data
                             $arrApi['data']['custMarkup'] = $plywood->getCustMarkupPer();
+
                             $arrApi['data']['venCost'] = $plywood->getVenCost();
                             $arrApi['data']['venWaste'] = $plywood->getVenWaste();
                             $arrApi['data']['subTotalVen'] = $plywood->getSubTotalVen();
+                            
                             $arrApi['data']['coreCost'] = $plywood->getCoreCost();
                             $arrApi['data']['coreWaste'] = $plywood->getCoreWaste();
                             $arrApi['data']['subTotalCore'] = $plywood->getSubTotalCore();
+                            
                             $arrApi['data']['backrCost'] = $plywood->getBackrCost();
                             $arrApi['data']['backrWaste'] = $plywood->getBackrWaste();
                             $arrApi['data']['subTotalBackr'] = $plywood->getSubTotalBackr();
