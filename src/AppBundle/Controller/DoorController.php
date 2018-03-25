@@ -366,6 +366,7 @@ class DoorController extends Controller
         $door->setPanelCost($data['panelCost']);
         $door->setPanelWaste($data['panelWaste']);
         $door->setSubTotalPanel($data['panelSubTotal']);
+        $door->setCalcTW($data['setCalcTW']);
         $em->persist($door);
         $em->flush();
         return true;
