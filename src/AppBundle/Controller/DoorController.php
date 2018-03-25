@@ -936,6 +936,7 @@ class DoorController extends Controller
         $doorCalculator->setTotalCost($doorCalCData->getTotalCost());
         $doorCalculator->setCreatedAt($createdAt);
         $doorCalculator->setUpdatedAt($createdAt);
+        $doorCalculator->setCalcTW($doorCalCData->getCalcTW());
         $em->persist($doorCalculator);
         $em->flush();
     }
