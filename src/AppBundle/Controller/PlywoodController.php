@@ -142,7 +142,7 @@ class PlywoodController extends Controller
             $totalCost = trim($getJson->get('totalCost') ? $getJson->get('totalCost') : 0);
             $colorMatch = trim($getJson->get('colorMatch') ? $getJson->get('colorMatch') : 0);
 
-            $calCTw = trim($getJson->get('calCTw') ? $getJson->get('custMarkupPly') : 0);
+            $calCTw = trim($getJson->get('calCTw') ? $getJson->get('calCTw') : 0);
             $autoNumberstring = '';
 
             if($autoNumberArr)
