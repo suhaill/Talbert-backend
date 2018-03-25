@@ -992,6 +992,7 @@ class DoorController extends Controller
         $door->setTotalCost(0.00);
         $door->setCreatedAt($createdAt);
         $door->setUpdatedAt($createdAt);
+        $door->setCalcTW(0);
         $em->persist($door);
         $em->flush();
     }
