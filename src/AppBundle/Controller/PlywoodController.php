@@ -286,7 +286,7 @@ class PlywoodController extends Controller
         $plywood->setIsActive(1);
         // Calculator data
          
-        $plywood->setCustMarkupPer($custMarkupPly);
+        $plywood->setCustMarkupPer($custMarkup);
 
         $plywood->setCalcTW($calCTw);
         
@@ -305,7 +305,7 @@ class PlywoodController extends Controller
         $plywood->setPanelCost($panelCost);
         $plywood->setPanelWaste($panelWaste);
         $plywood->setSubTotalPanel($subTotPanel);
-        
+
         $plywood->setFinishCost($finishCost);
         $plywood->setFinishWaste($finishWaste);
         $plywood->setSubTotalFinish($subTotalWaste);
@@ -323,7 +323,7 @@ class PlywoodController extends Controller
         $plywood->setSubTotalFinishEdge($subTotalFinishEdge);
 
         $plywood->setMillingCost($millingCost);
-        $plywood->setMillingWaste($millingVWaste);
+        $plywood->setMillingWaste($millingWaste);
         $plywood->setSubTotalMilling($subTotalmilling);
 
         $plywood->setRunningCost($rfCostP);
