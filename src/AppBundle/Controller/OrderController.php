@@ -17,6 +17,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use AppBundle\Entity\Orders;
 use AppBundle\Entity\Quotes;
 use AppBundle\Entity\Profile;
+use AppBundle\Entity\DoorCalculator;
 
 class OrderController extends Controller
 {
@@ -875,6 +876,15 @@ class OrderController extends Controller
             }*/
             if (!empty($doorRecords)) {
                 foreach ($doorRecords as $d) {
+                    $doorCosts = $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->
+                            findOneBy(['doorId' => $d->getId()]);
+                    if(!empty($doorCosts)){
+                        $totalcostPerPiece = !empty($doorCosts->getTotalcostPerPiece())?$doorCosts->getTotalcostPerPiece():0;
+                        $totalCost = !empty($doorCosts->getTotalCost())?$doorCosts->getTotalCost():0;
+                    } else {
+                        $totalcostPerPiece=0;
+                        $totalCost=0;
+                    }
                     $lineItem[$i]['id'] = $d->getId();
                     $lineItem[$i]['type'] = 'door';
                     $lineItem[$i]['url'] = 'door/edit-door';
@@ -888,8 +898,8 @@ class OrderController extends Controller
                     $lineItem[$i]['length'] = $d->getLength();
                     $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
                     $lineItem[$i]['edge'] = 'NA';
-                    $lineItem[$i]['unitPrice'] = '0';
-                    $lineItem[$i]['totalPrice'] = '0';
+                    $lineItem[$i]['unitPrice'] = $totalcostPerPiece;
+                    $lineItem[$i]['totalPrice'] = $totalCost;
                     $lineItem[$i]['widthFraction'] = $this->float2rat($d->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($d->getLengthFraction());
                     $i++;
