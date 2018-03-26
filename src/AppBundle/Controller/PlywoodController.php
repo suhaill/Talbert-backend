@@ -670,15 +670,9 @@ class PlywoodController extends Controller
 //            print_r($numberLabels);die;
             $lumberFee = trim($getJson->get('lumberfee'));
             $autoNumberArr = $getJson->get('autoNumber');
-            $quoteId = trim($getJson->get('quoteId'));
             $autoNumberstring = '';
-            $i=1;
             foreach($autoNumberArr as $val) {
-                if(empty($val['autoNumber'])){
-                    $val['autoNumber'] = $quoteId.'-'.$i;
-                }
-                $i++;
-                $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
+               $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
             }
             $autoNumberstring = rtrim($autoNumberstring,',');
             $autoNumber = $autoNumberstring;
