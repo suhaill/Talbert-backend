@@ -616,7 +616,11 @@ class DoorController extends Controller
     private function saveDoorSkinData($data, $doorId) {
         $qid = trim($data->get('qid'));
         $skinType = trim($data->get('skinType'));
-        $species = trim($data->get('species'));
+        $species = 'Other';
+        if(trim($data->get('skinType')) !== 'Other')    {
+            $species = trim($data->get('species'));    
+        }
+        
         $grainPattern = trim($data->get('grainPattern'));
         $grainDirection = trim($data->get('grainDirection'));
         $pattern = trim($data->get('pattern'));
@@ -779,6 +783,10 @@ class DoorController extends Controller
         $em = $this->getDoctrine()->getManager();
         $skin = $em->getRepository(Skins::class)->find($skinId);
         $skin->setSkinType($data->get('skinType'));
+        $skin->setSpecies('Other');
+        if(trim($data->get('skinType')) !== 'Other')    {
+            $skin->setSpecies($data->get('species'));
+        }
         $skin->setSpecies($data->get('species'));
         $skin->setGrain($data->get('grainPattern'));
         $skin->setGrainDir($data->get('grainDirection'));
