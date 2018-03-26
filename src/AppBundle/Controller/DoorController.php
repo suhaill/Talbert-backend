@@ -507,7 +507,7 @@ class DoorController extends Controller
             $i=1;
             foreach($autoNumberArr as $val) {
                 if(empty($val['autoNumber'])){
-                    $val['autoNumber'] = $qid.'-'.$i;
+                    $val['autoNumber'] = $qid.'-0'.$i;
                 }
                 $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
                 $i++;
