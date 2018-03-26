@@ -22,6 +22,7 @@ use AppBundle\Entity\Doors;
 use AppBundle\Entity\Skins;
 use AppBundle\Entity\Files;
 use AppBundle\Entity\Profile;
+use AppBundle\Entity\DoorCalculator;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -1136,7 +1137,7 @@ class QuoteController extends Controller
 //        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
         $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $qId, 'status'=> 1));
         $i=0;
-        if (!empty($plywoodRecords) || !empty($veneerRecords) || !empty($doorRecords)) {
+        if (!empty($plywoodRecords) || !empty($doorRecords)) {
             if (!empty($plywoodRecords)) {
                 foreach ($plywoodRecords as $p) {
                     $lineItem[$i]['id'] = $p->getId();
@@ -1183,6 +1184,15 @@ class QuoteController extends Controller
             }*/
             if (!empty($doorRecords)) {
                 foreach ($doorRecords as $d) {
+                    $doorCosts = $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->
+                            findOneBy(['doorId' => $d->getId()]);
+                    if(!empty($doorCosts)){
+                        $totalcostPerPiece = !empty($doorCosts->getTotalcostPerPiece())?$doorCosts->getTotalcostPerPiece():0;
+                        $totalCost = !empty($doorCosts->getTotalCost())?$doorCosts->getTotalCost():0;
+                    } else {
+                        $totalcostPerPiece=0;
+                        $totalCost=0;
+                    }
                     $lineItem[$i]['id'] = $d->getId();
                     $lineItem[$i]['type'] = 'door';
                     $lineItem[$i]['url'] = 'door/edit-door';
@@ -1196,8 +1206,8 @@ class QuoteController extends Controller
                     $lineItem[$i]['length'] = $d->getLength();
                     $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
                     $lineItem[$i]['edge'] = 'NA';
-                    $lineItem[$i]['unitPrice'] = '0';
-                    $lineItem[$i]['totalPrice'] = '0';
+                    $lineItem[$i]['unitPrice'] = $totalcostPerPiece;
+                    $lineItem[$i]['totalPrice'] = $totalCost;
                     $lineItem[$i]['widthFraction'] = $this->float2rat($d->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($d->getLengthFraction());
                     $i++;
