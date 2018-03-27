@@ -1197,7 +1197,11 @@ class QuoteController extends Controller
                     $lineItem[$i]['type'] = 'door';
                     $lineItem[$i]['url'] = 'door/edit-door';
                     $lineItem[$i]['quantity'] = $d->getQty();
-                    $lineItem[$i]['species'] = $this->getSpeciesNameById($this->getSpeciesIdByDoorId($d->getId()));
+                    if ($this->getSpeciesNameById($this->getSpeciesIdByDoorId($d->getId())) == null) {
+                        $lineItem[$i]['species'] = 'Other';
+                    } else {
+                        $lineItem[$i]['species'] = $this->getSpeciesNameById($this->getSpeciesIdByDoorId($d->getId()));
+                    }
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d->getId()));
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($this->getGradeIdByDoorId($d->getId())))[0];
                     $lineItem[$i]['back'] = 'NA';//$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
