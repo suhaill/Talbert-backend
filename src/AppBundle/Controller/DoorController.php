@@ -757,7 +757,7 @@ class DoorController extends Controller
         $door->setIsLabel($data->get('labelsYesNo'));
         $door->setLabels($data->get('labels'));
         $autoNumberArr = $data->get('autoNumber');
-        $door->setCoreType('coretype');
+        $door->setCoreType($data->get('coreType'));
         $autoNumberstring = '';
         if($autoNumberArr) {
             foreach($autoNumberArr as $val) {
