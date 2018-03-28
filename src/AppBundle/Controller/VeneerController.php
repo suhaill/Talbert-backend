@@ -67,7 +67,7 @@ class VeneerController extends Controller
             if (empty($quantity) || empty($speciesId) || empty($pattern) || 
             empty($grainDirectionId) || empty($gradeId) || 
             empty($thicknessId) || empty($width) || empty($length) || empty($coreTypeId) 
-            || empty($backer) || empty($lumberFee)) {
+            || empty($backer)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
@@ -129,26 +129,22 @@ class VeneerController extends Controller
         $veneer->setSubTotalBackr(0);
         $veneer->setBackrCost(0);
         $veneer->setBackrWaste(1);
-        $veneer->setTotCostPerPiece(0);
         $veneer->setRunningCost(0);
         $veneer->setRunningWaste(1);
         $veneer->getSubTotalrunning(0);
-        $veneer->setMarkup(0);
-        $veneer->setMarkup(0);
-        $veneer->setSellingPrice(0);
-        $veneer->setLineitemTotal(0);
+        $veneer->setTotCostPerPiece(0.00);
+        $veneer->setMarkup(0.00);
+        $veneer->setSellingPrice(0.00);
+        $veneer->setLineitemTotal(0.00);
         $veneer->setMachineSetup(0);
         $veneer->setMachineTooling(0);
         $veneer->setPreFinishSetup(0);
         $veneer->setColorMatch(0);
-        $veneer->setTotalCost(0);
+        $veneer->setTotalCost(0.00);
         $em->persist($veneer);
         $em->flush();
         $lastInserted = $veneer->getId();
-        //var_dump($fileId);
         $fileId_ar = explode(',', $fileId);
-        //var_dump($fileId_ar);
-        //echo count($fileId_ar);
         if(count($fileId_ar)>0 && !empty($fileId))
         {
             if($formtype == 'clone')
@@ -350,7 +346,7 @@ class VeneerController extends Controller
             if (empty($id) || empty($quantity) || empty($speciesId)
             || empty($pattern) || empty($grainDirectionId) || empty($gradeId) || 
             empty($thicknessId) || empty($width) || empty($length) || empty($coreTypeId) 
-            || empty($backer) || empty($lumberFee)) {
+            || empty($backer)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;

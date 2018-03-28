@@ -1024,6 +1024,8 @@ class QuoteController extends Controller
         $quote->setShipMethdId($shipMethod);
         $quote->setShipAddId($shipAddId);
         $quote->setLeadTime($leadTime);
+        $quote->setExpFee(0.00);
+        $quote->setDiscount(0.00);
         $quote->setStatus($status);
         $quote->setCreatedAt($datime);
         $quote->setUpdatedAt($datime);
@@ -1134,10 +1136,10 @@ class QuoteController extends Controller
     private function getVeneerslistbyQuoteId($qId) {
         $lineItem = array();
         $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $qId,'isActive'=>1));
-//        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
+        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
         $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $qId, 'status'=> 1));
         $i=0;
-        if (!empty($plywoodRecords) || !empty($doorRecords)) {
+        if (!empty($plywoodRecords) || !empty($doorRecords) || !empty($veneerRecords)) {
             if (!empty($plywoodRecords)) {
                 foreach ($plywoodRecords as $p) {
                     $lineItem[$i]['id'] = $p->getId();
@@ -1160,7 +1162,7 @@ class QuoteController extends Controller
                     $i++;
                 }
             }
-            /*if (!empty($veneerRecords)) {
+            if (!empty($veneerRecords)) {
                 foreach ($veneerRecords as $v) {
                     $lineItem[$i]['id'] = $v->getId();
                     $lineItem[$i]['type'] = 'veneer';
@@ -1181,7 +1183,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($v->getLengthFraction());
                     $i++;
                 }
-            }*/
+            }
             if (!empty($doorRecords)) {
                 foreach ($doorRecords as $d) {
                     $doorCosts = $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->
