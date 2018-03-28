@@ -162,6 +162,13 @@ class Doors
     private $soundDrop;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="specification", type="string", length=200)
+     */
+    private $specification;
+
+    /**
      * @var bool
      *
      * @ORM\Column(name="louvers", type="boolean")
@@ -1130,6 +1137,22 @@ class Doors
     public function getSoundDrop()
     {
         return $this->soundDrop;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSpecification()
+    {
+        return $this->specification;
+    }
+
+    /**
+     * @param string $specification
+     */
+    public function setSpecification($specification)
+    {
+        $this->specification = $specification;
     }
 
     /**

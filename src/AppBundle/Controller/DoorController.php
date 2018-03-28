@@ -119,6 +119,7 @@ class DoorController extends Controller
                 $arrApi['data']['sequence'] = $doorExists->getSequence();
                 $arrApi['data']['sound'] = $doorExists->getSound();
                 $arrApi['data']['soundDrop'] = $doorExists->getSoundDrop();
+                $arrApi['data']['specification'] = $doorExists->getSpecification();
                 $arrApi['data']['louvers'] = $doorExists->getLouvers();
                 $arrApi['data']['louversDrop'] = $doorExists->getLouversDrop();
                 $arrApi['data']['bevel'] = $doorExists->getBevel();
@@ -434,6 +435,7 @@ class DoorController extends Controller
         $sequesnce = trim($data->get('sequesnce'));
         $sound = trim($data->get('sound'));
         $soundDrop = trim($data->get('soundDrop'));
+        $specification = trim($data->get('specification'));
         $louvers = trim($data->get('louvers'));
         $louversDrop = trim($data->get('louversDrop'));
         $bevel = trim($data->get('bevel'));
@@ -538,6 +540,7 @@ class DoorController extends Controller
         $door->setSequence($sequesnce);
         $door->setSound($sound);
         $door->setSoundDrop($soundDrop);
+        $door->setSpecification($specification);
         $door->setLouvers($louvers);
         $door->setLouversDrop($louversDrop);
         $door->setBevel($bevel);
@@ -696,6 +699,7 @@ class DoorController extends Controller
         $door->setSequence($data->get('sequesnce'));
         $door->setSound($data->get('sound'));
         $door->setSoundDrop($data->get('soundDrop'));
+        $door->setSpecification($data->get('specification'));
         $door->setLouvers($data->get('louvers'));
         $door->setLouversDrop($data->get('louversDrop'));
         $door->setBevel($data->get('bevel'));
