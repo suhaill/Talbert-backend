@@ -61,6 +61,8 @@ class DoorController extends Controller
                 $statusCode = 422;
             } else {
                 $isDoorSaved = $this->saveDoorData($data);
+                $arrApi['data']['lastInsertId'] = $isDoorSaved;
+                $arrApi['data']['qId'] = $qid;
                 if (empty($isDoorSaved)) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'Door can not be saved.';
