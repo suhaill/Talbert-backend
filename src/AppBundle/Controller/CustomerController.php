@@ -243,18 +243,16 @@ class CustomerController extends Controller
                     if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty ($shipArr) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) ) {
                         $arrApi['status'] = 0;
                         $arrApi['message'] = 'Please fill all required fields';
-                        $statusCode = 422;
                     } else {
                         if ( is_numeric($phone) && strlen($phone) > 10 ) {
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Please enter correct phone number';
-                            $statusCode = 422;
                         } else {
                             $phoneCount = $this->checkIfOthrUsrHasThisPhone($phone, $userId);
                             if ($phoneCount) {
                                 $arrApi['status'] = 0;
                                 $arrApi['message'] = 'This Phone is already in user.';
-                                $statusCode = 422;
+
                             } else {
                                 $arrApi['status'] = 1;
                                 $arrApi['message'] = 'Successfully updated customer data.';
@@ -364,6 +362,9 @@ class CustomerController extends Controller
             } elseif ($isDataCorrect == 4 ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Unique email is required';
+            } elseif ($isDataCorrect == 5 ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Unique phone is required';
             } else {
                 if (!empty($data)) {
                     for ($i=0;$i<count($data); $i++) {
@@ -396,11 +397,12 @@ class CustomerController extends Controller
         for ($i = 0; $i < count($data); $i++) {
             if ( empty($data[$i]['Customer']) || empty($data[$i]['Contact']) || empty($data[$i]['Phone']) || empty($data[$i]['Email']) || empty($data[$i]['Term']) || empty($data[$i]['Street1']) || empty($data[$i]['City']) || empty($data[$i]['State']) || empty($data[$i]['Zip']) || empty($data[$i]['Nickname']) || empty($data[$i]['StreetShip']) || empty($data[$i]['CityShip']) || empty($data[$i]['StateShip']) || empty($data[$i]['ZipShip']) || empty($data[$i]['DelChrgShip']) || empty($data[$i]['SlsTxRtShip']) || empty($data[$i]['Dis']) ) {
                 return 2;
-            } else if ($this->checkIfUsernameExists($data[$i]['Contact'])){
+            } else if ($this->checkIfUsernameExists($data[$i]['Contact'])) {
                 return 3;
-            } else if ($this->checkIfEmailExists($data[$i]['Email'])){
+            } else if ($this->checkIfEmailExists($data[$i]['Email'])) {
                 return 4;
-            } else {
+            } else if ($this->checkIfPhoneExists($data[$i]['Phone'])) {
+                return 5;
             }
         }
         return 1;
