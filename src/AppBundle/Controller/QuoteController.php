@@ -196,7 +196,11 @@ class QuoteController extends Controller
                 $arrApi['data']['lumFee'] = $quoteData->getLumFee();
                 $arrApi['data']['shipCharge'] = $quoteData->getShipCharge();
                 $arrApi['data']['salesTax'] = $quoteData->getSalesTax();
-                $arrApi['data']['projectTot'] = $quoteData->getProjectTot();
+                if ($quoteData->getQuoteTot() == 0) {
+                    $arrApi['data']['projectTot'] = 0;
+                } else {
+                    $arrApi['data']['projectTot'] = $quoteData->getProjectTot();
+                }
                 $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
             }
         }
@@ -1150,7 +1154,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($p->getPatternMatch());
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($p->getGradeId()))[0];
                     $lineItem[$i]['back'] = $this->getBackNameById($p->getBackerId());
-                    $lineItem[$i]['thickness'] = $p->getFinishThickId();
+                    $lineItem[$i]['thickness'] = ($p->getFinishThickType() == 'inch') ? $this->float2rat($p->getFinishThickId()) : $this->float2rat($this->convertMmToInches($p->getFinishThickId()));
                     $lineItem[$i]['width'] = $p->getPlywoodWidth();
                     $lineItem[$i]['length'] = $p->getPlywoodLength();
                     $lineItem[$i]['core'] = $this->getCoreNameById($p->getCoreType());
@@ -1207,7 +1211,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d->getId()));
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($this->getGradeIdByDoorId($d->getId())))[0];
                     $lineItem[$i]['back'] = 'NA';//$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
-                    $lineItem[$i]['thickness'] = $d->getFinishThickId();
+                    $lineItem[$i]['thickness'] = ($d->getFinishThickType() == 'inch') ? $this->float2rat($d->getFinishThickId()) : $this->float2rat($this->convertMmToInches($d->getFinishThickId()));
                     $lineItem[$i]['width'] = $d->getWidth();
                     $lineItem[$i]['length'] = $d->getLength();
                     $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
@@ -1221,6 +1225,10 @@ class QuoteController extends Controller
             }
             return $lineItem;
         }
+    }
+
+    private function convertMmToInches($mm) {
+        return $mm * 0.0393701;
     }
 
     private function getSpeciesIdByDoorId($doorId) {
@@ -1364,7 +1372,7 @@ class QuoteController extends Controller
         if (!empty($shipAddId)) {
             $salesTaxRate = $this->getSalesTaxRateByAddId($shipAddId);
         }
-        $salesTaxAmount = (($quoteSubTotal + $expFee - $discount ) * ($salesTaxRate)) / 100;
+        $salesTaxAmount = (($quoteSubTotal - $discount ) * ($salesTaxRate)) / 100;
         $shipCharge = $this->getShippingChargeByAddId($shipAddId);
         $lumFee = $this->getPlywoodLumberFeeByQuoteId($quoteId) + $this->getVeneerLumberFeeByQuoteId($quoteId);
         $projectTotal = ($quoteSubTotal + $expFee - $discount + $salesTaxAmount + $shipCharge + $lumFee);
