@@ -509,7 +509,8 @@ class DoorController extends Controller
             $i=1;
             foreach($autoNumberArr as $val) {
                 if(empty($val['autoNumber'])){
-                    $val['autoNumber'] = $qid.'-0'.$i;
+                    $num_padded = sprintf("%02d", $i);
+                    $val['autoNumber'] = $qid.'-'.$num_padded;
                 }
                 $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
                 $i++;
@@ -762,10 +763,17 @@ class DoorController extends Controller
         $door->setLabels($data->get('labels'));
         $autoNumberArr = $data->get('autoNumber');
         $door->setCoreType($data->get('coreType'));
+        $qid = $data->get('qid');
         $autoNumberstring = '';
         if($autoNumberArr) {
+            $i=1;
             foreach($autoNumberArr as $val) {
+                if(empty($val['autoNumber'])){
+                    $num_padded = sprintf("%02d", $i);
+                    $val['autoNumber'] = $qid.'-'.$num_padded;
+                }
                 $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
+                $i++;
             }
             $autoNumberstring = rtrim($autoNumberstring,',');
         }

@@ -1154,7 +1154,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['width'] = $p->getPlywoodWidth();
                     $lineItem[$i]['length'] = $p->getPlywoodLength();
                     $lineItem[$i]['core'] = $this->getCoreNameById($p->getCoreType());
-                    $lineItem[$i]['edge'] = $this->getEdgeNameById($p->getEdgeDetail());
+                    $lineItem[$i]['edge'] = 'NA';//$this->getEdgeNameById($p->getEdgeDetail());
                     $lineItem[$i]['unitPrice'] = $p->getTotalcostPerPiece();
                     $lineItem[$i]['totalPrice'] = $p->getTotalCost();
                     $lineItem[$i]['widthFraction'] = $this->float2rat($p->getWidthFraction());
@@ -1266,7 +1266,7 @@ class QuoteController extends Controller
     }
 
     private function getBackNameById($bId) {
-        $backRecord = $this->getDoctrine()->getRepository('AppBundle:Backer')->findOneById($bId);
+        $backRecord = $this->getDoctrine()->getRepository('AppBundle:BackerGrade')->findOneById($bId);
         if (!empty($backRecord)) {
             return $backRecord->getName();
         }

@@ -27,7 +27,6 @@ class PlywoodController extends Controller
      * Security("is_granted('ROLE_USER')")
      */
     public function addPlywoodAction(Request $request) {
-
         $arrApi = [];
         $statusCode = 200;
         try {
@@ -91,7 +90,6 @@ class PlywoodController extends Controller
             $autoNumberArr = $getJson->get('autoNumber');
             $quoteId = trim($getJson->get('quoteId'));
             $custMarkup = trim($getJson->get('custMarkup') ? $getJson->get('custMarkup') : 0);
-            
             $venCost = trim($getJson->get('venCost') ? $getJson->get('venCost') : 0);
             $venWaste = trim($getJson->get('venWaste') ? $getJson->get('venWaste') : 1);
             $subTotalVen = trim($getJson->get('subTotalVen') ? $getJson->get('subTotalVen') : 0);
@@ -150,7 +148,8 @@ class PlywoodController extends Controller
                 $i=1;
                 foreach($autoNumberArr as $val) {
                     if(empty($val['autoNumber'])){
-                        $val['autoNumber'] = $quoteId.'-'.$i;
+                        $num_padded = sprintf("%02d", $i);
+                        $val['autoNumber'] = $quoteId.'-'.$num_padded;
                     }
                     $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
                     $i++;
@@ -675,7 +674,8 @@ class PlywoodController extends Controller
             $i=1;
             foreach($autoNumberArr as $val) {
                 if(empty($val['autoNumber'])){
-                    $val['autoNumber'] = $quoteId.'-'.$i;
+                    $num_padded = sprintf("%02d", $i);
+                    $val['autoNumber'] = $quoteId.'-'.$num_padded;
                 }
                 $i++;
                 $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
