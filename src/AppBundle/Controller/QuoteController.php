@@ -243,6 +243,31 @@ class QuoteController extends Controller
     }
 
     /**
+     * @Route("/api/quote/getLineItemCount")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("GET")
+    */
+    public function getLineItemsCountAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        try {
+                $quoteId = $request->query->get('id');
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully cloned quote';
+                $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+                $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+                $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $quoteId, 'status'=> 1));
+                $arrApi['data']['lineItemCount'] = count($plywoodRecords) + count($veneerRecords) + count($doorRecords);
+
+            }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
+
+    /**
      * @Route("/api/quote/getCustomerNameByQuoteId")
      * @Security("is_granted('ROLE_USER')")
      * @Method("GET")

@@ -103,6 +103,7 @@ class DoorController extends Controller
                 $arrApi['data']['id'] = $doorExists->getId();
                 $arrApi['data']['quoteId'] = $doorExists->getQuoteId();
                 $arrApi['data']['qty'] = $doorExists->getQty();
+                $arrApi['data']['lineItemNumber'] = $doorExists->getLineItemNum();
                 $arrApi['data']['pair'] = $doorExists->getPair();
                 $arrApi['data']['swing'] = $doorExists->getSwing();
                 $arrApi['data']['width'] = $doorExists->getWidth();
@@ -506,13 +507,15 @@ class DoorController extends Controller
         $datime = new \DateTime('now');
         $autoNumberArr = $data->get('autoNumber');
         $coreType = trim($data->get('coreType'));
+        $lineItemNumberToBeUsed = trim($data->get('lineItemNumberToBeUsed'));
         $autoNumberstring = '';
         if($autoNumberArr) {
             $i=1;
             foreach($autoNumberArr as $val) {
                 if(empty($val['autoNumber'])){
                     $num_padded = sprintf("%02d", $i);
-                    $val['autoNumber'] = $qid.'-'.$num_padded;
+                    $paddedLineItemNum = sprintf("%02d", $lineItemNumberToBeUsed);
+                    $val['autoNumber'] = $qid.'-'.$paddedLineItemNum.'-'.$num_padded;
                 }
                 $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
                 $i++;
@@ -525,6 +528,7 @@ class DoorController extends Controller
         $door = new Doors();
         $door->setQuoteId($qid);
         $door->setQty($qty);
+        $door->setLineItemNum($lineItemNumberToBeUsed);
         $door->setPair($pair);
         $door->setSwing($swing);
         $door->setWidth($width);
@@ -684,6 +688,7 @@ class DoorController extends Controller
         $door = $em->getRepository(Doors::class)->find($data->get('doorId'));
         $datime = new \DateTime('now');
         $door->setQty($data->get('qty'));
+        $door->setLineItemNum($data->get('editLineItemNumber'));
         $door->setPair($data->get('pair'));
         $door->setSwing($data->get('swing'));
         $door->setWidth($data->get('width'));
@@ -772,7 +777,8 @@ class DoorController extends Controller
             foreach($autoNumberArr as $val) {
                 if(empty($val['autoNumber'])){
                     $num_padded = sprintf("%02d", $i);
-                    $val['autoNumber'] = $qid.'-'.$num_padded;
+                    $paddedEditLineItemNum = sprintf("%02d", $data->get('editLineItemNumber'));
+                    $val['autoNumber'] = $qid.'-'.$paddedEditLineItemNum.'-'.$num_padded;
                 }
                 $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
                 $i++;

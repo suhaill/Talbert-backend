@@ -89,6 +89,7 @@ class PlywoodController extends Controller
             $lumberFee = trim($getJson->get('lumberfee'));
             $autoNumberArr = $getJson->get('autoNumber');
             $quoteId = trim($getJson->get('quoteId'));
+            $lineItemNumberToBeUsed = trim($getJson->get('lineItemNumberToBeUsed'));
             $custMarkup = trim($getJson->get('custMarkup') ? $getJson->get('custMarkup') : 0);
             $venCost = trim($getJson->get('venCost') ? $getJson->get('venCost') : 0);
             $venWaste = trim($getJson->get('venWaste') ? $getJson->get('venWaste') : 1);
@@ -149,7 +150,8 @@ class PlywoodController extends Controller
                 foreach($autoNumberArr as $val) {
                     if(empty($val['autoNumber'])){
                         $num_padded = sprintf("%02d", $i);
-                        $val['autoNumber'] = $quoteId.'-'.$num_padded;
+                        $paddedLineItemNumber = sprintf("%02d", $lineItemNumberToBeUsed);
+                        $val['autoNumber'] = $quoteId.'-'.$paddedLineItemNumber.'-'.$num_padded;
                     }
                     $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
                     $i++;
@@ -163,7 +165,7 @@ class PlywoodController extends Controller
             $fileId = trim($getJson->get('fileId'));
             $formtype = trim($getJson->get('formtype'));
 
-            if (empty($quantity) || empty($speciesId) || empty($patternId) || 
+            if (empty($quantity) || empty($lineItemNumberToBeUsed) || empty($speciesId) || empty($patternId) ||
             empty($grainDirectionId) || empty($patternMatch) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth)
             || empty($plywoodLength) || empty($finishThickId) || empty($backerId)  || empty($coreType)
             || empty($thickness) || empty($finish) || empty($facPaint) || empty($uvCuredId) || empty($sheenId) ) {
@@ -176,7 +178,7 @@ class PlywoodController extends Controller
                 $arrApi['message'] = 'Successfully saved plywood data.';
                 $statusCode = 200;
                 $lastInserted = $this->savePlywoodData(
-                    $quantity, $speciesId, $patternId, $grainDirectionId, $patternMatch, $gradeId,
+                    $quantity, $lineItemNumberToBeUsed, $speciesId, $patternId, $grainDirectionId, $patternMatch, $gradeId,
                     $thicknessId, $plywoodWidth,$widthFraction, $netsize, $plywoodLength,
                     $lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType,
                     $thickness, $finish, $facPaint, $uvCuredId,$uvColorId, $sheenId, $shameOnId,
@@ -200,7 +202,7 @@ class PlywoodController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    private function savePlywoodData($quantity, $speciesId, 
+    private function savePlywoodData($quantity, $lineItemNumberToBeUsed, $speciesId,
     $patternId, $grainDirectionId, $patternMatch, $gradeId, $thicknessId, $plywoodWidth,$widthFraction,$netsize,
     $plywoodLength,$lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint, $uvCuredId,$uvColorId, $sheenId,
     $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
@@ -210,6 +212,7 @@ class PlywoodController extends Controller
         $em = $this->getDoctrine()->getManager();
         $plywood = new Plywood();
         $plywood->setQuantity($quantity);
+        $plywood->setLineItemNum($lineItemNumberToBeUsed);
         $plywood->setSpeciesId($speciesId);
         $plywood->setGrainPatternId('');
         $plywood->setFlakexFiguredId('');
@@ -423,6 +426,7 @@ class PlywoodController extends Controller
 
                             $arrApi['data']['id'] = $userId;
                             $arrApi['data']['quantity'] = $plywood->getQuantity();
+                            $arrApi['data']['lineItemNumber'] = $plywood->getLineItemNum();
                             $arrApi['data']['type'] = 'plywood';
                             $arrApi['data']['speciesId'] = $plywood->getSpeciesId();
                             $arrApi['data']['grainPatternId'] = $plywood->getGrainPatternId();
@@ -607,6 +611,7 @@ class PlywoodController extends Controller
             $getJson = $jsontoarraygenerator->getJson($request);
             $id = trim($getJson->get('id'));
             $quantity = trim($getJson->get('quantity'));
+            $editLineItemNumber = trim($getJson->get('editLineItemNumber'));
             $speciesId = trim($getJson->get('species'));
             //$grainPatternId = trim($getJson->get('grainpattern'));
             //$flakexfigured = trim($getJson->get('flakexfigured'));
@@ -675,7 +680,8 @@ class PlywoodController extends Controller
             foreach($autoNumberArr as $val) {
                 if(empty($val['autoNumber'])){
                     $num_padded = sprintf("%02d", $i);
-                    $val['autoNumber'] = $quoteId.'-'.$num_padded;
+                    $paddedEditLineItemNum = sprintf("%02d", $editLineItemNumber);
+                    $val['autoNumber'] = $quoteId.'-'.$paddedEditLineItemNum.'-'.$num_padded;
                 }
                 $i++;
                 $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';

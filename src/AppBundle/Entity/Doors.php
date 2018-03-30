@@ -36,6 +36,13 @@ class Doors
     private $qty;
 
     /**
+     * @var int
+     *
+     * @ORM\Column(name="lineitem_num", type="integer")
+     */
+    private $lineItemNum;
+
+    /**
      * @var bool
      *
      * @ORM\Column(name="pair", type="boolean")
@@ -753,6 +760,22 @@ class Doors
     public function getQty()
     {
         return $this->qty;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLineItemNum()
+    {
+        return $this->lineItemNum;
+    }
+
+    /**
+     * @param int $lineItemNum
+     */
+    public function setLineItemNum($lineItemNum)
+    {
+        $this->lineItemNum = $lineItemNum;
     }
 
     /**

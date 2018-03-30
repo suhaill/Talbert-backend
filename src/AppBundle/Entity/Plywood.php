@@ -31,6 +31,13 @@ class Plywood
     /**
      * @var int
      *
+     * @ORM\Column(name="lineitem_num", type="integer")
+     */
+    private $lineItemNum;
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="speciesId", type="integer")
      */
     private $speciesId;
@@ -816,6 +823,22 @@ class Plywood
     public function getQuantity()
     {
         return $this->quantity;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLineItemNum()
+    {
+        return $this->lineItemNum;
+    }
+
+    /**
+     * @param int $lineItemNum
+     */
+    public function setLineItemNum($lineItemNum)
+    {
+        $this->lineItemNum = $lineItemNum;
     }
 
     /**
