@@ -688,6 +688,15 @@ class Doors
     }
     
     /**
+     * @param bool $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
+    
+    /**
      * Set coreType
      *
      * @param integer $coreType
