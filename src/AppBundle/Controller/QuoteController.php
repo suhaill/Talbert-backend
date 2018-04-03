@@ -232,8 +232,8 @@ class QuoteController extends Controller
                 $arrApi['message'] = 'Successfully cloned quote';
                 $clonedQuoteId = $this->cloneQuoteData($quoteData, $datime);
                 $arrApi['newCloneQuoteId']=$clonedQuoteId;
-//                $this->clonePlywoodData($quoteId, $clonedQuoteId, $datime);
-//                $this->cloneVeneerData($quoteId, $clonedQuoteId, $datime);
+                $this->clonePlywoodData($quoteId, $clonedQuoteId, $datime);
+                $this->cloneVeneerData($quoteId, $clonedQuoteId, $datime);
                 $this->cloneDoorData($quoteId, $clonedQuoteId, $datime);
             }
         }
