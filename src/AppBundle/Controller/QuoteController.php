@@ -231,8 +231,8 @@ class QuoteController extends Controller
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully cloned quote';
                 $clonedQuoteId = $this->cloneQuoteData($quoteData, $datime);
-                $this->clonePlywoodData($quoteId, $clonedQuoteId, $datime);
-                $this->cloneVeneerData($quoteId, $clonedQuoteId, $datime);
+//                $this->clonePlywoodData($quoteId, $clonedQuoteId, $datime);
+//                $this->cloneVeneerData($quoteId, $clonedQuoteId, $datime);
                 $this->cloneDoorData($quoteId, $clonedQuoteId, $datime);
             }
         }
@@ -921,15 +921,18 @@ class QuoteController extends Controller
                         ->setId(null)
                         ->setQuoteId($clonedQuoteId);
                 $em->persist($newEntity);
+                $em->flush();
                 foreach ($doorCalData as $value) {
                     $newDoorCalEntity = clone $value;
                     $newDoorCalEntity
                         ->setId(NULL)
-                        ->setDoorId($entity->getId());
+                        ->setDoorId($newEntity->getId());
                     $em->persist($newDoorCalEntity);
+                    $em->flush();
                 }
+//                print_r($newDoorCalEntity);die;
             }
-            $em->flush();
+            
             
             /*$em = $this->getDoctrine()->getManager();
             for ($i=0; $i< count($doorData); $i++) {
