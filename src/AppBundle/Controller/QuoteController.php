@@ -232,8 +232,8 @@ class QuoteController extends Controller
                 $arrApi['message'] = 'Successfully cloned quote';
                 $clonedQuoteId = $this->cloneQuoteData($quoteData, $datime);
                 $arrApi['newCloneQuoteId']=$clonedQuoteId;
-                $this->clonePlywoodData($quoteId, $clonedQuoteId, $datime);
-                $this->cloneVeneerData($quoteId, $clonedQuoteId, $datime);
+//                $this->clonePlywoodData($quoteId, $clonedQuoteId, $datime);
+//                $this->cloneVeneerData($quoteId, $clonedQuoteId, $datime);
                 $this->cloneDoorData($quoteId, $clonedQuoteId, $datime);
             }
         }
@@ -909,8 +909,48 @@ class QuoteController extends Controller
             }*/
         }
     }
-
+    
     private function cloneDoorData($quoteId, $clonedQuoteId, $datime) {
+        
+        $em = $this->getDoctrine()->getEntityManager('default');
+        $em->getConnection()->beginTransaction();
+        try {
+            $doorData = $em->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $quoteId));
+            if (!empty($doorData)) {
+                foreach ($doorData as $entity) {
+                    $newEntity = clone $entity;
+                    $newEntity->setId(null)->setQuoteId($clonedQuoteId);
+                    $em->persist($newEntity);
+                    $em->flush();
+                    $doorCalData = $em->getRepository('AppBundle:DoorCalculator')->findBy(['doorId' => $entity->getId()]);
+                    if(!empty($doorCalData)){
+                        foreach ($doorCalData as $value) {
+                            $newDoorCalEntity = clone $value;
+                            $newDoorCalEntity->setId(NULL)->setDoorId($newEntity->getId());
+                            $em->persist($newDoorCalEntity);
+                            $em->flush();
+                        }
+                    }                    
+                    $doorSkinData = $em->getRepository('AppBundle:Skins')->findBy(['doorId' => $entity->getId(),
+                        'quoteId'=>$quoteId]);
+                    if(!empty($doorSkinData)){
+                        foreach ($doorSkinData as $v) {
+                            $newDoorSkinEntity = clone $v;
+                            $newDoorSkinEntity->setId(NULL)->setQuoteId($clonedQuoteId)->setDoorId($newEntity->getId());
+                            $em->persist($newDoorSkinEntity);
+                            $em->flush();
+                        }
+                    }
+                }
+            }
+            $em->getConnection()->commit();
+        } catch (Exception $ex) {
+            $em->getConnection()->rollback();
+        }
+        
+    }
+
+    private function cloneDoorDataOld($quoteId, $clonedQuoteId, $datime) {
         $em = $this->getDoctrine()->getEntityManager('default');
         $doorData = $em->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $quoteId));
         
