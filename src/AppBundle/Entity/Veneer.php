@@ -349,6 +349,15 @@ class Veneer
     {
         return $this->id;
     }
+    
+    /**
+     * @param bool $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
 
     /**
      * Set quantity
