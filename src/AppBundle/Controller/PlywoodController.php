@@ -32,6 +32,7 @@ class PlywoodController extends Controller
         try {
             $jsontoarraygenerator = new JsonToArrayGenerator();
             $getJson = $jsontoarraygenerator->getJson($request);
+            $id = trim($getJson->get('id'));
             $quantity = trim($getJson->get('quantity'));
             $speciesId = trim($getJson->get('species'));
             //$grainPatternId = trim($getJson->get('grainpattern'));
@@ -140,30 +141,34 @@ class PlywoodController extends Controller
             $preFinishSetup = trim($getJson->get('preFinishSetup') ? $getJson->get('preFinishSetup') : 0);
             $totalCost = trim($getJson->get('totalCost') ? $getJson->get('totalCost') : 0);
             $colorMatch = trim($getJson->get('colorMatch') ? $getJson->get('colorMatch') : 0);
-
             $calCTw = trim($getJson->get('calCTw') ? $getJson->get('calCTw') : 0);
-            $autoNumberstring = '';
-
-            if($autoNumberArr)
-            {
-                $i=1;
-                foreach($autoNumberArr as $val) {
-                    if(empty($val['autoNumber'])){
-                        $num_padded = sprintf("%02d", $i);
-                        $paddedLineItemNumber = sprintf("%02d", $lineItemNumberToBeUsed);
-                        $val['autoNumber'] = $quoteId.'-'.$paddedLineItemNumber.'-'.$num_padded;
-                    }
-                    $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
-                    $i++;
+            $formtype = trim($getJson->get('formtype'));
+            if ($formtype == 'clone') {
+                $labelArr  = $this->getLabelByPlywoodId($id);
+                if (!empty($labelArr)) {
+                    $autoNumber = $this->replaceItemNumberOfLabels($labelArr, $lineItemNumberToBeUsed);
                 }
-                $autoNumberstring = rtrim($autoNumberstring,',');
+            } else {
+                $autoNumberstring = '';
+                if($autoNumberArr)
+                {
+                    $i=1;
+                    foreach($autoNumberArr as $val) {
+                        if(empty($val['autoNumber'])){
+                            $num_padded = sprintf("%02d", $i);
+                            $paddedLineItemNumber = sprintf("%02d", $lineItemNumberToBeUsed);
+                            $val['autoNumber'] = $quoteId.'-'.$paddedLineItemNumber.'-'.$num_padded;
+                        }
+                        $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
+                        $i++;
+                    }
+                    $autoNumberstring = rtrim($autoNumberstring,',');
+                }
+                $autoNumber = $autoNumberstring;
             }
-            
-            $autoNumber = $autoNumberstring;
             $comments = trim($getJson->get('comment'));
             $createdAt = new \DateTime('now');
             $fileId = trim($getJson->get('fileId'));
-            $formtype = trim($getJson->get('formtype'));
 
             if (empty($quantity) || empty($lineItemNumberToBeUsed) || empty($speciesId) || empty($patternId) ||
             empty($grainDirectionId) || empty($patternMatch) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth)
@@ -390,7 +395,6 @@ class PlywoodController extends Controller
 
         return $lastInserted;
     }
-
 
     /**
      * @Route("api/plywood/getPlywoodData")
@@ -994,6 +998,21 @@ class PlywoodController extends Controller
             $statusCode = 422;
         }
         return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function getLabelByPlywoodId($id) {
+        $plywood = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findOneById($id);
+        return explode(',', $plywood->getAutoNumber());
+    }
+
+    private function replaceItemNumberOfLabels($labelArr, $lineItemNumberToBeUsed) {
+        $labelArrToString = '';
+        for ($i=0;$i<count($labelArr);$i++) {
+            $labelStringToArr = explode('-', $labelArr[$i]);
+            $labelStringToArr[1] = $lineItemNumberToBeUsed;
+            $labelArrToString .= implode('-', $labelStringToArr).',';
+        }
+        return rtrim($labelArrToString, ',');
     }
 
 }

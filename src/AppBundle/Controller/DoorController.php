@@ -508,21 +508,29 @@ class DoorController extends Controller
         $autoNumberArr = $data->get('autoNumber');
         $coreType = trim($data->get('coreType'));
         $lineItemNumberToBeUsed = trim($data->get('lineItemNumberToBeUsed'));
-        $autoNumberstring = '';
-        if($autoNumberArr) {
-            $i=1;
-            foreach($autoNumberArr as $val) {
-                if(empty($val['autoNumber'])){
-                    $num_padded = sprintf("%02d", $i);
-                    $paddedLineItemNum = sprintf("%02d", $lineItemNumberToBeUsed);
-                    $val['autoNumber'] = $qid.'-'.$paddedLineItemNum.'-'.$num_padded;
-                }
-                $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
-                $i++;
+        if ($data->get('type') == 'clone') {
+            $labelArr  = $this->getLabelByDoorId($data->get('doorId'));
+            if (!empty($labelArr)) {
+                $autoNumber = $this->replaceItemNumberOfLabels($labelArr, $lineItemNumberToBeUsed);
             }
-            $autoNumberstring = rtrim($autoNumberstring,',');
+        } else {
+            $autoNumberstring = '';
+            if($autoNumberArr) {
+                $i=1;
+                foreach($autoNumberArr as $val) {
+                    if(empty($val['autoNumber'])){
+                        $num_padded = sprintf("%02d", $i);
+                        $paddedLineItemNum = sprintf("%02d", $lineItemNumberToBeUsed);
+                        $val['autoNumber'] = $qid.'-'.$paddedLineItemNum.'-'.$num_padded;
+                    }
+                    $autoNumberstring = $autoNumberstring.$val['autoNumber'].',';
+                    $i++;
+                }
+                $autoNumberstring = rtrim($autoNumberstring,',');
+            }
+            $autoNumber = $autoNumberstring;
         }
-        $autoNumber = $autoNumberstring;
+
         //Save data
         $em = $this->getDoctrine()->getManager();
         $door = new Doors();
@@ -1024,5 +1032,20 @@ class DoorController extends Controller
         $door->setCalcTW(0);
         $em->persist($door);
         $em->flush();
+    }
+
+    private function getLabelByDoorId($id) {
+        $door = $this->getDoctrine()->getRepository('AppBundle:Doors')->findOneById($id);
+        return explode(',', $door->getAutoNumber());
+    }
+
+    private function replaceItemNumberOfLabels($labelArr, $lineItemNumberToBeUsed) {
+        $labelArrToString = '';
+        for ($i=0;$i<count($labelArr);$i++) {
+            $labelStringToArr = explode('-', $labelArr[$i]);
+            $labelStringToArr[1] = $lineItemNumberToBeUsed;
+            $labelArrToString .= implode('-', $labelStringToArr).',';
+        }
+        return rtrim($labelArrToString, ',');
     }
 }
