@@ -1272,13 +1272,15 @@ class QuoteController extends Controller
                     $lineItem[$i]['length'] = $p->getPlywoodLength();
                     $lineItem[$i]['core'] = $this->getCoreNameById($p->getCoreType());
                     $lineItem[$i]['edge'] = 'NA';//$this->getEdgeNameById($p->getEdgeDetail());
-                    $lineItem[$i]['unitPrice'] = $p->getTotalcostPerPiece();
+                    $lineItem[$i]['unitPrice'] = $p->getSellingPrice();
                     $lineItem[$i]['totalPrice'] = $p->getTotalCost();
                     $lineItem[$i]['widthFraction'] = $this->float2rat($p->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($p->getLengthFraction());
+                    $lineItem[$i]['grain'] = $this->getGrainPattern($p->getGrainPatternId());
                     $i++;
                 }
             }
+            
             if (!empty($veneerRecords)) {
                 foreach ($veneerRecords as $v) {
                     $lineItem[$i]['id'] = $v->getId();
@@ -1294,10 +1296,11 @@ class QuoteController extends Controller
                     $lineItem[$i]['length'] = $v->getLength();
                     $lineItem[$i]['core'] = $this->getCoreNameById($v->getCoreTypeId());
                     $lineItem[$i]['edge'] = 'NA';
-                    $lineItem[$i]['unitPrice'] = $v->getTotCostPerPiece();
+                    $lineItem[$i]['unitPrice'] = $v->getSellingPrice();
                     $lineItem[$i]['totalPrice'] = $v->getTotalCost();
                     $lineItem[$i]['widthFraction'] = $this->float2rat($v->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($v->getLengthFraction());
+                    $lineItem[$i]['grain'] = $this->getGrainPattern($v->getGrainPatternId());
                     $i++;
                 }
             }
@@ -1306,7 +1309,7 @@ class QuoteController extends Controller
                     $doorCosts = $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->
                             findOneBy(['doorId' => $d->getId()]);
                     if(!empty($doorCosts)){
-                        $totalcostPerPiece = !empty($doorCosts->getTotalcostPerPiece())?$doorCosts->getTotalcostPerPiece():0;
+                        $totalcostPerPiece = !empty($doorCosts->getSellingPrice())?$doorCosts->getSellingPrice():0;
                         $totalCost = !empty($doorCosts->getTotalCost())?$doorCosts->getTotalCost():0;
                     } else {
                         $totalcostPerPiece=0;
@@ -1333,10 +1336,28 @@ class QuoteController extends Controller
                     $lineItem[$i]['totalPrice'] = $totalCost;
                     $lineItem[$i]['widthFraction'] = $this->float2rat($d->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($d->getLengthFraction());
+                    $lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
                     $i++;
                 }
             }
             return $lineItem;
+        }
+    }
+    
+    private function getGrainPattern($id,$type=''){
+        if($type=='door'){
+            $grainId= $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(['id'=>$id]);
+            if(!empty($grainId)){
+                $id=$grainId->getGrain();
+            } else {
+                $id=0;
+            }
+        }
+        $data= $this->getDoctrine()->getRepository('AppBundle:GrainDirection')->findOneBy(['id'=>$id]);
+        if(!empty($data)){
+            return $data->getName();
+        } else {
+            return '';
         }
     }
 
