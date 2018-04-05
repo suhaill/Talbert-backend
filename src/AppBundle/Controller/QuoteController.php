@@ -326,13 +326,14 @@ class QuoteController extends Controller
             $deliveryDate = trim($data->get('deliveryDate'));
             $expFee = trim($data->get('expFee'));
             $discount = trim($data->get('discount'));
+            $shipCost = trim($data->get('shipCost'));
             $datime = new \DateTime('now');
             if (empty($qDate) || empty($quoteAddedby) || empty($custId) || empty($salsManId) || empty($termId) || empty($shipMethod) || empty($shipAddId) || empty($leadTime) || empty($status) || empty($datime)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Parameter missing';
                 $statusCode = 422;
             } else {
-                $updateQuote = $this->updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $comment, $deliveryDate, $expFee, $discount, $datime);
+                $updateQuote = $this->updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $comment, $deliveryDate, $expFee, $discount, $shipCost, $datime);
                 if (!$updateQuote) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'Unable to update quote.';
@@ -670,7 +671,7 @@ class QuoteController extends Controller
         }
     }
 
-    private function updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status,  $comment, $deliveryDate, $expFee, $discount, $datime) {
+    private function updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status,  $comment, $deliveryDate, $expFee, $discount, $shipCost, $datime) {
         $em = $this->getDoctrine()->getManager();
         $quote = $em->getRepository(Quotes::class)->findOneById($qId);
         if (!empty($quote)) {
@@ -689,6 +690,7 @@ class QuoteController extends Controller
             $quote->setDeliveryDate($deliveryDate);
             $quote->setExpFee($expFee);
             $quote->setDiscount($discount);
+            $quote->setShipCharge($shipCost);
             $quote->setUpdatedAt($datime);
             $em->persist($quote);
             $em->flush();
