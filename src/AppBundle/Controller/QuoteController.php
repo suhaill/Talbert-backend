@@ -1498,7 +1498,7 @@ class QuoteController extends Controller
     private function updateQuoteData($quoteId) {
         $salesTaxRate = 0;
         $salesTaxAmount = 0;
-        $quoteSubTotal = $this->getPlywoodSubTotalByQuoteId($quoteId) + $this->getVeneerSubTotalByQuoteId($quoteId);
+        $quoteSubTotal = $this->getPlywoodSubTotalByQuoteId($quoteId) + $this->getVeneerSubTotalByQuoteId($quoteId) + $this->getDoorSubTotalByQuoteId($quoteId);
         $quoteData = $this->getQuoteDataById($quoteId);
         $shipAddId = $quoteData->getShipAddId();
         $expFee = $quoteData->getExpFee();
@@ -1506,7 +1506,7 @@ class QuoteController extends Controller
         if (!empty($shipAddId)) {
             $salesTaxRate = $this->getSalesTaxRateByAddId($shipAddId);
         }
-        $salesTaxAmount = (($quoteSubTotal - $discount ) * ($salesTaxRate)) / 100;
+        $salesTaxAmount = (($quoteSubTotal ) * ($salesTaxRate)) / 100;
         $shipCharge = $this->getShippingChargeByAddId($shipAddId);
         $lumFee = $this->getPlywoodLumberFeeByQuoteId($quoteId) + $this->getVeneerLumberFeeByQuoteId($quoteId);
         $projectTotal = ($quoteSubTotal + $expFee - $discount + $salesTaxAmount + $shipCharge + $lumFee);
@@ -1575,6 +1575,30 @@ class QuoteController extends Controller
             $i=0;
             foreach ($plywoodRecords as $p) {
                 $subtotal += $p->getTotalCost();
+                $i++;
+            }
+        } else {
+            $subtotal = 0;
+        }
+        return $subtotal;
+    }
+
+    private function getDoorSubTotalByQuoteId($quoteId) {
+        $subtotal = 0;
+        $query = $this->getDoctrine()->getManager();
+        $doorRecords = $query->createQueryBuilder()
+            ->select(['dc.totalCost as totolCost'])
+            ->from('AppBundle:DoorCalculator', 'dc')
+            ->leftJoin('AppBundle:Doors', 'd', 'WITH', 'dc.doorId = d.id')
+            ->where('d.quoteId = '.$quoteId, 'd.status = 1')
+            ->getQuery()
+            ->getResult();
+        //print_r($doorRecords);die;
+//        $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $quoteId,'status'=>1));
+        if (!empty($doorRecords)) {
+            $i=0;
+            foreach ($doorRecords as $d) {
+                $subtotal += $d['totolCost'];
                 $i++;
             }
         } else {
