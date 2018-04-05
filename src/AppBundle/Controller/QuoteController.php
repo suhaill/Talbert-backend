@@ -491,7 +491,7 @@ class QuoteController extends Controller
         $other = trim($data->get('other'));
         $custPO = trim($data->get('custPO'));
         $datime = new \DateTime('now');
-        if (empty($qId) || empty($estNo) || empty($approveBy) || empty($via) || empty($custPO)) {
+        if (empty($qId) || empty($estNo) || empty($approveBy) || empty($via)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Parameter missing';
             $statusCode = 422;
