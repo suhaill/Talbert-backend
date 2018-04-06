@@ -933,7 +933,7 @@ class PlywoodController extends Controller
             $query = $this->getDoctrine()->getManager();
             $result = $query->createQueryBuilder()
                 ->select(['v.quantity','v.plywoodWidth as width','v.plywoodLength as length','v.comments','v.speciesId','v.topEdge','v.bottomEdge',
-                    'v.rightEdge','v.leftEdge', 'concat(v.finishThickId," ",v.finishThickType) as thicknessName'])
+                    'v.rightEdge','v.leftEdge', "concat(v.finishThickId,' ',v.finishThickType) as thicknessName"])
                 ->from('AppBundle:Plywood', 'v')
                 ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
                 ->addSelect(['q.refNum','q.deliveryDate'])
