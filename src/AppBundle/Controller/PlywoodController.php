@@ -48,6 +48,7 @@ class PlywoodController extends Controller
             $plywoodLength = trim($getJson->get('length'));
             $lengthFraction = trim($getJson->get('lengthFraction'));
             $finishThickId = trim($getJson->get('finishthick'));
+            $finThickFraction = (trim($getJson->get('finishThicktype')) == 'inch') ? trim($getJson->get('finThickFraction')) : 0;
             $finishThicktype = trim($getJson->get('finishThicktype'));
             $isSequenced = trim($getJson->get('sequenced'));
             $coreType = trim($getJson->get('coretype'));
@@ -185,7 +186,7 @@ class PlywoodController extends Controller
                 $lastInserted = $this->savePlywoodData(
                     $quantity, $lineItemNumberToBeUsed, $speciesId, $patternId, $grainDirectionId, $patternMatch, $gradeId,
                     $thicknessId, $plywoodWidth,$widthFraction, $netsize, $plywoodLength,
-                    $lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType,
+                    $lengthFraction,$finishThickId,$finThickFraction,$finishThicktype, $backerId,$isSequenced,$coreType,
                     $thickness, $finish, $facPaint, $uvCuredId,$uvColorId, $sheenId, $shameOnId,
                     $coreSameOnbe, $coreSameOnte, $coreSameOnre, $coreSameOnle, $edgeDetail, $topEdge,
                     $edgeMaterialId, $edgeFinishSpeciesId, $bottomEdge, $bedgeMaterialId,$bedgeFinishSpeciesId, $rightEdge, $redgeMaterialId, $redgeFinishSpeciesId,
@@ -195,21 +196,16 @@ class PlywoodController extends Controller
                     $formtype, $edgeSameOnB, $edgeSameOnR, $edgeSameOnL, $custMarkup, $venCost, $venWaste, $subTotalVen, $coreCost, $coreWaste, $subTotalCore, $backrCost, $backrWaste, $subTotalBackr, $panelCost, $panelWaste, $subTotPanel, $finishCost, $finishWaste, $subTotalWaste, $edgeIntCost, $edgeIntWaste, $subTotalEdgeint, $edgeVCost, $edgeVWaste, $subTotalEdgev, $finishEdgeCost, $finishEdgeWaste, $subTotalFinishEdge, $millingCost, $millingWaste, $subTotalmilling, $rfCostP,$rfWasteP, $subTotRfP,$totalCostPerPiece,  $markup, $sellingPrice, $lineitemTotal, $machineSetup, $machineTooling, $preFinishSetup, $totalCost, $calCTw, $colorMatch);
                 $arrApi['lastInserted'] = $lastInserted;
             }
-
         }
-
         catch(Exception $e) {
-
             throw $e->getMessage();
-
         }
-
         return new JsonResponse($arrApi, $statusCode);
     }
 
     private function savePlywoodData($quantity, $lineItemNumberToBeUsed, $speciesId,
     $patternId, $grainDirectionId, $patternMatch, $gradeId, $thicknessId, $plywoodWidth,$widthFraction,$netsize,
-    $plywoodLength,$lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint, $uvCuredId,$uvColorId, $sheenId,
+    $plywoodLength,$lengthFraction,$finishThickId,$finThickFraction,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint, $uvCuredId,$uvColorId, $sheenId,
     $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
     $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
     $milling,$millingDescription,$unitMesureCostId,$running,$runningDescription,$unitMesureCostIdR,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$createdAt,$fileId,$quoteId,$formtype,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL, $custMarkup, $venCost, $venWaste, $subTotalVen, $coreCost, $coreWaste, $subTotalCore, $backrCost, $backrWaste, $subTotalBackr, $panelCost, $panelWaste, $subTotPanel, $finishCost, $finishWaste, $subTotalWaste, $edgeIntCost, $edgeIntWaste, $subTotalEdgeint, $edgeVCost, $edgeVWaste, $subTotalEdgev, $finishEdgeCost, $finishEdgeWaste, $subTotalFinishEdge, $millingCost, $millingWaste, $subTotalmilling, $rfCostP,$rfWasteP, $subTotRfP,$totalCostPerPiece,  $markup, $sellingPrice, $lineitemTotal, $machineSetup, $machineTooling, $preFinishSetup, $totalCost, $calCTw, $colorMatch)
@@ -232,6 +228,7 @@ class PlywoodController extends Controller
         $plywood->setPlywoodLength($plywoodLength);
         $plywood->setLengthFraction($lengthFraction);
         $plywood->setFinishThickId($finishThickId);
+        $plywood->setFinThickFraction($finThickFraction);
         $plywood->setFinishThickType($finishThicktype);
         $plywood->setBackerId($backerId);
         $plywood->setIsSequenced($isSequenced);
@@ -447,7 +444,8 @@ class PlywoodController extends Controller
                             $arrApi['data']['lengthFraction'] = $plywood->getLengthFraction();
 
                             $arrApi['data']['finishThickId'] = $plywood->getFinishThickId();
-                            $arrApi['data']['finishThicktype'] = $plywood->getFinishThickType();
+                            $arrApi['data']['finishThicktype'] = ($plywood->getFinishThickType() == 'inch') ? true : false;
+                            $arrApi['data']['finThickFraction'] = $plywood->getFinThickFraction();
                             $arrApi['data']['thickness'] = $plywood->getThickness();
                             $arrApi['data']['finish'] = $plywood->getFinish();
                             $arrApi['data']['facPaint'] = $plywood->getFacPaint();
@@ -630,6 +628,7 @@ class PlywoodController extends Controller
             $plywoodLength = trim($getJson->get('length'));
             $lengthFraction = trim($getJson->get('lengthFraction'));
             $finishThickId = trim($getJson->get('finishthick'));
+            $finThickFraction = (trim($getJson->get('finishThicktype')) == 'inch') ? trim($getJson->get('finThickFraction')) : 0;
             $finishThicktype = trim($getJson->get('finishThicktype'));
             $isSequenced = trim($getJson->get('sequenced'));
             $coreType = trim($getJson->get('coretype'));
@@ -709,7 +708,7 @@ class PlywoodController extends Controller
                 $statusCode = 200;
                 $this->editPlywoodData($id,$quantity, $speciesId, 
                 $patternId, $grainDirectionId, $patternMatch, $gradeId, $thicknessId, $plywoodWidth,$widthFraction,$netsize,
-                $plywoodLength,$lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint,$uvCuredId,$uvColorId, $sheenId,
+                $plywoodLength,$lengthFraction,$finishThickId,$finThickFraction,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint,$uvCuredId,$uvColorId, $sheenId,
                 $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
                 $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
                 $milling,$millingDescription,$unitMesureCostId,$running,$runningDescription,$unitmeasurecostR,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$fileId,$createdAt,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL);
@@ -804,7 +803,7 @@ class PlywoodController extends Controller
 
     private function editPlywoodData($id,$quantity, $speciesId, 
     $patternId, $grainDirectionId, $patternMatch, $gradeId, $thicknessId, $plywoodWidth,$widthFraction,$netsize,
-    $plywoodLength,$lengthFraction,$finishThickId,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint,$uvCuredId,$uvColorId, $sheenId,
+    $plywoodLength,$lengthFraction,$finishThickId,$finThickFraction,$finishThicktype,$backerId,$isSequenced,$coreType, $thickness, $finish,$facPaint,$uvCuredId,$uvColorId, $sheenId,
     $shameOnId,$coreSameOnbe,$coreSameOnte,$coreSameOnre,$coreSameOnle,$edgeDetail,$topEdge,$edgeMaterialId,$edgeFinishSpeciesId,$bottomEdge,$bedgeMaterialId,$bedgeFinishSpeciesId,$rightEdge,
     $redgeMaterialId,$redgeFinishSpeciesId,$leftEdge,$ledgeMaterialId,$ledgeFinishSpeciesId,
     $milling,$millingDescription,$unitMesureCostId,$running,$runningDescription,$unitmeasurecostR,$isLabels,$numberLabels,$lumberFee,$autoNumber,$comments,$fileId,$createdAt,$edgeSameOnB,$edgeSameOnR,$edgeSameOnL)
@@ -829,6 +828,7 @@ class PlywoodController extends Controller
         $plywood->setLengthFraction($lengthFraction);
         $plywood->setPlywoodLength($plywoodLength);
         $plywood->setFinishThickId($finishThickId);
+        $plywood->setFinThickFraction($finThickFraction);
         $plywood->setFinishThickType($finishThicktype);
         $plywood->setBackerId($backerId);
         $plywood->setIsSequenced($isSequenced);
