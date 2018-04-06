@@ -933,7 +933,7 @@ class PlywoodController extends Controller
             $query = $this->getDoctrine()->getManager();
             $result = $query->createQueryBuilder()
                 ->select(['v.quantity','v.plywoodWidth as width','v.plywoodLength as length','v.comments','v.speciesId','v.topEdge','v.bottomEdge',
-                    'v.rightEdge','v.leftEdge'])
+                    'v.rightEdge','v.leftEdge', 'concat(v.finishThickId," ",v.finishThickType) as thicknessName'])
                 ->from('AppBundle:Plywood', 'v')
                 ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
                 ->addSelect(['q.refNum','q.deliveryDate'])
@@ -943,8 +943,8 @@ class PlywoodController extends Controller
                 ->addSelect(['s.name as SpecieName'])
                 ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "v.patternId = p.id")
                 ->addSelect(['p.name as patternName'])
-                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
-                ->addSelect(['t.name as thicknessName'])
+//                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
+//                ->addSelect(['t.name as thicknessName'])
                 ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
                 ->addSelect(['fg.name as faceGradeName'])
                 ->leftJoin('AppBundle:Backer', 'b', 'WITH', "v.backerId = b.id")
