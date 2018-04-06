@@ -113,7 +113,8 @@ class DoorController extends Controller
                 $arrApi['data']['lengthFraction'] = $doorExists->getLengthFraction();
                 $arrApi['data']['dthickness'] = $doorExists->getThickness();
                 $arrApi['data']['finishThick'] = $doorExists->getFinishThickId();
-                $arrApi['data']['finishThicktype'] = $doorExists->getFinishThickType();
+                $arrApi['data']['finishThicktype'] = ($doorExists->getFinishThickType() == 'inch') ? true : false;
+                $arrApi['data']['finThickFraction'] = $doorExists->getFinThickFraction();
                 $arrApi['data']['panelThickness'] = $doorExists->getPanelThickness();
                 $arrApi['data']['doorUse'] = $doorExists->getDoorUse();
                 $arrApi['data']['construction'] = $doorExists->getConstruction();
@@ -429,6 +430,7 @@ class DoorController extends Controller
         $lengthFraction = trim($data->get('lengthFraction'));
         $thickness = trim($data->get('thickness'));
         $finishthick = trim($data->get('finishthick'));
+        $finThickFraction = (trim($data->get('finishThicktype')) == 'inch') ? trim($data->get('finThickFraction')) : 0;
         $finishThicktype = trim($data->get('finishThicktype'));
         $finalthickness = trim($data->get('corethickness'));
         $use = trim($data->get('use'));
@@ -546,6 +548,7 @@ class DoorController extends Controller
         $door->setLengthFraction($lengthFraction);
         $door->setThickness($thickness);
         $door->setFinishThickId($finishthick);
+        $door->setFinThickFraction($finThickFraction);
         $door->setFinishThickType($finishThicktype);
         $door->setPanelThickness($finalthickness);
         $door->setDoorUse($use);
@@ -706,6 +709,7 @@ class DoorController extends Controller
         $door->setLengthFraction($data->get('lengthFraction'));
         $door->setThickness($data->get('thickness'));
         $door->setFinishThickId($data->get('finishthick'));
+        $door->setFinThickFraction((trim($data->get('finishThicktype')) == 'inch') ? trim($data->get('finThickFraction')) : 0);
         $door->setFinishThickType($data->get('finishThicktype'));
         $door->setPanelThickness($data->get('corethickness'));
         $door->setDoorUse($data->get('use'));
