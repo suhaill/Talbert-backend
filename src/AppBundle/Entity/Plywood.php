@@ -134,6 +134,13 @@ class Plywood
     private $finishThickId;
 
     /**
+     * @var float
+     *
+     * @ORM\Column(name="finThickFraction", type="float")
+     */
+    private $finThickFraction;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="finishThickType", type="string", length=10)
@@ -1152,6 +1159,22 @@ class Plywood
     public function getFinishThickId()
     {
         return $this->finishThickId;
+    }
+
+    /**
+     * @return float
+     */
+    public function getFinThickFraction()
+    {
+        return $this->finThickFraction;
+    }
+
+    /**
+     * @param float $finThickFraction
+     */
+    public function setFinThickFraction($finThickFraction)
+    {
+        $this->finThickFraction = $finThickFraction;
     }
 
     /**
