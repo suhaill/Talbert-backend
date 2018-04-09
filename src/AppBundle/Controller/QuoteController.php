@@ -213,14 +213,17 @@ class QuoteController extends Controller
     /**
      * @Route("/api/quote/cloneQuote")
      * @Security("is_granted('ROLE_USER')")
-     * @Method("GET")
+     * @Method("POST")
      * params: None
      */
     public function cloneQuoteWithLineItemsAction(Request $request) {
         $arrApi = array();
         $statusCode = 200;
         try {
-            $quoteId = $request->query->get('id');
+            $jsontoarraygenerator = new JsonToArrayGenerator();
+            $data = $jsontoarraygenerator->getJson($request);
+            $quoteId = trim($data->get('quoteId'));
+            $lineItemIdArr = trim($data->get('lineItemIdArr'));
             $datime = new \DateTime('now');
             $quoteData = $this->getQuoteDataById($quoteId);
             if (empty($quoteData)) {
