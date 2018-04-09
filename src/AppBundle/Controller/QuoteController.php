@@ -1503,13 +1503,14 @@ class QuoteController extends Controller
         $quoteSubTotal = $this->getPlywoodSubTotalByQuoteId($quoteId) + $this->getVeneerSubTotalByQuoteId($quoteId) + $this->getDoorSubTotalByQuoteId($quoteId);
         $quoteData = $this->getQuoteDataById($quoteId);
         $shipAddId = $quoteData->getShipAddId();
+        $shipCharge = $quoteData->getShipCharge();
         $expFee = $quoteData->getExpFee();
         $discount = $quoteData->getDiscount();
         if (!empty($shipAddId)) {
             $salesTaxRate = $this->getSalesTaxRateByAddId($shipAddId);
         }
         $salesTaxAmount = (($quoteSubTotal ) * ($salesTaxRate)) / 100;
-        $shipCharge = $this->getShippingChargeByAddId($shipAddId);
+        //$shipCharge = $this->getShippingChargeByAddId($shipAddId);
         $lumFee = $this->getPlywoodLumberFeeByQuoteId($quoteId) + $this->getVeneerLumberFeeByQuoteId($quoteId);
         $projectTotal = ($quoteSubTotal + $expFee - $discount + $salesTaxAmount + $shipCharge + $lumFee);
         $this->saveQuoteCalculatedData($quoteId, $quoteSubTotal, $salesTaxAmount, $shipCharge, $lumFee, $projectTotal);
