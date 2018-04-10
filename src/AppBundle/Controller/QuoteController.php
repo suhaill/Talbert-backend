@@ -223,9 +223,22 @@ class QuoteController extends Controller
             $jsontoarraygenerator = new JsonToArrayGenerator();
             $data = $jsontoarraygenerator->getJson($request);
             $quoteId = trim($data->get('quoteId'));
-            $lineItemIdArr = trim($data->get('lineItemIdArr'));
+            $lineItemIdArr= trim($data->get('lineItemIdArr'));
+            $lineItemArr=[];
+            if(!empty($lineItemIdArr)){
+                $lineItemIdArr= trim($lineItemIdArr,',');
+                $lineItemIdArr= explode(',',$lineItemIdArr);
+                foreach ($lineItemIdArr as $v) {
+                    $a= explode('-', $v);
+                    $lineItemArr[$a[1]][]=$a[0];
+                }
+            }
+            $editFlag=!empty($lineItemArr)?true:false;
+            $lineItemArrD=!empty($lineItemArr['D'])?$lineItemArr['D']:[];
+            $lineItemArrP=!empty($lineItemArr['P'])?$lineItemArr['P']:[];
+            $lineItemArrV=!empty($lineItemArr['V'])?$lineItemArr['V']:[];
             $datime = new \DateTime('now');
-            $quoteData = $this->getQuoteDataById($quoteId);
+            $quoteData = $this->getQuoteDataById($quoteId,$editFlag);
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'This quote does not exists';
@@ -233,11 +246,11 @@ class QuoteController extends Controller
             } else {
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully cloned quote';
-                $clonedQuoteId = $this->cloneQuoteData($quoteData, $datime);
+                $clonedQuoteId = $this->cloneQuoteData($quoteData, $datime,$quoteId,$editFlag);
                 $arrApi['newCloneQuoteId']=$clonedQuoteId;
-                $this->clonePlywoodData($quoteId, $clonedQuoteId, $datime);
-                $this->cloneVeneerData($quoteId, $clonedQuoteId, $datime);
-                $this->cloneDoorData($quoteId, $clonedQuoteId, $datime);
+                $this->clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArrP);
+                $this->cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArrV);
+                $this->cloneDoorData($quoteId, $clonedQuoteId, $datime,$lineItemArrD);
             }
         }
         catch(Exception $e) {
@@ -701,14 +714,22 @@ class QuoteController extends Controller
         }
     }
 
-    private function cloneQuoteData($qData, $datime) {
+    private function cloneQuoteData($qData, $datime,$quoteId,$editFlag=false) {
         $em = $this->getDoctrine()->getManager();
         $quote = new Quotes();
-        $quote->setRefid($qData->getId());
+        if($editFlag==true){
+            $quote->setVersion($qData->getVersion()+1);
+            $quote->setControlNumber($qData->getControlNumber());
+            $quote->setRefid($quoteId);
+        } else {
+            $quote->setVersion($qData->getVersion());
+            $quote->setControlNumber($this->getLastControlNumber()+1);
+            $quote->setRefid($qData->getId());
+        }
         $quote->setEstimatedate($qData->getEstimatedate());
         $quote->setEstimatorId($qData->getEstimatorId());
-        $quote->setControlNumber($this->getLastControlNumber()+1);
-        $quote->setVersion($qData->getVersion());
+        //$quote->setControlNumber($this->getLastControlNumber()+1);
+        
         $quote->setCustomerId($qData->getCustomerId());
         $quote->setRefNum($qData->getRefNum());
         $quote->setSalesmanId($qData->getSalesmanId());
@@ -733,9 +754,10 @@ class QuoteController extends Controller
         return $quote->getId();
     }
 
-    private function clonePlywoodData($quoteId, $clonedQuoteId, $datime) {
+    private function clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[]) {
         $em = $this->getDoctrine()->getEntityManager('default');
-        $ply = $em->getRepository('AppBundle:Plywood')->findBy(array('quoteId'=>$quoteId));
+        $condition=!empty($lineItemArr)?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
+        $ply = $em->getRepository('AppBundle:Plywood')->findBy($condition);
         if (!empty($ply)) {
             
             foreach ($ply as $entity) {
@@ -847,9 +869,10 @@ class QuoteController extends Controller
         }
     }
 
-    private function cloneVeneerData($quoteId, $clonedQuoteId, $datime) {
+    private function cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[]) {
         $em = $this->getDoctrine()->getEntityManager('default');
-        $veneeerData = $em->getRepository('AppBundle:Veneer')->findBy(array('quoteId'=>$quoteId));
+        $condition=!empty($lineItemArr)?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
+        $veneeerData = $em->getRepository('AppBundle:Veneer')->findBy($condition);
         //print_r($veneeerData);die;
         if (!empty($veneeerData)) {
             foreach ($veneeerData as $entity) {
@@ -915,12 +938,13 @@ class QuoteController extends Controller
         }
     }
     
-    private function cloneDoorData($quoteId, $clonedQuoteId, $datime) {
+    private function cloneDoorData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[]) {
         
         $em = $this->getDoctrine()->getEntityManager('default');
         $em->getConnection()->beginTransaction();
         try {
-            $doorData = $em->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $quoteId));
+            $condition=!empty($lineItemArr)?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
+            $doorData = $em->getRepository('AppBundle:Doors')->findBy($condition);
             if (!empty($doorData)) {
                 foreach ($doorData as $entity) {
                     $newEntity = clone $entity;
@@ -1212,8 +1236,14 @@ class QuoteController extends Controller
         return $d = $dateArr[1].'/'.$dateArr[2].'/'.$dateArr[0];
     }
 
-    private function getQuoteDataById($qId) {
-        return $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId);
+    private function getQuoteDataById($qId,$editFlag=false) {
+        if($editFlag==true){
+            $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneBy(['controlNumber'=>$qId],
+                    ['version'=>'DESC'],1,0);
+        } else {
+            $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId);
+        }
+        return $result;
     }
 
     private function getBillAddById($cust_id) {
