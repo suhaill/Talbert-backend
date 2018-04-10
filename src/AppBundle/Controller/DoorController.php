@@ -49,7 +49,7 @@ class DoorController extends Controller
         $finalthickness = trim($data->get('corethickness'));
         $lumFee = trim($data->get('lumFee'));
         $createdAt = new \DateTime('now');
-        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($finishthick) || empty($finishThicktype) || empty($finalthickness)) {
+        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) ) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Please fill all the fields.';
             $statusCode = 422;
@@ -263,7 +263,7 @@ class DoorController extends Controller
         $finishThicktype = trim($data->get('finishThicktype'));
         $finalthickness = trim($data->get('corethickness'));
         $lumFee = trim($data->get('lumFee'));
-        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness) || empty($finishthick) || empty($finishThicktype) || empty($finalthickness)) {
+        if (empty($qid) || empty($qty) || empty($width) || empty($length) || empty($thickness)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Please fill all the fields.';
             $statusCode = 422;
@@ -437,7 +437,7 @@ class DoorController extends Controller
         $construction = trim($data->get('construction'));
         $fireRating = trim($data->get('fireRating'));
         $doorCore = trim($data->get('doorCore'));
-        $sequesnce = trim($data->get('sequesnce'));
+        $sequesnce = trim( ($data->get('sequesnce')) ? $data->get('sequesnce') : 'narrow');
         $sound = trim($data->get('sound'));
         $soundDrop = trim($data->get('soundDrop'));
         $specification = trim($data->get('specification'));
