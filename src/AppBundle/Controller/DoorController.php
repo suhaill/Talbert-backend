@@ -212,6 +212,8 @@ class DoorController extends Controller
                     $arrApi['data']['color'] = $skinData->getColor();
                     $arrApi['data']['edge'] = $skinData->getEdge();
                     $arrApi['data']['thickness'] = $skinData->getThickness();
+                    $arrApi['data']['frontSkinThicknessDrop'] = $skinData->getFrontSkinThickDrop();
+                    $arrApi['data']['frontSkinCoreThick'] = $skinData->getFrontSkinCoreThick();
                     $arrApi['data']['skinTypeBack'] = $skinData->getSkinTypeBack();
                     $arrApi['data']['backSpecies'] = $skinData->getBackSpecies();
                     $arrApi['data']['backGrain'] = $skinData->getBackGrain();
@@ -223,6 +225,8 @@ class DoorController extends Controller
                     $arrApi['data']['backColor'] = $skinData->getBackColor();
                     $arrApi['data']['backEdge'] = $skinData->getBackEdge();
                     $arrApi['data']['backThickness'] = $skinData->getBackThickness();
+                    $arrApi['data']['backSkinThicknessDrop'] = $skinData->getBackSkinThickDrop();
+                    $arrApi['data']['backSkinCoreThick'] = $skinData->getBackSkinCoreThick();
                 }
                 $allfiles = $this->getAttachmentsByDoorId($doorId);
                 $filestring = '';
@@ -641,7 +645,6 @@ class DoorController extends Controller
         if(trim($data->get('skinType')) !== 'Other')    {
             $species = trim($data->get('species'));    
         }
-        
         $grainPattern = trim($data->get('grainPattern'));
         $grainDirection = trim($data->get('grainDirection'));
         $pattern = trim($data->get('pattern'));
@@ -651,6 +654,8 @@ class DoorController extends Controller
         $color = trim($data->get('color'));
         $edge = trim($data->get('edge'));
         $skinFrontthickness = trim($data->get('skinFrontthickness'));
+        $frontSkinThicknessDrop = trim($data->get('frontSkinThicknessDrop'));
+        $frontSkinCoreThick = trim($data->get('frontSkinCoreThick'));
         $skinTypeBack = trim($data->get('skinTypeBack'));
         $backSpecies = trim($data->get('backSpecies'));
         $backGrainPattern = trim($data->get('backGrainPattern'));
@@ -662,6 +667,8 @@ class DoorController extends Controller
         $backColor = trim($data->get('backColor'));
         $backEdge = trim($data->get('backEdge'));
         $skinBackthickness = trim($data->get('skinBackthickness'));
+        $backSkinThicknessDrop = trim($data->get('backSkinThicknessDrop'));
+        $backSkinCoreThick = trim($data->get('backSkinCoreThick'));
         // Save skin data
         $em = $this->getDoctrine()->getManager();
         $skin = new Skins();
@@ -678,6 +685,8 @@ class DoorController extends Controller
         $skin->setColor($color);
         $skin->setEdge($edge);
         $skin->setThickness($skinFrontthickness);
+        $skin->setFrontSkinThickDrop($frontSkinThicknessDrop);
+        $skin->setFrontSkinCoreThick($frontSkinCoreThick);
         $skin->setSkinTypeBack($skinTypeBack);
         $skin->setBackSpecies($backSpecies);
         $skin->setBackGrain($backGrainPattern);
@@ -689,6 +698,8 @@ class DoorController extends Controller
         $skin->setBackColor($backColor);
         $skin->setBackEdge($backEdge);
         $skin->setBackThickness($skinBackthickness);
+        $skin->setBackSkinThickDrop($backSkinThicknessDrop);
+        $skin->setBackSkinCoreThick($backSkinCoreThick);
         $em->persist($skin);
         $em->flush();
         return $skin->getId();
@@ -829,6 +840,8 @@ class DoorController extends Controller
         $skin->setColor($data->get('color'));
         $skin->setEdge($data->get('edge'));
         $skin->setThickness($data->get('skinFrontthickness'));
+        $skin->setFrontSkinThickDrop($data->get('frontSkinThicknessDrop'));
+        $skin->setFrontSkinCoreThick($data->get('frontSkinCoreThick'));
         $skin->setSkinTypeBack($data->get('skinTypeBack'));
         $skin->setBackSpecies($data->get('backSpecies'));
         $skin->setBackGrain($data->get('backGrainPattern'));
@@ -840,6 +853,8 @@ class DoorController extends Controller
         $skin->setBackColor($data->get('backColor'));
         $skin->setBackEdge($data->get('backEdge'));
         $skin->setBackThickness($data->get('skinBackthickness'));
+        $skin->setBackSkinThickDrop($data->get('backSkinThicknessDrop'));
+        $skin->setBackSkinCoreThick($data->get('backSkinCoreThick'));
         $em->persist($skin);
         $em->flush();
     }
