@@ -113,6 +113,20 @@ class Skins
     private $thickness;
 
     /**
+     * @var int
+     *
+     * @ORM\Column(name="frontSkinThickDrop", type="integer")
+     */
+    private $frontSkinThickDrop;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="frontSkinCoreThick", type="string", length=100, nullable=true)
+     */
+    private $frontSkinCoreThick;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="skin_type_back", type="string", length=15)
@@ -188,6 +202,20 @@ class Skins
      * @ORM\Column(name="back_thickness", type="string", length=100, nullable=true)
      */
     private $backThickness;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="backSkinThickDrop", type="integer")
+     */
+    private $backSkinThickDrop;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="backSkinCoreThick", type="string", length=100, nullable=true)
+     */
+    private $backSkinCoreThick;
 
     /**
      * Get id
@@ -512,6 +540,38 @@ class Skins
     }
 
     /**
+     * @return int
+     */
+    public function getFrontSkinThickDrop()
+    {
+        return $this->frontSkinThickDrop;
+    }
+
+    /**
+     * @param int $frontSkinThickDrop
+     */
+    public function setFrontSkinThickDrop($frontSkinThickDrop)
+    {
+        $this->frontSkinThickDrop = $frontSkinThickDrop;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFrontSkinCoreThick()
+    {
+        return $this->frontSkinCoreThick;
+    }
+
+    /**
+     * @param string $frontSkinCoreThick
+     */
+    public function setFrontSkinCoreThick($frontSkinCoreThick)
+    {
+        $this->frontSkinCoreThick = $frontSkinCoreThick;
+    }
+
+    /**
      * @return string
      */
     public function getSkinTypeBack()
@@ -685,6 +745,38 @@ class Skins
     public function setBackThickness($backThickness)
     {
         $this->backThickness = $backThickness;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBackSkinThickDrop()
+    {
+        return $this->backSkinThickDrop;
+    }
+
+    /**
+     * @param int $backSkinThickDrop
+     */
+    public function setBackSkinThickDrop($backSkinThickDrop)
+    {
+        $this->backSkinThickDrop = $backSkinThickDrop;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackSkinCoreThick()
+    {
+        return $this->backSkinCoreThick;
+    }
+
+    /**
+     * @param string $backSkinCoreThick
+     */
+    public function setBackSkinCoreThick($backSkinCoreThick)
+    {
+        $this->backSkinCoreThick = $backSkinCoreThick;
     }
 }
 
