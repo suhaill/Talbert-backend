@@ -22,6 +22,13 @@ class Orders
     private $id;
 
     /**
+     * @var int
+     *
+     * @ORM\Column(name="quote_id", type="integer")
+     */
+    private $quoteId;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="est_number", type="string", length=20, nullable=true)
@@ -29,9 +36,53 @@ class Orders
     private $estNumber;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="order_number", type="string", length=20, nullable=true)
+     */
+    private $orderNumber;
+
+    /**
+     * @return string
+     */
+    public function getOrderNumber()
+    {
+        return $this->orderNumber;
+    }
+
+    /**
+     * @param string $orderNumber
+     */
+    public function setOrderNumber($orderNumber)
+    {
+        $this->orderNumber = $orderNumber;
+    }
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="approved_by", type="string", length=50, nullable=true)
+     */
+    private $approvedBy;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="via", type="string", length=20, nullable=true)
+     */
+    private $via;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="other", type="string", length=50, nullable=true)
+     */
+    private $other;
+
+    /**
      * @var \DateTime
      *
-     * @ORM\Column(name="order_date", type="datetime", nullable=true)
+     * @ORM\Column(name="order_date", type="string", length=30, nullable=true)
      */
     private $orderDate;
 
@@ -52,7 +103,7 @@ class Orders
     /**
      * @var \DateTime
      *
-     * @ORM\Column(name="ship_date", type="datetime", nullable=true)
+     * @ORM\Column(name="ship_date", type="string", length=30, nullable=true)
      */
     private $shipDate;
 
@@ -65,6 +116,70 @@ class Orders
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return int
+     */
+    public function getQuoteId()
+    {
+        return $this->quoteId;
+    }
+
+    /**
+     * @param int $quoteId
+     */
+    public function setQuoteId($quoteId)
+    {
+        $this->quoteId = $quoteId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getApprovedBy()
+    {
+        return $this->approvedBy;
+    }
+
+    /**
+     * @param string $approvedBy
+     */
+    public function setApprovedBy($approvedBy)
+    {
+        $this->approvedBy = $approvedBy;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVia()
+    {
+        return $this->via;
+    }
+
+    /**
+     * @param string $via
+     */
+    public function setVia($via)
+    {
+        $this->via = $via;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOther()
+    {
+        return $this->other;
+    }
+
+    /**
+     * @param string $other
+     */
+    public function setOther($other)
+    {
+        $this->other = $other;
     }
 
     /**
@@ -170,7 +285,7 @@ class Orders
      *
      * @return Orders
      */
-    public function setShipDate($shipDate)
+        public function setShipDate($shipDate)
     {
         $this->shipDate = $shipDate;
 

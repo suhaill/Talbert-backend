@@ -44,13 +44,16 @@ class UserController extends Controller
                 $arrApi['message'] = 'Parameters missing.';
                 $statusCode = 422;
             } else {
-
-
-
                 $em = $this->getDoctrine()->getManager();
-
                // $user = $this->getDoctrine()->getRepository('AppBundle:User')->findOneBy(['username'=>$username]);
-               $user = $em->getRepository('AppBundle:User')->findUser($username);
+               $profile = $em->getRepository('AppBundle:Profile')->findOneBy(array('email' => $username));
+               if (!empty($profile)) {
+                    $userId = $profile->getUserId();
+                    $user = $em->getRepository('AppBundle:User')->findOneById($userId);
+               } else {
+                   $user = $em->getRepository('AppBundle:User')->findUser($username);
+               }
+
                 if($user){
 
                          $hashedPassword = $user->getPassword();
@@ -60,7 +63,7 @@ class UserController extends Controller
                             $token = $this->get('lexik_jwt_authentication.encoder')
                                 ->encode([
                                     'username' => $user->getUsername(),
-                                    'exp' => time() + 3600 // 1 hour expiration
+                                    'exp' => time() + $this->getParameter('jwt_timeout') // 1 hour expiration
                                 ]);
                             $arrApi['status'] = 1;
                             $arrApi['message'] = 'Successfully logged in.';

@@ -6,6 +6,7 @@ use AppBundle\Entity\Addresses;
 use AppBundle\Entity\CustomerProfiles;
 use AppBundle\Entity\Discounts;
 use AppBundle\Service\JsonToArrayGenerator;
+use function GuzzleHttp\Promise\is_fulfilled;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -242,18 +243,16 @@ class CustomerController extends Controller
                     if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty ($shipArr) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) ) {
                         $arrApi['status'] = 0;
                         $arrApi['message'] = 'Please fill all required fields';
-                        $statusCode = 422;
                     } else {
                         if ( is_numeric($phone) && strlen($phone) > 10 ) {
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Please enter correct phone number';
-                            $statusCode = 422;
                         } else {
                             $phoneCount = $this->checkIfOthrUsrHasThisPhone($phone, $userId);
                             if ($phoneCount) {
                                 $arrApi['status'] = 0;
                                 $arrApi['message'] = 'This Phone is already in user.';
-                                $statusCode = 422;
+
                             } else {
                                 $arrApi['status'] = 1;
                                 $arrApi['message'] = 'Successfully updated customer data.';
@@ -299,7 +298,7 @@ class CustomerController extends Controller
                 if (empty($custName) && empty($sortBy) && empty($order)) {
                     $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'), $limit, $offset);
                 } else if (!empty($custName) && empty($sortBy) && empty($order)) {
-                    $custIds = $this->getCustomerIdsByName($custName);
+                    $custIds = $this->getCustomerIdsByNameLike($custName);
                     $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds),array('id' => 'DESC'), $limit, $offset);
                 } else if (empty($custName) && !empty($sortBy) && !empty($order)) {
                     if ($sortBy == 'id' || $sortBy == 'createdAt') {
@@ -312,7 +311,7 @@ class CustomerController extends Controller
                     }
                 } else if (!empty($custName) && !empty($sortBy) && !empty($order)) {
                     if ($sortBy == 'id' || $sortBy == 'createdAt') {
-                        $custIds = $this->getCustomerIdsByName($custName);
+                        $custIds = $this->getCustomerIdsByNameLike($custName);
                         $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), array($sortBy => $order), $limit, $offset);
                     } else {
                         $custIds = $this->getSortedCustomerIds($custName, $sortBy, $order);
@@ -340,7 +339,116 @@ class CustomerController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    /**
+     * @Route("/api/customer/importCustomers")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     */
+    public function importCustomersAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        try {
+            $jsontoarraygenerator = new JsonToArrayGenerator();
+            $data = $jsontoarraygenerator->getJson($request);
+            $passwd = password_hash('123456', PASSWORD_DEFAULT);
+            $datime = new \DateTime('now');
+            $isDataCorrect = $this->checkIfAllRequiredDataIsThere($data);
+            if ($isDataCorrect == 2 ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Please fill all the details';
+            } elseif ($isDataCorrect == 3 ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Unique username is required';
+            } elseif ($isDataCorrect == 4 ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Unique email is required';
+            } elseif ($isDataCorrect == 5 ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Unique phone is required';
+            } else {
+                if (!empty($data)) {
+                    for ($i=0;$i<count($data); $i++) {
+                        $comment = (empty($data[$i]['Note'])) ? '' : $data[$i]['Note'];
+                        $lastUserId = $this->saveCustomerData($data[$i]['Contact'], $passwd, 11, 1, $datime, 'customer');
+                        $lstPrfId = $this->saveProfileData($lastUserId, $data[$i]['Customer'], $data[$i]['Contact'], $data[$i]['Email'], $data[$i]['Phone']);
+                        $this->saveCustomerProfile($data[$i]['Term'], $comment, $lastUserId);
+                        $this->saveBillingAddress($data[$i]['Street1'], $data[$i]['City'], $data[$i]['State'], $data[$i]['Zip'], $lastUserId, $datime);
+                        $this->saveShipAdd($data[$i]['Nickname'], $data[$i]['StreetShip'], $data[$i]['CityShip'], $data[$i]['StateShip'], $data[$i]['ZipShip'], $data[$i]['DelChrgShip'], $data[$i]['SlsTxRtShip'], $lastUserId, $datime);
+                        $this->saveDisDataImp($data[$i]['Dis'], $lastUserId);
+                    }
+                    $arrApi['status'] = 1;
+                    $arrApi['message'] = 'Successfully imported';
+                } else {
+                    $arrApi['status'] = 0;
+                    $arrApi['message'] = 'File is empty';
+                    $statusCode = 422;
+                }
+            }
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
     // Reusable methods
+
+    private function checkIfAllRequiredDataIsThere($data) {
+        //print_r($data);die;
+        for ($i = 0; $i < count($data); $i++) {
+            if ( empty($data[$i]['Customer']) || empty($data[$i]['Contact']) || empty($data[$i]['Phone']) || empty($data[$i]['Email']) || empty($data[$i]['Term']) || empty($data[$i]['Street1']) || empty($data[$i]['City']) || empty($data[$i]['State']) || empty($data[$i]['Zip']) || empty($data[$i]['Nickname']) || empty($data[$i]['StreetShip']) || empty($data[$i]['CityShip']) || empty($data[$i]['StateShip']) || empty($data[$i]['ZipShip']) || empty($data[$i]['DelChrgShip']) || empty($data[$i]['SlsTxRtShip']) || empty($data[$i]['Dis']) ) {
+                return 2;
+            } else if ($this->checkIfUsernameExists($data[$i]['Contact'])) {
+                return 3;
+            } else if ($this->checkIfEmailExists($data[$i]['Email'])) {
+                return 4;
+            } else if ($this->checkIfPhoneExists($data[$i]['Phone'])) {
+                return 5;
+            }
+        }
+        return 1;
+    }
+
+    private function checkIfUsernameExists($username) {
+        $usernameData = $this->getDoctrine()
+            ->getRepository('AppBundle:User')
+            ->findOneBy(array('username' => $username));
+        if (count($usernameData) > 0 ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private function saveShipAdd($nickname, $street, $city, $state, $zip, $deliveryCharge, $salestaxRate, $lastUserId, $datime) {
+        $em = $this->getDoctrine()->getManager();
+        $addresses = new Addresses();
+        $addresses->setNickname($nickname);
+        $addresses->setStreet($street);
+        $addresses->setCity($city);
+        $addresses->setStateId($state);
+        $addresses->setZip($zip);
+        $addresses->setDeliveryCharge($deliveryCharge);
+        $addresses->setSalesTaxRate($salestaxRate);
+        $addresses->setAddressType('shipping');
+        $addresses->setStatus(1);
+        $addresses->setUserId($lastUserId);
+        $addresses->setUpdatedAt($datime);
+        $em->persist($addresses);
+        $em->flush();
+    }
+
+    private function saveDisDataImp($prdName, $lastUserId) {
+        $rate = 10;
+        $sts = 1;
+        $em = $this->getDoctrine()->getManager();
+        $dis = new Discounts();
+        $dis->setProductName($prdName);
+        $dis->setUserId($lastUserId);
+        $dis->setRate($rate);
+        $dis->setStatus($sts);
+        $em->persist($dis);
+        $em->flush();
+    }
 
     private function updateUserRecord($isActive, $company, $fName, $phone, $datime, $userId) {
         $em = $this->getDoctrine()->getManager();
@@ -383,8 +491,8 @@ class CustomerController extends Controller
                 $addresses->setCity($val['city']);
                 $addresses->setStateId($val['state']);
                 $addresses->setZip($val['zip']);
-                $addresses->setDeliveryCharge($val['deliveryCharge']);
-                $addresses->setSalesTaxRate($val['salesTaxRate']);
+                $addresses->setDeliveryCharge($this->formateDeliveryCharge($val['deliveryCharge']));
+                $addresses->setSalesTaxRate($this->formateSalestax($val['salesTaxRate']));
                 $addresses->setAddressType('shipping');
                 $addresses->setStatus(1);
                 $addresses->setUserId($userId);
@@ -495,8 +603,8 @@ class CustomerController extends Controller
             $addresses->setCity($val['city']);
             $addresses->setStateId($val['state']);
             $addresses->setZip($val['zip']);
-            $addresses->setDeliveryCharge($val['deliveryCharge']);
-            $addresses->setSalesTaxRate($val['salesTaxRate']);
+            $addresses->setDeliveryCharge($this->formateDeliveryCharge($val['deliveryCharge']));
+            $addresses->setSalesTaxRate($this->formateSalestax($val['salesTaxRate']));
             $addresses->setAddressType('shipping');
             $addresses->setStatus(1);
             $addresses->setUserId($lastUserId);
@@ -504,6 +612,16 @@ class CustomerController extends Controller
             $em->persist($addresses);
             $em->flush();
         }
+    }
+
+    private function formateDeliveryCharge($dc) {
+        $arrExp = array('$',',');
+        $arrRep = array('','');
+        return str_replace($arrExp, $arrRep, $dc);
+    }
+
+    private function formateSalestax($st) {
+        return str_replace('%', '', $st);
     }
 
     private function saveDiscountData($prdArr, $lastUserId) {
@@ -718,6 +836,21 @@ class CustomerController extends Controller
             $addressId = null;
         }
         return $addressId;
+    }
+
+    private function getCustomerIdsByNameLike($custName) {
+        $conn = $this->getDoctrine()->getConnection('default');
+        $SQL="select user_id from profiles WHERE fname LIKE '$custName%'";
+        $stmt=$conn->prepare($SQL);
+        $stmt->execute();
+        $result = $stmt->fetchAll();
+        $data = array();
+        $i=0;
+        foreach ($result as $pD) {
+            $data[] = $pD['user_id'];
+            $i++;
+        }
+        return $data;
     }
 
     private function getCustomerIdsByName($custName) {

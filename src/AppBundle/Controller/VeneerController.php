@@ -19,6 +19,8 @@ use AppBundle\Entity\Files;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 
 class VeneerController extends Controller
 {
@@ -46,8 +48,10 @@ class VeneerController extends Controller
             $gradeId = trim($getJson->get('facegrade'));
             $thicknessId = trim($getJson->get('thickness'));
             $width = trim($getJson->get('width'));
+            $widthFraction = trim($getJson->get('widthFraction'));
             $isNetSize = trim($getJson->get('netsize'));
             $length = trim($getJson->get('length'));
+            $lengthFraction = trim($getJson->get('lengthFraction'));
             $coreTypeId = trim($getJson->get('coretype'));
             $backer = trim($getJson->get('backer'));
             $isFlexSanded = trim($getJson->get('flexsanded'));
@@ -63,7 +67,7 @@ class VeneerController extends Controller
             if (empty($quantity) || empty($speciesId) || empty($pattern) || 
             empty($grainDirectionId) || empty($gradeId) || 
             empty($thicknessId) || empty($width) || empty($length) || empty($coreTypeId) 
-            || empty($backer) || empty($lumberFee)) {
+            || empty($backer)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
@@ -75,7 +79,7 @@ class VeneerController extends Controller
                 $lastInserted = $this->saveVeneerData($quantity, $speciesId, 
                 $pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize, 
                 $length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,
-                $comments,$createdAt,$fileId,$quoteId,$formtype);
+                $comments,$createdAt,$fileId,$quoteId,$formtype,$widthFraction,$lengthFraction);
                 $arrApi['lastInserted'] = $lastInserted;
             
             }
@@ -87,7 +91,7 @@ class VeneerController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    private function saveVeneerData($quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$createdAt,$fileId,$quoteId,$formtype=null)
+    private function saveVeneerData($quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$createdAt,$fileId,$quoteId,$formtype=null,$widthFraction,$lengthFraction)
     {
         $em = $this->getDoctrine()->getManager();
         $veneer = new Veneer();
@@ -100,8 +104,10 @@ class VeneerController extends Controller
         $veneer->setGradeId($gradeId);
         $veneer->setThicknessId($thicknessId);
         $veneer->setWidth($width);
+        $veneer->setWidthFraction($widthFraction);
         $veneer->setIsNetSize($isNetSize);
         $veneer->setLength($length);
+        $veneer->setLengthFraction($lengthFraction);
         $veneer->setCoreTypeId($coreTypeId);
         $veneer->setBacker($backer);
         $veneer->setIsFlexSanded($isFlexSanded);
@@ -115,34 +121,30 @@ class VeneerController extends Controller
         $veneer->setIsActive(1);
         $veneer->setCustMarkupPer(25);
         $veneer->setVenCost(0);
-        $veneer->setVenWaste(0);
+        $veneer->setVenWaste(1);
         $veneer->setSubTotalVen(0);
         $veneer->setCoreCost(0);
         $veneer->setSubTotalCore(0);
-        $veneer->setCoreWaste(0);
+        $veneer->setCoreWaste(1);
         $veneer->setSubTotalBackr(0);
         $veneer->setBackrCost(0);
-        $veneer->setBackrWaste(0);
-        $veneer->setTotCostPerPiece(0);
+        $veneer->setBackrWaste(1);
         $veneer->setRunningCost(0);
-        $veneer->setRunningWaste(0);
+        $veneer->setRunningWaste(1);
         $veneer->getSubTotalrunning(0);
-        $veneer->setMarkup(0);
-        $veneer->setMarkup(0);
-        $veneer->setSellingPrice(0);
-        $veneer->setLineitemTotal(0);
+        $veneer->setTotCostPerPiece(0.00);
+        $veneer->setMarkup(0.00);
+        $veneer->setSellingPrice(0.00);
+        $veneer->setLineitemTotal(0.00);
         $veneer->setMachineSetup(0);
         $veneer->setMachineTooling(0);
         $veneer->setPreFinishSetup(0);
         $veneer->setColorMatch(0);
-        $veneer->setTotalCost(0);
+        $veneer->setTotalCost(0.00);
         $em->persist($veneer);
         $em->flush();
         $lastInserted = $veneer->getId();
-        //var_dump($fileId);
         $fileId_ar = explode(',', $fileId);
-        //var_dump($fileId_ar);
-        //echo count($fileId_ar);
         if(count($fileId_ar)>0 && !empty($fileId))
         {
             if($formtype == 'clone')
@@ -231,8 +233,10 @@ class VeneerController extends Controller
                             $arrApi['data']['gradeId'] = $veneer->getGradeId();
                             $arrApi['data']['thicknessId'] = $veneer->getThicknessId();
                             $arrApi['data']['width'] = $veneer->getWidth();
+                            $arrApi['data']['widthFraction'] = $veneer->getWidthFraction();
                             $arrApi['data']['isNetSize'] = $veneer->getIsNetSize();
                             $arrApi['data']['length'] = $veneer->getLength();
+                            $arrApi['data']['lengthFraction'] = $veneer->getLengthFraction();
                             $arrApi['data']['coreTypeId'] = $veneer->getCoreTypeId();
                             $arrApi['data']['backer'] = $veneer->getBacker();
                             $arrApi['data']['isFlexSanded'] = $veneer->getIsFlexSanded();
@@ -324,8 +328,10 @@ class VeneerController extends Controller
             $gradeId = trim($getJson->get('facegrade'));
             $thicknessId = trim($getJson->get('thickness'));
             $width = trim($getJson->get('width'));
+            $widthFraction = trim($getJson->get('widthFraction'));
             $isNetSize = trim($getJson->get('netsize'));
             $length = trim($getJson->get('length'));
+            $lengthFraction = trim($getJson->get('lengthFraction'));
             $coreTypeId = trim($getJson->get('coretype'));
             $backer = trim($getJson->get('backer'));
             $isFlexSanded = trim($getJson->get('flexsanded'));
@@ -340,20 +346,18 @@ class VeneerController extends Controller
             if (empty($id) || empty($quantity) || empty($speciesId)
             || empty($pattern) || empty($grainDirectionId) || empty($gradeId) || 
             empty($thicknessId) || empty($width) || empty($length) || empty($coreTypeId) 
-            || empty($backer) || empty($lumberFee)) {
+            || empty($backer)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
                 $statusCode = 422;
             } else {
-
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully saved veneer data.';
                 $statusCode = 200;
                 $this->editVeneerData($id,$quantity, $speciesId,
                 $pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize, 
                 $length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,
-                $comments,$fileId,$createdAt);
-            
+                $comments,$fileId,$createdAt,$widthFraction,$lengthFraction);
             }
         }
         catch(Exception $e) {
@@ -363,7 +367,7 @@ class VeneerController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    private function editVeneerData($id,$quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$fileId,$createdAt) 
+    private function editVeneerData($id,$quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$fileId,$createdAt,$widthFraction,$lengthFraction)
     {
         $em = $this->getDoctrine()->getManager();
         $veneer =  $this->getDoctrine()->getRepository('AppBundle:Veneer')->find($id);
@@ -378,8 +382,10 @@ class VeneerController extends Controller
         $veneer->setGradeId($gradeId);
         $veneer->setThicknessId($thicknessId);
         $veneer->setWidth($width);
+        $veneer->setWidthFraction($widthFraction);
         $veneer->setIsNetSize($isNetSize);
         $veneer->setLength($length);
+        $veneer->setLengthFraction($lengthFraction);
         $veneer->setCoreTypeId($coreTypeId);
         $veneer->setBacker($backer);
         $veneer->setIsFlexSanded($isFlexSanded);
@@ -449,12 +455,16 @@ class VeneerController extends Controller
             $veneer->setUpdatedAt($createdAt);
             
         }
-        elseif($type == 'plywood')
+        else if($type == 'plywood')
         {
             $plywood =  $this->getDoctrine()->getRepository('AppBundle:Plywood')->find($id);
             $plywood->setIsActive(0);
             $plywood->setUpdatedAt($createdAt);
             
+        } else {
+            $door =  $this->getDoctrine()->getRepository('AppBundle:Doors')->find($id);
+            $door->setStatus(0);
+            $door->setUpdatedAt($createdAt);
         }
 
         try{
@@ -533,5 +543,63 @@ class VeneerController extends Controller
         $em->flush();
         return 1;
     }
-
+    
+    /**
+     * @Route("api/veneer/getVeneerDataByQuoteId")
+     * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
+     * 
+     * Date: 20-02-2018
+     * Author: Mohit Kumar
+     */
+    public function getVeneerDataByQuoteId(Request $request){
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+//        $userId=!empty($data->get('user_id'))?trim($data->get('user_id')):'';
+        $quoteId=!empty($data->get('quote_id'))?trim($data->get('quote_id')):'';
+        if(!empty($quoteId)){
+            $query = $this->getDoctrine()->getManager();
+            $result = $query->createQueryBuilder()
+                ->select(['v.quantity','v.width','v.length','v.comments','v.sequenced'])
+                ->from('AppBundle:Veneer', 'v')
+                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
+                ->addSelect(['q.refNum','q.deliveryDate'])
+                ->leftJoin('AppBundle:User', 'u', 'WITH', "q.customerId = u.id and u.userType='customer' and u.roleId=11")
+                ->addSelect(['u.username'])
+                ->leftJoin('AppBundle:Species', 's', 'WITH', "v.speciesId = s.id")
+                ->addSelect(['s.name as SpecieName'])
+                ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "v.patternId = p.id")
+                ->addSelect(['p.name as patternName'])
+                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
+                ->addSelect(['t.name as thicknessName'])
+                ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
+                ->addSelect(['fg.name as faceGradeName'])
+                ->leftJoin('AppBundle:Backer', 'b', 'WITH', "v.backer = b.id")
+                ->addSelect(['b.name as backerName'])
+                ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "v.grainDirectionId = gd.id")
+                ->addSelect(['gd.name as grainDirectionName'])
+                ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+                ->addSelect(['o.orderDate as orderDate','o.estNumber as estNumber'])
+                ->where('v.quoteId = '.$quoteId)
+                ->getQuery()
+                ->getResult();
+//                ->getSQL();
+            if (empty($result) ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'There is no quote.';
+                $statusCode = 422;
+            } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived the quote list.';
+                $arrApi['data']['veneer']=$result;
+            }
+        } else {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Quote Id is missing.';
+            $statusCode = 422;
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
 }

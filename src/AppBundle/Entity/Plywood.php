@@ -31,6 +31,13 @@ class Plywood
     /**
      * @var int
      *
+     * @ORM\Column(name="lineitem_num", type="integer")
+     */
+    private $lineItemNum;
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="speciesId", type="integer")
      */
     private $speciesId;
@@ -66,6 +73,13 @@ class Plywood
     /**
      * @var int
      *
+     * @ORM\Column(name="patternMatch", type="integer")
+     */
+    private $patternMatch;
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="gradeId", type="integer")
      */
     private $gradeId;
@@ -87,9 +101,30 @@ class Plywood
     /**
      * @var float
      *
+     * @ORM\Column(name="widthFraction", type="float")
+     */
+    private $widthFraction;
+
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="is_net_size", type="boolean")
+     */
+    private $isNetSize;
+
+    /**
+     * @var float
+     *
      * @ORM\Column(name="plywoodLength", type="float")
      */
     private $plywoodLength;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="lengthFraction", type="float")
+     */
+    private $lengthFraction;
 
     /**
      * @var int
@@ -97,6 +132,20 @@ class Plywood
      * @ORM\Column(name="finishThickId", type="float")
      */
     private $finishThickId;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="finThickFraction", type="float")
+     */
+    private $finThickFraction;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="finishThickType", type="string", length=10)
+     */
+    private $finishThickType;
 
     /**
      * @var int
@@ -132,6 +181,13 @@ class Plywood
      * @ORM\Column(name="finish", type="string", length=255)
      */
     private $finish;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="facPaint", type="integer")
+     */
+    private $facPaint;
 
     /**
      * @var int
@@ -195,6 +251,75 @@ class Plywood
      * @ORM\Column(name="edgeDetail", type="boolean")
      */
     private $edgeDetail;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="edgeSameOnB", type="integer", options={"default":0})
+     */
+    private $edgeSameOnB;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="edgeSameOnR", type="integer", options={"default":0})
+     */
+    private $edgeSameOnR;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="edgeSameOnL", type="integer", options={"default":0})
+     */
+    private $edgeSameOnL;
+
+    /**
+     * @return int
+     */
+    public function getEdgeSameOnB()
+    {
+        return $this->edgeSameOnB;
+    }
+
+    /**
+     * @param int $edgeSameOnB
+     */
+    public function setEdgeSameOnB($edgeSameOnB)
+    {
+        $this->edgeSameOnB = $edgeSameOnB;
+    }
+
+    /**
+     * @return int
+     */
+    public function getEdgeSameOnR()
+    {
+        return $this->edgeSameOnR;
+    }
+
+    /**
+     * @param int $edgeSameOnR
+     */
+    public function setEdgeSameOnR($edgeSameOnR)
+    {
+        $this->edgeSameOnR = $edgeSameOnR;
+    }
+
+    /**
+     * @return int
+     */
+    public function getEdgeSameOnL()
+    {
+        return $this->edgeSameOnL;
+    }
+
+    /**
+     * @param int $edgeSameOnL
+     */
+    public function setEdgeSameOnL($edgeSameOnL)
+    {
+        $this->edgeSameOnL = $edgeSameOnL;
+    }
 
     /**
      * @var int
@@ -295,18 +420,32 @@ class Plywood
     private $millingDescription;
 
     /**
-     * @var float
-     *
-     * @ORM\Column(name="cost", type="float")
-     */
-    private $cost;
-
-    /**
      * @var int
      *
      * @ORM\Column(name="unitMesureCostId", type="integer")
      */
     private $unitMesureCostId;
+
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="running", type="boolean")
+     */
+    private $running;
+
+    /**
+     * @var array
+     *
+     * @ORM\Column(name="runningDescription", type="text" ,)
+     */
+    private $runningDescription;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="unitMesureCostIdR", type="integer")
+     */
+    private $unitMesureCostIdR;
 
     /**
      * @var bool
@@ -380,6 +519,13 @@ class Plywood
     private $custMarkupPer;
 
     /**
+     * @var bool
+     *
+     * @ORM\Column(name="calcTW", type="boolean")
+     */
+    private $calcTW;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="ven_cost", type="string", length=10, nullable=true, options={"default":0})
@@ -389,7 +535,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="ven_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="ven_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $venWaste;
 
@@ -410,7 +556,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="core_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="core_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $coreWaste;
 
@@ -431,7 +577,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $backrWaste;
 
@@ -445,6 +591,27 @@ class Plywood
     /**
      * @var string
      *
+     * @ORM\Column(name="panel_cost", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $panelCost;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="panel_waste", type="string", length=10, nullable=true, options={"default":1})
+     */
+    private $panelWaste;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="sub_total_panel", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $subTotalPanel;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="finish_cost", type="string", length=10, nullable=true, options={"default":0})
      */
     private $finishCost;
@@ -452,7 +619,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="finish_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="finish_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $finishWaste;
 
@@ -473,7 +640,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="edgeint_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="edgeint_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $edgeintWaste;
 
@@ -494,7 +661,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="edgev_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="edgev_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $edgevWaste;
 
@@ -515,7 +682,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="finishedge_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="finishedge_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $finishEdgeWaste;
 
@@ -536,7 +703,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="milling_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="milling_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $millingWaste;
 
@@ -557,7 +724,7 @@ class Plywood
     /**
      * @var string
      *
-     * @ORM\Column(name="running_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="running_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $runningWaste;
 
@@ -640,6 +807,15 @@ class Plywood
     {
         return $this->id;
     }
+    
+    /**
+     * @param bool $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
 
     /**
      * Set quantity
@@ -663,6 +839,22 @@ class Plywood
     public function getQuantity()
     {
         return $this->quantity;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLineItemNum()
+    {
+        return $this->lineItemNum;
+    }
+
+    /**
+     * @param int $lineItemNum
+     */
+    public function setLineItemNum($lineItemNum)
+    {
+        $this->lineItemNum = $lineItemNum;
     }
 
     /**
@@ -749,6 +941,22 @@ class Plywood
         $this->grainDirectionId = $grainDirectionId;
 
         return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPatternMatch()
+    {
+        return $this->patternMatch;
+    }
+
+    /**
+     * @param int $patternMatch
+     */
+    public function setPatternMatch($patternMatch)
+    {
+        $this->patternMatch = $patternMatch;
     }
 
     /**
@@ -858,6 +1066,38 @@ class Plywood
     }
 
     /**
+     * @return float
+     */
+    public function getWidthFraction()
+    {
+        return $this->widthFraction;
+    }
+
+    /**
+     * @param float $widthFraction
+     */
+    public function setWidthFraction($widthFraction)
+    {
+        $this->widthFraction = $widthFraction;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNetSize()
+    {
+        return $this->isNetSize;
+    }
+
+    /**
+     * @param bool $isNetSize
+     */
+    public function setIsNetSize($isNetSize)
+    {
+        $this->isNetSize = $isNetSize;
+    }
+
+    /**
      * Set plywoodLength
      *
      * @param float $plywoodLength
@@ -882,6 +1122,22 @@ class Plywood
     }
 
     /**
+     * @return float
+     */
+    public function getLengthFraction()
+    {
+        return $this->lengthFraction;
+    }
+
+    /**
+     * @param float $lengthFraction
+     */
+    public function setLengthFraction($lengthFraction)
+    {
+        $this->lengthFraction = $lengthFraction;
+    }
+
+    /**
      * Set finishThickId
      *
      * @param integer $finishThickId
@@ -903,6 +1159,38 @@ class Plywood
     public function getFinishThickId()
     {
         return $this->finishThickId;
+    }
+
+    /**
+     * @return float
+     */
+    public function getFinThickFraction()
+    {
+        return $this->finThickFraction;
+    }
+
+    /**
+     * @param float $finThickFraction
+     */
+    public function setFinThickFraction($finThickFraction)
+    {
+        $this->finThickFraction = $finThickFraction;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFinishThickType()
+    {
+        return $this->finishThickType;
+    }
+
+    /**
+     * @param string $finishThickType
+     */
+    public function setFinishThickType($finishThickType)
+    {
+        $this->finishThickType = $finishThickType;
     }
 
     /**
@@ -1023,6 +1311,22 @@ class Plywood
     public function getFinish()
     {
         return $this->finish;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFacPaint()
+    {
+        return $this->facPaint;
+    }
+
+    /**
+     * @param string $facPaint
+     */
+    public function setFacPaint($facPaint)
+    {
+        $this->facPaint = $facPaint;
     }
 
     /**
@@ -1579,30 +1883,6 @@ class Plywood
     }
 
     /**
-     * Set cost
-     *
-     * @param float $cost
-     *
-     * @return Plywood
-     */
-    public function setCost($cost)
-    {
-        $this->cost = $cost;
-
-        return $this;
-    }
-
-    /**
-     * Get cost
-     *
-     * @return float
-     */
-    public function getCost()
-    {
-        return $this->cost;
-    }
-
-    /**
      * Set unitMesureCostId
      *
      * @param integer $unitMesureCostId
@@ -1624,6 +1904,54 @@ class Plywood
     public function getUnitMesureCostId()
     {
         return $this->unitMesureCostId;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRunning()
+    {
+        return $this->running;
+    }
+
+    /**
+     * @param bool $running
+     */
+    public function setRunning($running)
+    {
+        $this->running = $running;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRunningDescription()
+    {
+        return $this->runningDescription;
+    }
+
+    /**
+     * @param array $runningDescription
+     */
+    public function setRunningDescription($runningDescription)
+    {
+        $this->runningDescription = $runningDescription;
+    }
+
+    /**
+     * @return int
+     */
+    public function getUnitMesureCostIdR()
+    {
+        return $this->unitMesureCostIdR;
+    }
+
+    /**
+     * @param int $unitMesureCostIdR
+     */
+    public function setUnitMesureCostIdR($unitMesureCostIdR)
+    {
+        $this->unitMesureCostIdR = $unitMesureCostIdR;
     }
 
     /**
@@ -1866,6 +2194,26 @@ class Plywood
     }
 
     /**
+     * @return bool
+     */
+    public function isCalcTW()
+    {
+        return $this->calcTW;
+    }
+    
+    public function getCalcTW()
+    {
+        return $this->calcTW;
+    }
+    /**
+     * @param bool $calcTW
+     */
+    public function setCalcTW($calcTW)
+    {
+        $this->calcTW = $calcTW;
+    }
+
+    /**
      * @return string
      */
     public function getVenCost()
@@ -2007,6 +2355,54 @@ class Plywood
     public function setSubTotalBackr($subTotalBackr)
     {
         $this->subTotalBackr = $subTotalBackr;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPanelCost()
+    {
+        return $this->panelCost;
+    }
+
+    /**
+     * @param string $panelCost
+     */
+    public function setPanelCost($panelCost)
+    {
+        $this->panelCost = $panelCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPanelWaste()
+    {
+        return $this->panelWaste;
+    }
+
+    /**
+     * @param string $panelWaste
+     */
+    public function setPanelWaste($panelWaste)
+    {
+        $this->panelWaste = $panelWaste;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubTotalPanel()
+    {
+        return $this->subTotalPanel;
+    }
+
+    /**
+     * @param string $subTotalPanel
+     */
+    public function setSubTotalPanel($subTotalPanel)
+    {
+        $this->subTotalPanel = $subTotalPanel;
     }
 
     /**

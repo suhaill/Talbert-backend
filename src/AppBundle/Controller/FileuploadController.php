@@ -35,6 +35,7 @@ class FileuploadController extends Controller
       $uploadDirectory = $this->container->getParameter('upload_file_destination');
 
       $file = $request->files->get('file');
+
       $attachableId = $request->request->get('attachableId');
       $attachableType = $request->request->get('attachableType');
       $originalname = $file->getClientOriginalName();

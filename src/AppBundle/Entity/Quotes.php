@@ -52,6 +52,29 @@ class Quotes
     private $estimatedate;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="delivery_date", type="string", length=30, nullable=true)
+     */
+    private $deliveryDate;
+
+    /**
+     * @return string
+     */
+    public function getDeliveryDate()
+    {
+        return $this->deliveryDate;
+    }
+
+    /**
+     * @param string $deliveryDate
+     */
+    public function setDeliveryDate($deliveryDate)
+    {
+        $this->deliveryDate = $deliveryDate;
+    }
+
+    /**
      * @var int
      *
      * @ORM\Column(name="estimator_id", type="integer")
@@ -61,7 +84,7 @@ class Quotes
     /**
      * @var string
      *
-     * @ORM\Column(name="control_number", type="string", length=20, nullable=true)
+     * @ORM\Column(name="control_number", type="integer", nullable=true)
      */
     private $controlNumber;
 

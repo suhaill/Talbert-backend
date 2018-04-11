@@ -85,6 +85,13 @@ class Veneer
     private $width;
 
     /**
+     * @var float
+     *
+     * @ORM\Column(name="widthFraction", type="float")
+     */
+    private $widthFraction;
+
+    /**
      * @var bool
      *
      * @ORM\Column(name="is_net_size", type="boolean")
@@ -97,6 +104,13 @@ class Veneer
      * @ORM\Column(name="length", type="float")
      */
     private $length;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="lengthFraction", type="float")
+     */
+    private $lengthFraction;
 
     /**
      * @var int
@@ -189,7 +203,7 @@ class Veneer
     /**
      * @var string
      *
-     * @ORM\Column(name="ven_waste", type="string", length=10, nullable=true, options={"default" = 0})
+     * @ORM\Column(name="ven_waste", type="string", length=10, nullable=true, options={"default" = 1})
      */
     private $venWaste;
 
@@ -210,7 +224,7 @@ class Veneer
     /**
      * @var string
      *
-     * @ORM\Column(name="core_waste", type="string", length=10, nullable=true, options={"default" = 0})
+     * @ORM\Column(name="core_waste", type="string", length=10, nullable=true, options={"default" = 1})
      */
     private $coreWaste;
 
@@ -231,7 +245,7 @@ class Veneer
     /**
      * @var string
      *
-     * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true, options={"default" = 0})
+     * @ORM\Column(name="backr_waste", type="string", length=10, nullable=true, options={"default" = 1})
      */
     private $backrWaste;
 
@@ -252,7 +266,7 @@ class Veneer
     /**
      * @var string
      *
-     * @ORM\Column(name="running_waste", type="string", length=10, nullable=true, options={"default":0})
+     * @ORM\Column(name="running_waste", type="string", length=10, nullable=true, options={"default":1})
      */
     private $runningWaste;
 
@@ -334,6 +348,15 @@ class Veneer
     public function getId()
     {
         return $this->id;
+    }
+    
+    /**
+     * @param bool $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
     }
 
     /**
@@ -554,6 +577,22 @@ class Veneer
     }
 
     /**
+     * @return float
+     */
+    public function getWidthFraction()
+    {
+        return $this->widthFraction;
+    }
+
+    /**
+     * @param float $widthFraction
+     */
+    public function setWidthFraction($widthFraction)
+    {
+        $this->widthFraction = $widthFraction;
+    }
+
+    /**
      * Set isNetSize
      *
      * @param boolean $isNetSize
@@ -599,6 +638,22 @@ class Veneer
     public function getLength()
     {
         return $this->length;
+    }
+
+    /**
+     * @return float
+     */
+    public function getLengthFraction()
+    {
+        return $this->lengthFraction;
+    }
+
+    /**
+     * @param float $lengthFraction
+     */
+    public function setLengthFraction($lengthFraction)
+    {
+        $this->lengthFraction = $lengthFraction;
     }
 
     /**
