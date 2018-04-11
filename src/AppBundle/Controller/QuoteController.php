@@ -248,9 +248,9 @@ class QuoteController extends Controller
                 $arrApi['message'] = 'Successfully cloned quote';
                 $clonedQuoteId = $this->cloneQuoteData($quoteData, $datime,$quoteId,$editFlag);
                 $arrApi['newCloneQuoteId']=$clonedQuoteId;
-                $this->clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArrP);
-                $this->cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArrV);
-                $this->cloneDoorData($quoteId, $clonedQuoteId, $datime,$lineItemArrD);
+                $arrApi['newClonePlywoodId']=$this->clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArrP);
+                $arrApi['newCloneVeneerId']=$this->cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArrV);
+                $arrApi['newCloneDoorId']=$this->cloneDoorData($quoteId, $clonedQuoteId, $datime,$lineItemArrD);
             }
         }
         catch(Exception $e) {
@@ -769,6 +769,8 @@ class QuoteController extends Controller
                 $em->persist($newEntity);
             }
             $em->flush();
+            $newPly = $em->getRepository('AppBundle:Plywood')->findOneBy(['quoteId'=>$clonedQuoteId],['id'=>'ASC']);
+            return $newPly->getId();
 //            for ($i=0; $i< 1; $i++) {
 //                $ply[$i]->setQuoteId($clonedQuoteId);
                 /*$plywd = new Plywood();
@@ -866,6 +868,8 @@ class QuoteController extends Controller
 //                $this->cloneAttachments($ply[$i]->getId(), $plywd->getId(), 'Plywood', $datime);
 //            }
             
+        } else {
+            return '';
         }
     }
 
@@ -884,7 +888,8 @@ class QuoteController extends Controller
                 $em->persist($newEntity);
             }
             $em->flush();
-            
+            $newV= $em->getRepository('AppBundle:Veneer')->findOneBy(['quoteId'=>$clonedQuoteId],['id'=>'ASC']);
+            return $newV->getId();
             /*$em = $this->getDoctrine()->getManager();
             for ($i=0; $i< count($veneeerData); $i++) {
                 $veneer = new Veneer();
@@ -935,6 +940,8 @@ class QuoteController extends Controller
                 $em->flush();
                 $this->cloneAttachments($veneeerData[$i]->getId(), $veneer->getId(), 'Veneer', $datime);
             }*/
+        } else {
+            return '';
         }
     }
     
@@ -976,7 +983,8 @@ class QuoteController extends Controller
         } catch (Exception $ex) {
             $em->getConnection()->rollback();
         }
-        
+        $newD= $em->getRepository('AppBundle:Doors')->findOneBy(['quoteId'=>$clonedQuoteId],['id'=>'ASC']);
+        return $newD->getId();
     }
 
     private function cloneDoorDataOld($quoteId, $clonedQuoteId, $datime) {
