@@ -916,6 +916,23 @@ class OrderController extends Controller
         }
     }
     
+    private function getGrainPattern($id,$type=''){
+        if($type=='door'){
+            $grainId= $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(['id'=>$id]);
+            if(!empty($grainId)){
+                $id=$grainId->getGrain();
+            } else {
+                $id=0;
+            }
+        }
+        $data= $this->getDoctrine()->getRepository('AppBundle:GrainDirection')->findOneBy(['id'=>$id]);
+        if(!empty($data)){
+            return $data->getName();
+        } else {
+            return '';
+        }
+    }
+    
     private function getCustomerEmailById($customer_id) {
         if (!empty($customer_id)) {
             $profileObj = $this->getDoctrine()
