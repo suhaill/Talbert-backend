@@ -933,7 +933,8 @@ class PlywoodController extends Controller
             $query = $this->getDoctrine()->getManager();
             $result = $query->createQueryBuilder()
                 ->select(['v.quantity','v.plywoodWidth as width','v.plywoodLength as length','v.comments','v.speciesId','v.topEdge','v.bottomEdge',
-                    'v.rightEdge','v.leftEdge', "concat(v.finishThickId,' ',v.finishThickType) as panelThicknessName"])
+                    'v.rightEdge','v.leftEdge', "v.finishThickId as pThicknessName",'v.finishThickType',
+                    "v.finThickFraction"])
                 ->from('AppBundle:Plywood', 'v')
                 ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
                 ->addSelect(['q.refNum','q.deliveryDate'])
@@ -988,9 +989,20 @@ class PlywoodController extends Controller
                 $arrApi['message'] = 'There is no quote.';
                 $statusCode = 422;
             } else {
+//                print_r($result);die;
+                $newResult=[];
+                foreach ($result as $v) {
+                    $v['finThickFraction']= $this->float2rat($v['finThickFraction']); 
+                    if($v['finishThickType']=='inch'){
+                        $v['panelThicknessName']=$v['pThicknessName'].($v['finThickFraction']!=0?' '.$v['finThickFraction']:'').' '.$v['finishThickType'];
+                    } else {
+                        $v['panelThicknessName']=$v['pThicknessName'].' '.$v['finishThickType'];
+                    }
+                    $newResult[]=$v;
+                }
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived the quote list.';
-                $arrApi['data']['plywood']=$result;
+                $arrApi['data']['plywood']=$newResult;
             }
         } else {
             $arrApi['status'] = 0;
@@ -1013,6 +1025,75 @@ class PlywoodController extends Controller
             $labelArrToString .= implode('-', $labelStringToArr).',';
         }
         return rtrim($labelArrToString, ',');
+    }
+    
+    private function float2rat($num = 0.0, $err = 0.001)
+    {
+        if ($err <= 0.0 || $err >= 1.0)
+        {
+            $err = 0.001;
+        }
+
+        $sign = ($num > 0) ? 1 : (($num < 0) ? - 1 : 0);
+
+        if ($sign === - 1)
+        {
+            $num = abs($num);
+        }
+
+        if ($sign !== 0)
+        {
+            // $err is the maximum relative $err; convert to absolute
+            $err *= $num;
+        }
+
+        $n = (int) floor($num);
+        $num -= $n;
+
+        if ($num < $err)
+        {
+            return (string) ($sign * $n);
+        }
+
+        if (1 - $err < $num)
+        {
+            return (string) ($sign * ($n + 1));
+        }
+
+        // The lower fraction is 0/1
+        $lower_n = 0;
+        $lower_d = 1;
+
+        // The upper fraction is 1/1
+        $upper_n = 1;
+        $upper_d = 1;
+
+        while (true)
+        {
+            // The middle fraction is ($lower_n + $upper_n) / (lower_d + $upper_d)
+            $middle_n = $lower_n + $upper_n;
+            $middle_d = $lower_d + $upper_d;
+
+            if ($middle_d * ($num + $err) < $middle_n)
+            {
+                // real + $err < middle : middle is our new upper
+                $upper_n = $middle_n;
+                $upper_d = $middle_d;
+            }
+            elseif ($middle_n < ($num - $err) * $middle_d)
+            {
+                // middle < real - $err : middle is our new lower
+                $lower_n = $middle_n;
+                $lower_d = $middle_d;
+            }
+            else
+            {
+                // Middle is our best fraction
+                return (string) (($n * $middle_d + $middle_n) * $sign) . '/' . (string) $middle_d;
+            }
+        }
+
+        return '0'; // should be unreachable.
     }
 
 }
