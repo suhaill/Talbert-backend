@@ -934,7 +934,7 @@ class PlywoodController extends Controller
             $result = $query->createQueryBuilder()
                 ->select(['v.quantity','v.plywoodWidth as width','v.plywoodLength as length','v.comments','v.speciesId','v.topEdge','v.bottomEdge',
                     'v.rightEdge','v.leftEdge', "v.finishThickId as pThicknessName",'v.finishThickType',
-                    "v.finThickFraction"])
+                    "v.finThickFraction","v.thickness as panelThicknessName"])
                 ->from('AppBundle:Plywood', 'v')
                 ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
                 ->addSelect(['q.refNum','q.deliveryDate'])
@@ -990,7 +990,7 @@ class PlywoodController extends Controller
                 $statusCode = 422;
             } else {
 //                print_r($result);die;
-                $newResult=[];
+                /*$newResult=[];
                 foreach ($result as $v) {
                     $v['finThickFraction']= $this->float2rat($v['finThickFraction']); 
                     if($v['finishThickType']=='inch'){
@@ -999,10 +999,10 @@ class PlywoodController extends Controller
                         $v['panelThicknessName']=$v['pThicknessName'].' '.$v['finishThickType'];
                     }
                     $newResult[]=$v;
-                }
+                }*/
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived the quote list.';
-                $arrApi['data']['plywood']=$newResult;
+                $arrApi['data']['plywood']=$result;
             }
         } else {
             $arrApi['status'] = 0;
