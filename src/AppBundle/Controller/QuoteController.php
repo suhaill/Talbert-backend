@@ -738,7 +738,7 @@ class QuoteController extends Controller
         $quote->setShipMethdId($qData->getShipMethdId());
         $quote->setShipAddId($qData->getShipAddId());
         $quote->setLeadTime($qData->getLeadTime());
-        $quote->setStatus($qData->getStatus());
+        $quote->setStatus('Current');
         $quote->setComment($qData->getComment());
         $quote->setCreatedAt($datime);
         $quote->setUpdatedAt($datime);
@@ -770,7 +770,7 @@ class QuoteController extends Controller
             }
             $em->flush();
             $newPly = $em->getRepository('AppBundle:Plywood')->findOneBy(['quoteId'=>$clonedQuoteId],['id'=>'ASC']);
-            return $newPly->getId();
+            return !empty($newPly->getId())?$newPly->getId():'';
 //            for ($i=0; $i< 1; $i++) {
 //                $ply[$i]->setQuoteId($clonedQuoteId);
                 /*$plywd = new Plywood();
@@ -889,7 +889,7 @@ class QuoteController extends Controller
             }
             $em->flush();
             $newV= $em->getRepository('AppBundle:Veneer')->findOneBy(['quoteId'=>$clonedQuoteId],['id'=>'ASC']);
-            return $newV->getId();
+            return !empty($newV->getId())?$newV->getId():'';
             /*$em = $this->getDoctrine()->getManager();
             for ($i=0; $i< count($veneeerData); $i++) {
                 $veneer = new Veneer();
@@ -983,8 +983,12 @@ class QuoteController extends Controller
         } catch (Exception $ex) {
             $em->getConnection()->rollback();
         }
-        $newD= $em->getRepository('AppBundle:Doors')->findOneBy(['quoteId'=>$clonedQuoteId],['id'=>'ASC']);
-        return $newD->getId();
+        if (!empty($doorData)) {
+            $newD= $em->getRepository('AppBundle:Doors')->findOneBy(['quoteId'=>$clonedQuoteId],['id'=>'ASC']);
+            return !empty($newD->getId())?$newD->getId():'';
+        } else {
+            return '';
+        }        
     }
 
     private function cloneDoorDataOld($quoteId, $clonedQuoteId, $datime) {
