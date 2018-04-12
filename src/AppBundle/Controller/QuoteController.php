@@ -1189,6 +1189,9 @@ class QuoteController extends Controller
         $quote->setUpdatedAt($datime);
         $em->persist($quote);
         $em->flush();
+        $quote->setControlNumber($quote->getId());
+        $em->persist($quote);
+        $em->flush();
         return $quote->getId();
     }
 
