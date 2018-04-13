@@ -55,11 +55,12 @@ class CustomerController extends Controller
             $prdArr = $data->get('products');
             $shipArr = $data->get('shipp');
             $datime = new \DateTime('now');
+            $isValidShipAdd = $this->validateShippingAddress($shipArr);
             if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'You are not allowed to add customers';
             } else {
-                if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($email) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip)  || empty ($shipArr) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) ) {
+                if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($email) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip)  || empty ($shipArr) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) || empty($isValidShipAdd)) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'Please fill all required fields';
                 } else {
@@ -235,12 +236,13 @@ class CustomerController extends Controller
                 $prdArr = $data->get('products');
                 $shipArr = $data->get('shipp');
                 $datime = new \DateTime('now');
+                $isValidShipAdd = $this->validateShippingAddress($shipArr);
                 if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'You are not allowed to update customers';
                     $statusCode = 422;
                 } else {
-                    if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty ($shipArr) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) ) {
+                    if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty($isValidShipAdd) ) {
                         $arrApi['status'] = 0;
                         $arrApi['message'] = 'Please fill all required fields';
                     } else {
@@ -897,5 +899,17 @@ class CustomerController extends Controller
         $expDate = explode(' ', $date)[0];
         $expDate1 = explode('-',$expDate);
         return $expDate1[1].'/'.$expDate1[2].'/'.$expDate1[0];
+    }
+
+    private function validateShippingAddress($shipArr) {
+        $res = true;
+        if (!empty($shipArr)) {
+            for ($i=0;$i<count($shipArr);$i++) {
+                if ( empty (trim($shipArr[$i]['nickname'])) || empty (trim($shipArr[$i]['street'])) || empty (trim($shipArr[$i]['city'])) || empty (trim($shipArr[$i]['state'])) || empty (trim($shipArr[$i]['zip'])) || empty (trim($shipArr[$i]['deliveryCharge'])) || empty (trim($shipArr[$i]['salesTaxRate'])) ) {
+                    $res = false;
+                }
+            }
+        }
+        return $res;
     }
 }
