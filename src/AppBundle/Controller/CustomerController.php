@@ -251,7 +251,7 @@ class CustomerController extends Controller
                             $phoneCount = $this->checkIfOthrUsrHasThisPhone($phone, $userId);
                             if ($phoneCount) {
                                 $arrApi['status'] = 0;
-                                $arrApi['message'] = 'This Phone is already in user.';
+                                $arrApi['message'] = 'Entered phone number already exists.';
 
                             } else {
                                 $arrApi['status'] = 1;
