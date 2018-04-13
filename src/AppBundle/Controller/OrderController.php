@@ -826,7 +826,7 @@ class OrderController extends Controller
     private function getVeneerslistbyQuoteId($qId) {
         $lineItem = array();
         $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $qId,'isActive'=>1));
-        //$veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
+        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
         $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $qId, 'status'=> 1));
         $i=0;
         if (!empty($plywoodRecords) || !empty($veneerRecords) || !empty($doorRecords)) {
@@ -840,19 +840,20 @@ class OrderController extends Controller
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($p->getPatternMatch());
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($p->getGradeId()))[0];
                     $lineItem[$i]['back'] = $this->getBackNameById($p->getBackerId());
-                    $lineItem[$i]['thickness'] = $p->getFinishThickId();
+                    $lineItem[$i]['thickness'] = ($p->getFinishThickType() == 'inch') ? $this->float2rat($p->getFinishThickId()) : $this->float2rat($this->convertMmToInches($p->getFinishThickId()));
                     $lineItem[$i]['width'] = $p->getPlywoodWidth();
                     $lineItem[$i]['length'] = $p->getPlywoodLength();
                     $lineItem[$i]['core'] = $this->getCoreNameById($p->getCoreType());
-                    $lineItem[$i]['edge'] = $this->getEdgeNameById($p->getEdgeDetail());
-                    $lineItem[$i]['unitPrice'] = $p->getTotalcostPerPiece();
+                    $lineItem[$i]['edge'] = 'NA';//$this->getEdgeNameById($p->getEdgeDetail());
+                    $lineItem[$i]['unitPrice'] = $p->getSellingPrice();
                     $lineItem[$i]['totalPrice'] = $p->getTotalCost();
                     $lineItem[$i]['widthFraction'] = $this->float2rat($p->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($p->getLengthFraction());
+                    $lineItem[$i]['grain'] = $this->getGrainPattern($p->getGrainPatternId());
                     $i++;
                 }
             }
-            /*if (!empty($veneerRecords)) {
+            if (!empty($veneerRecords)) {
                 foreach ($veneerRecords as $v) {
                     $lineItem[$i]['id'] = $v->getId();
                     $lineItem[$i]['type'] = 'veneer';
@@ -867,19 +868,20 @@ class OrderController extends Controller
                     $lineItem[$i]['length'] = $v->getLength();
                     $lineItem[$i]['core'] = $this->getCoreNameById($v->getCoreTypeId());
                     $lineItem[$i]['edge'] = 'NA';
-                    $lineItem[$i]['unitPrice'] = $v->getTotCostPerPiece();
+                    $lineItem[$i]['unitPrice'] = $v->getSellingPrice();
                     $lineItem[$i]['totalPrice'] = $v->getTotalCost();
                     $lineItem[$i]['widthFraction'] = $this->float2rat($v->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($v->getLengthFraction());
+                    $lineItem[$i]['grain'] = $this->getGrainPattern($v->getGrainPatternId());
                     $i++;
                 }
-            }*/
+            }
             if (!empty($doorRecords)) {
                 foreach ($doorRecords as $d) {
                     $doorCosts = $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->
                             findOneBy(['doorId' => $d->getId()]);
                     if(!empty($doorCosts)){
-                        $totalcostPerPiece = !empty($doorCosts->getTotalcostPerPiece())?$doorCosts->getTotalcostPerPiece():0;
+                        $totalcostPerPiece = !empty($doorCosts->getSellingPrice())?$doorCosts->getSellingPrice():0;
                         $totalCost = !empty($doorCosts->getTotalCost())?$doorCosts->getTotalCost():0;
                     } else {
                         $totalcostPerPiece=0;
@@ -889,11 +891,15 @@ class OrderController extends Controller
                     $lineItem[$i]['type'] = 'door';
                     $lineItem[$i]['url'] = 'door/edit-door';
                     $lineItem[$i]['quantity'] = $d->getQty();
-                    $lineItem[$i]['species'] = $this->getSpeciesNameById($this->getSpeciesIdByDoorId($d->getId()));
+                    if ($this->getSpeciesNameById($this->getSpeciesIdByDoorId($d->getId())) == null) {
+                        $lineItem[$i]['species'] = 'Other';
+                    } else {
+                        $lineItem[$i]['species'] = $this->getSpeciesNameById($this->getSpeciesIdByDoorId($d->getId()));
+                    }
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d->getId()));
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($this->getGradeIdByDoorId($d->getId())))[0];
                     $lineItem[$i]['back'] = 'NA';//$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
-                    $lineItem[$i]['thickness'] = $d->getFinishThickId();
+                    $lineItem[$i]['thickness'] = ($d->getFinishThickType() == 'inch') ? $this->float2rat($d->getFinishThickId()) : $this->float2rat($this->convertMmToInches($d->getFinishThickId()));
                     $lineItem[$i]['width'] = $d->getWidth();
                     $lineItem[$i]['length'] = $d->getLength();
                     $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
@@ -902,10 +908,28 @@ class OrderController extends Controller
                     $lineItem[$i]['totalPrice'] = $totalCost;
                     $lineItem[$i]['widthFraction'] = $this->float2rat($d->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($d->getLengthFraction());
+                    $lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
                     $i++;
                 }
             }
             return $lineItem;
+        }
+    }
+    
+    private function getGrainPattern($id,$type=''){
+        if($type=='door'){
+            $grainId= $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(['id'=>$id]);
+            if(!empty($grainId)){
+                $id=$grainId->getGrain();
+            } else {
+                $id=0;
+            }
+        }
+        $data= $this->getDoctrine()->getRepository('AppBundle:GrainDirection')->findOneBy(['id'=>$id]);
+        if(!empty($data)){
+            return $data->getName();
+        } else {
+            return '';
         }
     }
     
