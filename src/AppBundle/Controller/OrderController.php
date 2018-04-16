@@ -1322,4 +1322,8 @@ class OrderController extends Controller
 
         return '0'; // should be unreachable.
     }
+
+    private function convertMmToInches($mm) {
+        return $mm * 0.0393701;
+    }
 }
