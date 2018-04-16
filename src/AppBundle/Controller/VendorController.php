@@ -276,7 +276,7 @@ class VendorController extends Controller
                     $vendor->setComment($comments);
                     $em->flush();
                     $arrApi['status'] = 1;
-                    $arrApi['message'] = 'User data updated';
+                    $arrApi['message'] = 'Vendor data updated';
                     $statusCode = 200;
 
 
