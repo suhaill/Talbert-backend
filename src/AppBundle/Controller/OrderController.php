@@ -1340,9 +1340,97 @@ class OrderController extends Controller
         $result = $query->createQueryBuilder()
             ->select(['o.orderNumber','o.quoteId','o.estNumber'])
             ->from('AppBundle:Orders', 'o')
+            ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'o.quoteId = q.id')
+            ->addSelect(['q.customerId','q.deliveryDate as dueDate'])
+            ->leftJoin('AppBundle:Profile', 'p', 'WITH', "q.customerId = p.userId")
+            ->addSelect(["p.fname",'p.lname'])
+            ->addOrderBy('q.deliveryDate', 'DESC')
+//            ->leftJoin('AppBundle:Plywood', 'pw', 'WITH', "pw.quoteId = q.id")
+//            ->addSelect(['pw.quantity','pw.plywoodWidth as width','pw.plywoodLength as length','pw.speciesId',
+//                "'Plywood' as type",'pw.id','pw.patternId'])
+//            ->leftJoin('AppBundle:Species', 's', 'WITH', "pw.speciesId = s.id")
+//            ->addSelect(['s.name as SpecieName'])
+//            ->leftJoin('AppBundle:Pattern', 'pat', 'WITH', "pw.patternId = pat.id")
+//            ->addSelect(['pat.name as patternName'])
             ->getQuery()
             ->getResult()
         ;
-        print_r($result);die;
+        $newResult=[];
+        if(!empty($result)){
+            foreach ($result as $v) {
+                $ply=$query->createQueryBuilder()
+                    ->select(["'Plywood' as type",'pw.quantity',"concat(pw.plywoodWidth,' x ',pw.plywoodLength) as size",
+                        'pw.plywoodWidth as width','pw.plywoodLength as length',
+                        'pw.id','pw.patternId','pw.speciesId','pw.lineItemNum',
+                        '((pw.plywoodWidth * pw.plywoodLength)/144) as totalSquareFeet'])
+                    ->from('AppBundle:Plywood', 'pw')
+                    ->leftJoin('AppBundle:Species', 's', 'WITH', "pw.speciesId = s.id")
+                    ->addSelect(['s.name as SpecieName'])
+                    ->leftJoin('AppBundle:Pattern', 'pat', 'WITH', "pw.patternId = pat.id")
+                    ->addSelect(['pat.name as patternName'])
+                    ->where("pw.quoteId = '".$v['quoteId']."' and pw.isActive=1")
+                    ->addOrderBy('pw.lineItemNum', 'ASC')
+                    ->getQuery()
+                    ->getResult()
+                ;
+                $ver=$query->createQueryBuilder()
+                    ->select(["'Veneer' as type",'v.quantity',"concat(v.width,' x ',v.length) as size",
+                        'v.width as width','v.length as length','v.speciesId',"'1' as lineItemNum",
+                        'v.id','v.patternId','((v.width * v.length)/144) as totalSquareFeet'])
+                    ->from('AppBundle:Veneer', 'v')
+                    ->leftJoin('AppBundle:Species', 's', 'WITH', "v.speciesId = s.id")
+                    ->addSelect(['s.name as SpecieName'])
+                    ->leftJoin('AppBundle:Pattern', 'pat', 'WITH', "v.patternId = pat.id")
+                    ->addSelect(['pat.name as patternName'])
+                    ->where("v.quoteId = '".$v['quoteId']."' and v.isActive=1")
+                    ->getQuery()
+                    ->getResult()
+                ;
+                $door=$query->createQueryBuilder()
+                    ->select(["'Door' as type",'d.qty as quantity',"concat(d.width,' x ',d.length) as size",
+                        'd.width as width','d.length as length','d.lineItemNum',
+                        'd.id','((d.width * d.length)/144) as totalSquareFeet'])
+                    ->from('AppBundle:Doors', 'd')
+                    ->leftJoin('AppBundle:Skins', 'sk', 'WITH', "sk.doorId = d.id")
+                    ->addSelect(['sk.species as speciesId','sk.pattern as patternId'])
+                    ->leftJoin('AppBundle:Species', 's', 'WITH', "sk.species = s.id")
+                    ->addSelect(['s.name as SpecieName'])
+                    ->leftJoin('AppBundle:Pattern', 'pat', 'WITH', "sk.pattern = pat.id")
+                    ->addSelect(['pat.name as patternName'])
+                    ->where("d.quoteId = '".$v['quoteId']."' and d.status=1")
+                    ->addOrderBy('d.lineItemNum', 'ASC')
+                    ->getQuery()
+                    ->getResult()
+                ;
+                $array = array_merge($ply,$ver,$door);
+                if(!empty($array)){
+                    $v['lineItem']= $this->arraySortByColumn($array,'lineItemNum');
+                } else {
+                    $v['lineItem']=[];
+                }
+                $newResult[]=$v;
+            }
+        }
+        if (empty($newResult) ) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'There is no line-item.';
+            $statusCode = 422;
+        } else {
+            $arrApi['status'] = 1;
+            $arrApi['message'] = 'Successfully retreived the line-item list.';
+            $arrApi['data']['lineitem']=$newResult;
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+    
+    private function arraySortByColumn(&$arr, $col, $dir = SORT_ASC) {
+        if(!empty($arr)){
+            $sort_col = array();
+            foreach ($arr as $key=> $row) {
+                $sort_col[$key] = $row[$col];
+            }
+            array_multisort($sort_col, $dir, $arr);
+        }        
+        return $arr;
     }
 }
