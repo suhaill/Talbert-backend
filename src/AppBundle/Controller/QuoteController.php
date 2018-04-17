@@ -1181,6 +1181,7 @@ class QuoteController extends Controller
         $quote->setTermId($termId);
         $quote->setShipMethdId($shipMethod);
         $quote->setShipAddId($shipAddId);
+        $quote->setShipCharge($this->getShipChargeByAddId($shipAddId));
         $quote->setLeadTime($leadTime);
         $quote->setExpFee(0.00);
         $quote->setDiscount(0.00);
@@ -1193,6 +1194,15 @@ class QuoteController extends Controller
         $em->persist($quote);
         $em->flush();
         return $quote->getId();
+    }
+
+    private function getShipChargeByAddId($shipAddId) {
+        $shipCharge = 0;
+        $addData = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findOneById($shipAddId);
+        if (!empty($addData)) {
+            $shipCharge = $addData->getDeliveryCharge();
+        }
+        return $shipCharge;
     }
 
     private function getCustomerNameById($customer_id) {
