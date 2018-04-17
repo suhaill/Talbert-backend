@@ -1326,4 +1326,23 @@ class OrderController extends Controller
     private function convertMmToInches($mm) {
         return $mm * 0.0393701;
     }
+    
+    /**
+     * @Route("/api/order/getLineItemList")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("GET")
+     * params: None
+     */
+    public function getLineItemListAction(Request $request){
+        $arrApi = [];
+        $statusCode = 200;
+        $query = $this->getDoctrine()->getManager();
+        $result = $query->createQueryBuilder()
+            ->select(['o.orderNumber','o.quoteId','o.estNumber'])
+            ->from('AppBundle:Orders', 'o')
+            ->getQuery()
+            ->getResult()
+        ;
+        print_r($result);die;
+    }
 }
