@@ -170,10 +170,9 @@ class PlywoodController extends Controller
             $comments = trim($getJson->get('comment'));
             $createdAt = new \DateTime('now');
             $fileId = trim($getJson->get('fileId'));
-
             if (empty($quantity) || empty($lineItemNumberToBeUsed) || empty($speciesId) || empty($patternId) ||
             empty($grainDirectionId) || empty($patternMatch) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth)
-            || empty($plywoodLength) /*|| empty($finishThickId)*/ || empty($backerId)  || empty($coreType)
+            || empty($plywoodLength) || empty($backerId)  || empty($coreType)
             || empty($thickness) || empty($finish) || empty($facPaint) || empty($uvCuredId) || empty($sheenId) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
@@ -697,7 +696,7 @@ class PlywoodController extends Controller
             $fileId = trim($getJson->get('fileId'));
             if (empty($id) || empty($quantity) || empty($speciesId) || empty($patternId) || 
             empty($grainDirectionId) || empty($patternMatch) || empty($gradeId) ||  empty($thicknessId) || empty($plywoodWidth)
-            || empty($plywoodLength) /*|| empty($finishThickId)*/ || empty($backerId)  || empty($coreType)
+            || empty($plywoodLength) || empty($backerId)  || empty($coreType)
             || empty($thickness) || empty($finish) || empty($facPaint) || empty($uvCuredId) || empty($sheenId) || empty($topEdge) || empty($edgeMaterialId) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'Please fill all the fields.';
