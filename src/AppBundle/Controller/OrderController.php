@@ -832,6 +832,16 @@ class OrderController extends Controller
         if (!empty($plywoodRecords) || !empty($veneerRecords) || !empty($doorRecords)) {
             if (!empty($plywoodRecords)) {
                 foreach ($plywoodRecords as $p) {
+                    if($p->getFinishThickType() == 'inch'){
+                        if($p->getFinishThickId()>0){
+                            $thickness=$p->getFinishThickId().($p->getFinThickFraction()!=0?' '.$this->float2rat($p->getFinThickFraction()):'').'"';
+                        } else {
+                            $thickness=$this->float2rat($p->getFinThickFraction()).'"';
+                        }
+                    } else {
+//                        $thickness=$this->float2rat($this->convertMmToInches($p->getFinishThickId()));
+                        $thickness=$p->getFinishThickId().' '.$p->getFinishThickType();
+                    }
                     $lineItem[$i]['id'] = $p->getId();
                     $lineItem[$i]['type'] = 'plywood';
                     $lineItem[$i]['url'] = 'line-item/edit-plywood';
@@ -840,7 +850,8 @@ class OrderController extends Controller
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($p->getPatternMatch());
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($p->getGradeId()))[0];
                     $lineItem[$i]['back'] = $this->getBackNameById($p->getBackerId());
-                    $lineItem[$i]['thickness'] = $p->getFinishThickId();
+//                    $lineItem[$i]['thickness'] = $p->getFinishThickId();
+                    $lineItem[$i]['thickness'] = $thickness;
                     $lineItem[$i]['width'] = $p->getPlywoodWidth();
                     $lineItem[$i]['length'] = $p->getPlywoodLength();
                     $lineItem[$i]['core'] = $this->getCoreNameById($p->getCoreType());
@@ -852,7 +863,7 @@ class OrderController extends Controller
                     $i++;
                 }
             }
-            /*if (!empty($veneerRecords)) {
+            if (!empty($veneerRecords)) {
                 foreach ($veneerRecords as $v) {
                     $lineItem[$i]['id'] = $v->getId();
                     $lineItem[$i]['type'] = 'veneer';
@@ -873,7 +884,7 @@ class OrderController extends Controller
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($v->getLengthFraction());
                     $i++;
                 }
-            }*/
+            }
             if (!empty($doorRecords)) {
                 foreach ($doorRecords as $d) {
                     $doorCosts = $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->
@@ -885,6 +896,16 @@ class OrderController extends Controller
                         $totalcostPerPiece=0;
                         $totalCost=0;
                     }
+                    if($d->getFinishThickType() == 'inch'){
+                        if($d->getFinishThickId()>0){
+                            $thickness=$d->getFinishThickId().($d->getFinThickFraction()!=0?' '.$this->float2rat($d->getFinThickFraction()):'').'"';
+                        } else {
+                            $thickness=$this->float2rat($d->getFinThickFraction()).'"';
+                        }
+                    } else {
+//                        $thickness=$this->float2rat($this->convertMmToInches($p->getFinishThickId()));
+                        $thickness=$d->getFinishThickId().' '.$d->getFinishThickType();
+                    }
                     $lineItem[$i]['id'] = $d->getId();
                     $lineItem[$i]['type'] = 'door';
                     $lineItem[$i]['url'] = 'door/edit-door';
@@ -893,7 +914,8 @@ class OrderController extends Controller
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d->getId()));
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($this->getGradeIdByDoorId($d->getId())))[0];
                     $lineItem[$i]['back'] = 'NA';//$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
-                    $lineItem[$i]['thickness'] = $d->getFinishThickId();
+//                    $lineItem[$i]['thickness'] = $d->getFinishThickId();
+                    $lineItem[$i]['thickness']=$thickness;
                     $lineItem[$i]['width'] = $d->getWidth();
                     $lineItem[$i]['length'] = $d->getLength();
                     $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
