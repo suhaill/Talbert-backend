@@ -1253,7 +1253,7 @@ class QuoteController extends Controller
     }
 
     private function getVeneerslistbyQuoteId($qId) {
-        $lineItem = array();
+        $lineItem = array(); 
         $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $qId,'isActive'=>1));
         $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
         $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $qId, 'status'=> 1));

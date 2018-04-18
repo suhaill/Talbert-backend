@@ -915,7 +915,7 @@ class OrderController extends Controller
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($this->getGradeIdByDoorId($d->getId())))[0];
                     $lineItem[$i]['back'] = 'NA';//$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
 //                    $lineItem[$i]['thickness'] = $d->getFinishThickId();
-                    $lineItem[$i]['thickness']=$thickness;
+                    $lineItem[$i]['thickness']=$thickness; 
                     $lineItem[$i]['width'] = $d->getWidth();
                     $lineItem[$i]['length'] = $d->getLength();
                     $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
