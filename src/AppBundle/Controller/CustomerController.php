@@ -488,13 +488,13 @@ class CustomerController extends Controller
             $em = $this->getDoctrine()->getManager();
             foreach ($shipArr as $val) {
                 $addresses = new Addresses();
-                $addresses->setNickname($val['nickname']);
-                $addresses->setStreet($val['street']);
-                $addresses->setCity($val['city']);
-                $addresses->setStateId($val['state']);
-                $addresses->setZip($val['zip']);
-                $addresses->setDeliveryCharge($this->formateDeliveryCharge($val['deliveryCharge']));
-                $addresses->setSalesTaxRate($this->formateSalestax($val['salesTaxRate']));
+                $addresses->setNickname(trim($val['nickname']));
+                $addresses->setStreet(trim($val['street']));
+                $addresses->setCity(trim($val['city']));
+                $addresses->setStateId(trim($val['state']));
+                $addresses->setZip(trim($val['zip']));
+                $addresses->setDeliveryCharge($this->formateDeliveryCharge(trim($val['deliveryCharge'])));
+                $addresses->setSalesTaxRate($this->formateSalestax(trim($val['salesTaxRate'])));
                 $addresses->setAddressType('shipping');
                 $addresses->setStatus(1);
                 $addresses->setUserId($userId);
@@ -600,13 +600,13 @@ class CustomerController extends Controller
         $em = $this->getDoctrine()->getManager();
         foreach ($shipArr as $val) {
             $addresses = new Addresses();
-            $addresses->setNickname($val['nickname']);
-            $addresses->setStreet($val['street']);
-            $addresses->setCity($val['city']);
-            $addresses->setStateId($val['state']);
-            $addresses->setZip($val['zip']);
-            $addresses->setDeliveryCharge($this->formateDeliveryCharge($val['deliveryCharge']));
-            $addresses->setSalesTaxRate($this->formateSalestax($val['salesTaxRate']));
+            $addresses->setNickname(trim($val['nickname']));
+            $addresses->setStreet(trim($val['street']));
+            $addresses->setCity(trim($val['city']));
+            $addresses->setStateId(trim($val['state']));
+            $addresses->setZip(trim($val['zip']));
+            $addresses->setDeliveryCharge($this->formateDeliveryCharge(trim($val['deliveryCharge'])));
+            $addresses->setSalesTaxRate($this->formateSalestax(trim($val['salesTaxRate'])));
             $addresses->setAddressType('shipping');
             $addresses->setStatus(1);
             $addresses->setUserId($lastUserId);
@@ -633,7 +633,7 @@ class CustomerController extends Controller
             $em = $this->getDoctrine()->getManager();
             foreach ($prdArr as $val) {
                 $dis = new Discounts();
-                $dis->setProductName($val['products']);
+                $dis->setProductName(trim($val['products']));
                 $dis->setUserId($lastUserId);
                 $dis->setRate($rate);
                 $dis->setStatus($sts);
