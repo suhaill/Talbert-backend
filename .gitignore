@@ -30,7 +30,6 @@
 /web/bundles/
 /web/uploads/
 /web/.htaccess
-/.gitignore
 
 # PHPUnit
 /app/phpunit.xml
