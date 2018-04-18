@@ -902,7 +902,7 @@ class OrderController extends Controller
                         if($d->getFinishThickId()>0){
                             $thickness=$d->getFinishThickId().($d->getFinThickFraction()!=0?' '.$this->float2rat($d->getFinThickFraction()):'').'"';
                         } else {
-                            $thickness=$this->float2rat($p->getFinThickFraction()).'"';
+                            $thickness=$this->float2rat($d->getFinThickFraction()).'"';
                         }
                     } else {
 //                        $thickness=$this->float2rat($this->convertMmToInches($p->getFinishThickId()));
