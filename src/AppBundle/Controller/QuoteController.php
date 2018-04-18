@@ -1261,6 +1261,16 @@ class QuoteController extends Controller
         if (!empty($plywoodRecords) || !empty($doorRecords) || !empty($veneerRecords)) {
             if (!empty($plywoodRecords)) {
                 foreach ($plywoodRecords as $p) {
+                    if($p->getFinishThickType() == 'inch'){
+                        if($p->getFinishThickId()>0){
+                            $thickness=$p->getFinishThickId().($p->getFinThickFraction()!=0?' '.$this->float2rat($p->getFinThickFraction()):'').'"';
+                        } else {
+                            $thickness=$this->float2rat($p->getFinThickFraction()).'"';
+                        }
+                    } else {
+//                        $thickness=$this->float2rat($this->convertMmToInches($p->getFinishThickId()));
+                        $thickness=$p->getFinishThickId().' '.$p->getFinishThickType();
+                    }
                     $lineItem[$i]['id'] = $p->getId();
                     $lineItem[$i]['type'] = 'plywood';
                     $lineItem[$i]['url'] = 'line-item/edit-plywood';
@@ -1269,7 +1279,8 @@ class QuoteController extends Controller
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($p->getPatternMatch());
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($p->getGradeId()))[0];
                     $lineItem[$i]['back'] = $this->getBackNameById($p->getBackerId());
-                    $lineItem[$i]['thickness'] = ($p->getFinishThickType() == 'inch') ? $this->float2rat($p->getFinishThickId()) : $this->float2rat($this->convertMmToInches($p->getFinishThickId()));
+//                    $lineItem[$i]['thickness'] = ($p->getFinishThickType() == 'inch') ? $this->float2rat($p->getFinishThickId()) : $this->float2rat($this->convertMmToInches($p->getFinishThickId()));
+                    $lineItem[$i]['thickness'] = $thickness;
                     $lineItem[$i]['width'] = $p->getPlywoodWidth();
                     $lineItem[$i]['length'] = $p->getPlywoodLength();
                     $lineItem[$i]['core'] = $this->getCoreNameById($p->getCoreType());
@@ -1317,6 +1328,16 @@ class QuoteController extends Controller
                         $totalcostPerPiece=0;
                         $totalCost=0;
                     }
+                    if($d->getFinishThickType() == 'inch'){
+                        if($d->getFinishThickId()>0){
+                            $thickness=$d->getFinishThickId().($d->getFinThickFraction()!=0?' '.$this->float2rat($d->getFinThickFraction()):'').'"';
+                        } else {
+                            $thickness=$this->float2rat($d->getFinThickFraction()).'"';
+                        }
+                    } else {
+//                        $thickness=$this->float2rat($this->convertMmToInches($p->getFinishThickId()));
+                        $thickness=$d->getFinishThickId().' '.$d->getFinishThickType();
+                    }
                     $lineItem[$i]['id'] = $d->getId();
                     $lineItem[$i]['type'] = 'door';
                     $lineItem[$i]['url'] = 'door/edit-door';
@@ -1329,7 +1350,8 @@ class QuoteController extends Controller
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d->getId()));
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($this->getGradeIdByDoorId($d->getId())))[0];
                     $lineItem[$i]['back'] = 'NA';//$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
-                    $lineItem[$i]['thickness'] = ($d->getFinishThickType() == 'inch') ? $this->float2rat($d->getFinishThickId()) : $this->float2rat($this->convertMmToInches($d->getFinishThickId()));
+//                    $lineItem[$i]['thickness'] = ($d->getFinishThickType() == 'inch') ? $this->float2rat($d->getFinishThickId()) : $this->float2rat($this->convertMmToInches($d->getFinishThickId()));
+                    $lineItem[$i]['thickness']=$thickness;
                     $lineItem[$i]['width'] = $d->getWidth();
                     $lineItem[$i]['length'] = $d->getLength();
                     $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
