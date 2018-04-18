@@ -1316,7 +1316,7 @@ class QuoteController extends Controller
         $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
         $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $qId, 'status'=> 1));
         $i=0;
-//        print_r($plywoodRecords);die;
+//        print_r($doorRecords);die;
         if (!empty($plywoodRecords) || !empty($doorRecords) || !empty($veneerRecords)) {
             if (!empty($plywoodRecords)) {
                 foreach ($plywoodRecords as $p) {
@@ -1386,15 +1386,15 @@ class QuoteController extends Controller
                         $totalcostPerPiece=0;
                         $totalCost=0;
                     }
-                    if($p->getFinishThickType() == 'inch'){
-                        if($p->getFinishThickId()>0){
-                            $thickness=$p->getFinishThickId().($p->getFinThickFraction()!=0?' '.$this->float2rat($p->getFinThickFraction()):'').'"';
+                    if($d->getFinishThickType() == 'inch'){
+                        if($d->getFinishThickId()>0){
+                            $thickness=$d->getFinishThickId().($d->getFinThickFraction()!=0?' '.$this->float2rat($d->getFinThickFraction()):'').'"';
                         } else {
                             $thickness=$this->float2rat($p->getFinThickFraction()).'"';
                         }
                     } else {
 //                        $thickness=$this->float2rat($this->convertMmToInches($p->getFinishThickId()));
-                        $thickness=$p->getFinishThickId().' '.$p->getFinishThickType();
+                        $thickness=$d->getFinishThickId().' '.$d->getFinishThickType();
                     }
                     $lineItem[$i]['id'] = $d->getId();
                     $lineItem[$i]['type'] = 'door';
