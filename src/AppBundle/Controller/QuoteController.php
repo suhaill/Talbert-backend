@@ -342,7 +342,7 @@ class QuoteController extends Controller
             $deliveryDate = trim($data->get('deliveryDate'));
             $expFee = trim($data->get('expFee'));
             $discount = trim($data->get('discount'));
-            $shipCost = trim($data->get('shipCost'));
+            $shipCost = trim($this->formateDeliveryCharge($data->get('shipCost')));
             $datime = new \DateTime('now');
             if (empty($qDate) || empty($quoteAddedby) || empty($custId) || empty($salsManId) || empty($termId) || empty($shipMethod) || empty($shipAddId) || empty($leadTime) || empty($status) || empty($datime)) {
                 $arrApi['status'] = 0;
@@ -1830,6 +1830,12 @@ class QuoteController extends Controller
         }
 
         return '0'; // should be unreachable.
+    }
+
+    private function formateDeliveryCharge($dc) {
+        $arrExp = array('$',',');
+        $arrRep = array('','');
+        return str_replace($arrExp, $arrRep, $dc);
     }
 
 }
