@@ -146,8 +146,8 @@ class CustomerController extends Controller
      */
     public function getAllCustomersAction(Request $request){
         if ($request->getMethod() == 'GET') {
-            $arrApi = array();
-            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'));
+            $arrApi = [];
+            /*$users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'));
             if ( empty($users) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no user.';
@@ -163,7 +163,32 @@ class CustomerController extends Controller
                         $arrApi['data']['customers'][$i]['createdDate'] = $this->getCreatedDateById($userId);
                     }
                 }
+            }*/
+            $query = $this->getDoctrine()->getManager();
+            $users = $query->createQueryBuilder()
+                ->select(['u.id','u.createdAt'])
+                ->from('AppBundle:User', 'u')
+                ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+                ->addSelect(['p.company as comapny',"p.fname",'p.lname'])
+                ->where('p.company is not null')
+                ->orderBy('p.company','ASC')
+                ->getQuery()
+                ->getResult();
+            if ( empty($users) ) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'There is no user.';
+            } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived the customers list.';
+                for ($i=0; $i<count($users); $i++) {
+//                    $userId = $users[$i]->getId();
+                    $arrApi['data']['customers'][$i]['id'] = $users[$i]['id'];
+                    $arrApi['data']['customers'][$i]['fname'] = $users[$i]['fname'].(!empty($users[$i]['lname'])?' '.$users[$i]['lname']:'');
+                    $arrApi['data']['customers'][$i]['comapny'] = $users[$i]['comapny'];
+                    $arrApi['data']['customers'][$i]['createdDate'] = $users[$i]['createdAt']->format('m/d/Y');
+                }
             }
+//        print_r($result);die;
             return new JsonResponse($arrApi);
         }
     }
