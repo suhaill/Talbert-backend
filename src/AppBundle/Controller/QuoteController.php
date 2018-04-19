@@ -190,16 +190,16 @@ class QuoteController extends Controller
                 $arrApi['data']['status'] = $quoteData->getStatus();
                 $arrApi['data']['comment'] = $quoteData->getComment();
                 $arrApi['data']['deliveryDate'] = $quoteData->getDeliveryDate();
-                $arrApi['data']['quoteSubTot'] = $quoteData->getQuoteTot();
-                $arrApi['data']['expFee'] = $quoteData->getExpFee();
-                $arrApi['data']['discount'] = $quoteData->getDiscount();
-                $arrApi['data']['lumFee'] = $quoteData->getLumFee();
-                $arrApi['data']['shipCharge'] = $quoteData->getShipCharge();
-                $arrApi['data']['salesTax'] = $quoteData->getSalesTax();
+                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot())?number_format($quoteData->getQuoteTot(),0):'00.00';
+                $arrApi['data']['expFee'] = !empty($quoteData->getExpFee())?number_format($quoteData->getExpFee(),2):'00.00';
+                $arrApi['data']['discount'] = !empty($quoteData->getDiscount())?number_format($quoteData->getDiscount(),2):'00.00';
+                $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee())?number_format($quoteData->getLumFee(),2):'00.00';
+                $arrApi['data']['shipCharge'] = !empty($quoteData->getShipCharge())?number_format($quoteData->getShipCharge(),2):'00.00';
+                $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax())?number_format($quoteData->getSalesTax(),2):'00.00';
                 if ($quoteData->getQuoteTot() == 0) {
-                    $arrApi['data']['projectTot'] = 0;
+                    $arrApi['data']['projectTot'] = '00.00';
                 } else {
-                    $arrApi['data']['projectTot'] = $quoteData->getProjectTot();
+                    $arrApi['data']['projectTot'] = number_format($quoteData->getProjectTot(),2);
                 }
                 $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
             }
