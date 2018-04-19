@@ -249,9 +249,9 @@ class QuoteController extends Controller
                 $arrApi['message'] = 'Successfully cloned quote';
                 $clonedQuoteId = $this->cloneQuoteData($quoteData, $datime,$quoteId,$editFlag);
                 $arrApi['newCloneQuoteId']=$clonedQuoteId;
-                $arrApi['newClonePlywoodId']=$this->clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArrP);
-                $arrApi['newCloneVeneerId']=$this->cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArrV);
-                $arrApi['newCloneDoorId']=$this->cloneDoorData($quoteId, $clonedQuoteId, $datime,$lineItemArrD);
+                $arrApi['newClonePlywoodId']=$this->clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArrP,$editFlag);
+                $arrApi['newCloneVeneerId']=$this->cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArrV,$editFlag);
+                $arrApi['newCloneDoorId']=$this->cloneDoorData($quoteId, $clonedQuoteId, $datime,$lineItemArrD,$editFlag);
             }
         }
         catch(Exception $e) {
@@ -755,9 +755,9 @@ class QuoteController extends Controller
         return $quote->getId();
     }
 
-    private function clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[]) {
+    private function clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[],$editFlag=false) {
         $em = $this->getDoctrine()->getEntityManager('default');
-        $condition=!empty($lineItemArr)?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
+        $condition=$editFlag==true?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
         $ply = $em->getRepository('AppBundle:Plywood')->findBy($condition);
         if (!empty($ply)) {
             
@@ -874,9 +874,9 @@ class QuoteController extends Controller
         }
     }
 
-    private function cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[]) {
+    private function cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[],$editFlag=false) {
         $em = $this->getDoctrine()->getEntityManager('default');
-        $condition=!empty($lineItemArr)?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
+        $condition=$editFlag==true?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
         $veneeerData = $em->getRepository('AppBundle:Veneer')->findBy($condition);
         //print_r($veneeerData);die;
         if (!empty($veneeerData)) {
@@ -946,12 +946,12 @@ class QuoteController extends Controller
         }
     }
     
-    private function cloneDoorData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[]) {
+    private function cloneDoorData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[],$editFlag=false) {
         
         $em = $this->getDoctrine()->getEntityManager('default');
         $em->getConnection()->beginTransaction();
         try {
-            $condition=!empty($lineItemArr)?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
+            $condition=$editFlag==true?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
             $doorData = $em->getRepository('AppBundle:Doors')->findBy($condition);
             if (!empty($doorData)) {
                 foreach ($doorData as $entity) {
