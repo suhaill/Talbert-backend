@@ -205,13 +205,13 @@ class OrderController extends Controller
                 $arrApi['data']['status'] = $quoteData->getStatus();
                 $arrApi['data']['comment'] = $quoteData->getComment();
                 $arrApi['data']['deliveryDate'] = $quoteData->getDeliveryDate();
-                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot())?number_format($quoteData->getQuoteTot(),0):'00.00';
-                $arrApi['data']['expFee'] = !empty($quoteData->getExpFee())?number_format($quoteData->getExpFee(),2):'00.00';
-                $arrApi['data']['discount'] = !empty($quoteData->getDiscount())?number_format($quoteData->getDiscount(),2):'00.00';
-                $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee())?number_format($quoteData->getLumFee(),2):'00.00';
-                $arrApi['data']['shipCharge'] = !empty($quoteData->getShipCharge())?number_format($quoteData->getShipCharge(),2):'00.00';
-                $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax())?number_format($quoteData->getSalesTax(),2):'00.00';
-                $arrApi['data']['projectTot'] = !empty($quoteData->getProjectTot())?number_format($quoteData->getProjectTot(),2):'00.00';
+                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot())?str_replace(',','',number_format($quoteData->getQuoteTot(),0)):'00.00';
+                $arrApi['data']['expFee'] = !empty($quoteData->getExpFee())?str_replace(',','',number_format($quoteData->getExpFee(),2)):'00.00';
+                $arrApi['data']['discount'] = !empty($quoteData->getDiscount())?str_replace(',','',number_format($quoteData->getDiscount(),2)):'00.00';
+                $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee())?str_replace(',','',number_format($quoteData->getLumFee(),2)):'00.00';
+                $arrApi['data']['shipCharge'] = !empty($quoteData->getShipCharge())?str_replace(',','',number_format($quoteData->getShipCharge(),2)):'00.00';
+                $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax())?str_replace(',','',number_format($quoteData->getSalesTax(),2)):'00.00';
+                $arrApi['data']['projectTot'] = !empty($quoteData->getProjectTot())?str_replace(',','',number_format($quoteData->getProjectTot(),2)):'00.00';
                 $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
             }
         }
