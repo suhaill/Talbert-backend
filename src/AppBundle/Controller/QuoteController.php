@@ -464,7 +464,7 @@ class QuoteController extends Controller
     }
 
     /**
-     * @Route("/api/quote/searchQuote")
+     * @Route("/api/quote/searchQuotes")
      * @Security("is_granted('ROLE_USER')")
      * @Method("POST")
      * params: None
@@ -474,9 +474,15 @@ class QuoteController extends Controller
         $statusCode = 200;
         $jsontoarraygenerator = new JsonToArrayGenerator();
         $data = $jsontoarraygenerator->getJson($request);
-        $quote = $data->get('quote');
-        $currUserId = $data->get('currentuserId');
-        if (empty($quote) || empty($currUserId)) {
+        $pageNo = $data->get('current_page');
+        $limit = $data->get('limit');
+        $searchVal = $data->get('searchVal');
+        $sortBy = $data->get('sort_by');
+        $order = $data->get('order');
+        $startDate = $data->get('startDate');
+        $endDate = $data->get('endDate');
+        $offset = ($pageNo - 1)  * $limit;
+        if (false) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Parameter missing.';
             $statusCode = 422;
