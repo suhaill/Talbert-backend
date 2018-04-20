@@ -30,7 +30,19 @@ class SalesmanController extends Controller
     public function getSalesmanListAction(Request $request) {
         if ($request->getMethod() == 'GET') {
             $arrApi = array();
-            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('roleId' => 4,'isActive'=> 1),array('id' => 'DESC'));
+//            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('roleId' => 4,'isActive'=> 1),array('id' => 'DESC'));
+            
+            $query = $this->getDoctrine()->getManager();
+            $users = $query->createQueryBuilder()
+                ->select(['u.id'])
+                ->from('AppBundle:User', 'u')
+                ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+                ->addSelect(["p.fname"])
+                ->where('u.roleId = :value1 AND u.isActive = :value2')
+                ->setParameters(array('value1'=>4,'value2'=>1))
+                ->orderBy('p.fname','ASC')
+                ->getQuery()
+                ->getResult();
             if ( empty($users) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no salesman.';
@@ -38,11 +50,11 @@ class SalesmanController extends Controller
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived the salesman list.';
                 for ($i=0; $i<count($users); $i++) {
-                    $userId = $users[$i]->getId();
-                    if (!empty($userId)) {
-                        $arrApi['data']['salesmans'][$i]['id'] = $users[$i]->getId();
-                        $arrApi['data']['salesmans'][$i]['name'] = explode(' ', $this->getFnameById($userId))[0];
-                    }
+//                    $userId = $users[$i]->getId();
+//                    if (!empty($userId)) {
+                        $arrApi['data']['salesmans'][$i]['id'] = $users[$i]['id'];
+                        $arrApi['data']['salesmans'][$i]['name'] = $users[$i]['fname'];
+//                    }
                 }
             }
             return new JsonResponse($arrApi);
