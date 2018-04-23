@@ -476,9 +476,9 @@ class QuoteController extends Controller
         $data = $jsontoarraygenerator->getJson($request);
         $pageNo = $data->get('current_page');
         $limit = $data->get('limit');
-        $searchVal = $data->get('searchVal');
         $sortBy = $data->get('sort_by');
         $order = $data->get('order');
+        $searchVal = $data->get('searchVal');
         $startDate = $data->get('startDate');
         $endDate = $data->get('endDate');
         $offset = ($pageNo - 1)  * $limit;
@@ -488,13 +488,72 @@ class QuoteController extends Controller
             $statusCode = 422;
         } else {
             try {
-                echo 'hi';die;
+                $searchType = $this->checkIfSearchValIsEstOrCompany($searchVal);
+                if ($searchType == 'estNo') {
+                    $data = $this->getQuoteDataByEstNo($searchVal);
+                } else {
+                    $data = $this->getQuoteDataByCompany($searchVal, $startDate, $endDate);
+                }
+                if (empty($data) ) {
+                    $arrApi['status'] = 0;
+                    $arrApi['message'] = 'No quote found';
+                    $arrApi['data']['quotes'] = [];
+                } else {
+                    $arrApi['status'] = 1;
+                    $arrApi['message'] = 'Successfully retreived the quote list.';
+                    $quoteList=[];
+                    for($i=0;$i<count($data);$i++) {
+                        $quoteList[$i]['id'] = $data[$i]['id'];
+                        $quoteList[$i]['estimateNumber'] = 'E-'.$data[$i]['controlNumber'].'-'.$data[$i]['version'];
+                        $quoteList[$i]['customername'] = strtoupper($this->getCustomerNameById($data[$i]['customerId']));
+                        $quoteList[$i]['companyname'] = strtoupper($this->getCompanyById($data[$i]['customerId']));
+                        $quoteList[$i]['status'] = $data[$i]['status'];
+                        $quoteList[$i]['estDate'] = $this->getEstimateDateFormate($data[$i]['estimatedate']);
+                    }
+                    $arrApi['data']['quotes'] = $quoteList;
+                }
             }
             catch(Exception $e) {
                 throw $e->getMessage();
             }
         }
         return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function getQuoteDataByEstNo($searchVal) {
+        $estArr = explode('-', $searchVal);
+        $query = $this->getDoctrine()->getManager();
+        $qb = $query->createQueryBuilder("qe");
+        $qb->select(["q.id","q.controlNumber","q.version","q.customerId, q.status","q.estimatedate"])
+           ->from('AppBundle:Quotes', 'q')
+           ->where('q.controlNumber=:controlNumber AND (q.status=:status OR q.status=:hstatus)')
+           ->setParameter('controlNumber', $estArr[1] )
+           ->setParameter('status', 'Current' )
+           ->setParameter('hstatus', 'Hold' );
+        $result = $qb->getQuery()->getResult();
+        return $result;
+    }
+
+    private function getQuoteDataByCompany($searchVal, $startDate, $endDate) {
+        $query = $this->getDoctrine()->getManager();
+        $qb = $query->createQueryBuilder("qe");
+        $qb->select(["q.id","q.controlNumber","q.version","q.customerId, q.status","q.estimatedate"])
+            ->from('AppBundle:Quotes', 'q');
+        if ( $startDate && $endDate ) {
+            $qb->where('q.estimatedate >= :from AND q.estimatedate <= :to AND p.company=:company AND (q.status=:status OR q.status=:hstatus)');
+        } else {
+            $qb->where('p.company=:company AND (q.status=:status OR q.status=:hstatus)');
+        }
+        $qb->leftJoin('AppBundle:Profile', 'p', 'WITH', "q.customerId = p.userId")
+        ->setParameter('company', $searchVal );
+        if ( $startDate && $endDate ) {
+            $qb->setParameter('from', $startDate)
+                ->setParameter('to', $endDate);
+        }
+        $qb->setParameter('status', 'Current' )
+        ->setParameter('hstatus', 'Hold' );
+        return $qb->getQuery()->getResult();
+
     }
 
     /**
@@ -1843,6 +1902,17 @@ class QuoteController extends Controller
         $arrExp = array('$',',');
         $arrRep = array('','');
         return str_replace($arrExp, $arrRep, $dc);
+    }
+
+    private function checkIfSearchValIsEstOrCompany($searchVal) {
+        $type = '';
+        if (preg_match_all ("/E(-)(\\d+)/", $searchVal, $matches))
+        {
+            $type = 'estNo';
+        } else {
+            $type = 'company';
+        }
+        return $type;
     }
 
 }
