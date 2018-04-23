@@ -62,6 +62,7 @@ class VeneerController extends Controller
             $quoteId = trim($getJson->get('quoteId'));
             $createdAt = new \DateTime('now');
             $formtype = trim($getJson->get('formtype'));
+            $lineItemNumberToBeUsed = trim($getJson->get('lineItemNumberToBeUsed'));
             
             
             if (empty($quantity) || empty($speciesId) || empty($pattern) || 
@@ -79,7 +80,7 @@ class VeneerController extends Controller
                 $lastInserted = $this->saveVeneerData($quantity, $speciesId, 
                 $pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize, 
                 $length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,
-                $comments,$createdAt,$fileId,$quoteId,$formtype,$widthFraction,$lengthFraction);
+                $comments,$createdAt,$fileId,$quoteId,$formtype,$widthFraction,$lengthFraction,$lineItemNumberToBeUsed);
                 $arrApi['lastInserted'] = $lastInserted;
             
             }
@@ -91,7 +92,9 @@ class VeneerController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    private function saveVeneerData($quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$createdAt,$fileId,$quoteId,$formtype=null,$widthFraction,$lengthFraction)
+    private function saveVeneerData($quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width,
+            $isNetSize,$length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,$comments,$createdAt,$fileId,
+            $quoteId,$formtype=null,$widthFraction,$lengthFraction,$lineItemNumberToBeUsed)
     {
         $em = $this->getDoctrine()->getManager();
         $veneer = new Veneer();
@@ -141,6 +144,7 @@ class VeneerController extends Controller
         $veneer->setPreFinishSetup(0);
         $veneer->setColorMatch(0);
         $veneer->setTotalCost(0.00);
+        $veneer->setLineItemNum($lineItemNumberToBeUsed);
         $em->persist($veneer);
         $em->flush();
         $lastInserted = $veneer->getId();
@@ -283,7 +287,8 @@ class VeneerController extends Controller
                             $arrApi['data']['machineTooling'] = $veneer->getMachineTooling();
                             $arrApi['data']['preFinishSetup'] = $veneer->getPreFinishSetup();
                             $arrApi['data']['colorMatch'] = $veneer->getColorMatch();
-                            $arrApi['data']['totalCost'] = $veneer->getTotalCost();
+                            $arrApi['data']['totalCost'] = $veneer->getTotalCost();                            
+                            $arrApi['data']['lineItemNum'] = $veneer->getLineItemNum();
 
                         }
                     }
