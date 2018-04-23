@@ -339,7 +339,14 @@ class Veneer
      * @ORM\Column(name="total_cost", type="string", length=10, nullable=true, options={"default" = 0})
      */
     private $totalCost;
-
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="lineitem_num", type="integer")
+     */
+    private $lineItemNum;
+    
     /**
      * Get id
      *
@@ -1254,5 +1261,21 @@ class Veneer
     public function setTotalCost($totalCost)
     {
         $this->totalCost = $totalCost;
+    }
+    
+    /**
+     * @return int
+     */
+    public function getLineItemNum()
+    {
+        return $this->lineItemNum;
+    }
+
+    /**
+     * @param int $lineItemNum
+     */
+    public function setLineItemNum($lineItemNum)
+    {
+        $this->lineItemNum = $lineItemNum;
     }
 }
