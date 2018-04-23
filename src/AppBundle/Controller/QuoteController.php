@@ -540,12 +540,12 @@ class QuoteController extends Controller
         $qb->select(["q.id","q.controlNumber","q.version","q.customerId, q.status","q.estimatedate"])
             ->from('AppBundle:Quotes', 'q');
         if ( $startDate && $endDate ) {
-            $qb->where('q.estimatedate >= :from AND q.estimatedate <= :to AND p.company=:company AND (q.status=:status OR q.status=:hstatus)');
+            $qb->where('q.estimatedate >= :from AND q.estimatedate <= :to AND p.company LIKE :company AND (q.status=:status OR q.status=:hstatus)');
         } else {
-            $qb->where('p.company=:company AND (q.status=:status OR q.status=:hstatus)');
+            $qb->where('p.company LIKE :company AND (q.status=:status OR q.status=:hstatus)');
         }
         $qb->leftJoin('AppBundle:Profile', 'p', 'WITH', "q.customerId = p.userId")
-        ->setParameter('company', $searchVal );
+        ->setParameter('company', $searchVal."%" );
         if ( $startDate && $endDate ) {
             $qb->setParameter('from', $startDate)
                 ->setParameter('to', $endDate);
