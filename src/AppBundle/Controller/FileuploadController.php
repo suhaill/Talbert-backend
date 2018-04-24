@@ -44,10 +44,12 @@ class FileuploadController extends Controller
       $filesize = $file->getSize();
 
       if($filesize > 5000000 ){
+          $arrApi['status'] = 0;
           $arrApi['message'] = "File too large, you can upload files up to 5 MB";
           $statusCode = 400;
       }
       else if(!in_array($ext,$allowedExtension)){
+          $arrApi['status'] = 0;
           $arrApi['message'] = "File not allowed";
           $statusCode = 400;
       }else{
@@ -62,15 +64,12 @@ class FileuploadController extends Controller
                   $em->persist($fileEntity);
                   $em->flush();
                   $fileId = $fileEntity->getId();
-                  $statusCode = 200;
                   $arrApi['status'] = 1;
                   $arrApi['message'] = "Successfully Uploaded";
                   $arrApi['data']['fileId'] = $fileId;
                   $arrApi['data']['ext'] = $ext;
                   $arrApi['data']['originalname'] = $originalname;
-
               }
-
           }catch(Exception $e){
               $arrApi['error']= $e;
           }
