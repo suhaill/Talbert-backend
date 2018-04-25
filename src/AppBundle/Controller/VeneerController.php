@@ -607,4 +607,52 @@ class VeneerController extends Controller
         }
         return new JsonResponse($arrApi, $statusCode);
     }
+    
+    /**
+     * @Route("/api/veneer/updateLineItemNumber")
+     * @Method({"POST"})
+     * Security("is_granted('ROLE_USER')")
+     */
+    public function updateLineItemNumberAction(Request $request){
+        $arrApi = [];
+        $statusCode = 200;
+        $flag=true;
+        $msg='';
+        try {
+            $jsontoarraygenerator = new JsonToArrayGenerator();
+            $getJson = $jsontoarraygenerator->getJson($request);
+            $sno = trim($getJson->get('sno'));
+            $id = trim($getJson->get('id'));
+            $quoteId = trim($getJson->get('quoteId'));
+            if (!empty($sno) && !empty($id) && !empty($quoteId)){
+                $veneer = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findOneBy([
+                    'id'=>$id,'quoteId'=>$quoteId
+                ]);
+                if(!empty($veneer)){
+                    $em = $this->getDoctrine()->getManager();
+                    $veneer->setLineItemNum($sno);
+                    $em->persist($veneer);
+                    $em->flush();
+                    $flag= true;
+                    $statusCode=200;
+                    $msg='Success';
+                } else {
+                    $flag=false;
+                    $msg='There is no venner for this id!';
+                    $statusCode=422;
+                }
+            } else {
+                $flag=false;
+                $msg='Invalid data!';
+                $statusCode=422;
+            }
+            
+        } catch (Exception $exc) {
+            $msg= $exc->getTraceAsString();
+            $statusCode=422;
+        }
+        $arrApi['status']=$flag;
+        $arrApi['message']=$msg;
+        return new JsonResponse($arrApi, $statusCode);
+    }
 }
