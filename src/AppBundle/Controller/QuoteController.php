@@ -44,6 +44,7 @@ class QuoteController extends Controller
             $jsontoarraygenerator = new JsonToArrayGenerator();
             $data = $jsontoarraygenerator->getJson($request);
             $qDate = trim($data->get('date'));
+            $qDateForSearch = explode('T', trim($data->get('date')))[0];
             $quoteAddedby = trim($data->get('current_user_id'));
             $ver = 1;
             $custId = trim($data->get('customer_id'));
@@ -77,7 +78,7 @@ class QuoteController extends Controller
                     $arrApi['status'] = 1;
                     $arrApi['message'] = 'Successfully saved quote';
                     $statusCode = 200;
-                    $arrApi['data']['lastInsertId'] = $this->saveQuoteData($qDate, $quoteAddedby, $ctrlNo, $ver, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime);
+                    $arrApi['data']['lastInsertId'] = $this->saveQuoteData($qDate, $qDateForSearch, $quoteAddedby, $ctrlNo, $ver, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime);
                 }
             }
         }
@@ -328,6 +329,7 @@ class QuoteController extends Controller
             $data = $jsontoarraygenerator->getJson($request);
             $qId = $data->get('id');
             $qDate = trim($data->get('date'));
+            $qDateForSearch = explode('T', trim($data->get('date')))[0];
             $quoteAddedby = trim($data->get('current_user_id'));
             $ver = 1;
             $custId = trim($data->get('customer_id'));
@@ -350,7 +352,7 @@ class QuoteController extends Controller
                 $arrApi['message'] = 'Parameter missing';
                 $statusCode = 422;
             } else {
-                $updateQuote = $this->updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $comment, $deliveryDate, $expFee, $discount, $shipCost, $datime);
+                $updateQuote = $this->updateData($qId, $qDate, $qDateForSearch, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $comment, $deliveryDate, $expFee, $discount, $shipCost, $datime);
                 if (!$updateQuote) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'Unable to update quote.';
@@ -478,7 +480,7 @@ class QuoteController extends Controller
         $limit = $data->get('limit');
         $sortBy = $data->get('sort_by');
         $order = $data->get('order');
-        $searchVal = $data->get('searchVal');
+        $searchVal = trim($data->get('searchVal'));
         $startDate = $data->get('startDate');
         $endDate = $data->get('endDate');
         $offset = ($pageNo - 1)  * $limit;
@@ -540,15 +542,23 @@ class QuoteController extends Controller
         $qb->select(["q.id","q.controlNumber","q.version","q.customerId, q.status","q.estimatedate"])
             ->from('AppBundle:Quotes', 'q');
         if ( $startDate && $endDate ) {
-            $qb->where('q.estimatedate >= :from AND q.estimatedate <= :to AND p.company LIKE :company AND (q.status=:status OR q.status=:hstatus)');
+            if ( $startDate == $endDate ) {
+                $qb->where('q.estDateForSearch = :from AND p.company LIKE :company AND (q.status=:status OR q.status=:hstatus)');
+            } else {
+                $qb->where('q.estDateForSearch >= :from AND q.estDateForSearch <= :to AND p.company LIKE :company AND (q.status=:status OR q.status=:hstatus) order by q.estimatedate');
+            }
         } else {
             $qb->where('p.company LIKE :company AND (q.status=:status OR q.status=:hstatus)');
         }
         $qb->leftJoin('AppBundle:Profile', 'p', 'WITH', "q.customerId = p.userId")
         ->setParameter('company', $searchVal."%" );
         if ( $startDate && $endDate ) {
-            $qb->setParameter('from', $startDate)
-                ->setParameter('to', $endDate);
+            if ( $startDate == $endDate ) {
+                $qb->setParameter('from', explode('T', $startDate)[0]);
+            } else {
+                $qb->setParameter('from', explode('T', $startDate)[0])
+                    ->setParameter('to', explode('T', $endDate)[0]);
+            }
         }
         $qb->setParameter('status', 'Current' )
         ->setParameter('hstatus', 'Hold' );
@@ -753,11 +763,12 @@ class QuoteController extends Controller
         }
     }
 
-    private function updateData($qId, $qDate, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status,  $comment, $deliveryDate, $expFee, $discount, $shipCost, $datime) {
+    private function updateData($qId, $qDate, $qDateForSearch, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status,  $comment, $deliveryDate, $expFee, $discount, $shipCost, $datime) {
         $em = $this->getDoctrine()->getManager();
         $quote = $em->getRepository(Quotes::class)->findOneById($qId);
         if (!empty($quote)) {
             $quote->setEstimatedate($qDate);
+            $quote->setEstDateForSearch($qDateForSearch);
             $quote->setEstimatorId($quoteAddedby);
             $quote->setCustomerId($custId);
             $quote->setRefNum($refNo);
@@ -1233,10 +1244,11 @@ class QuoteController extends Controller
         return $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneBy(array('refNum' => $refNo));
     }
 
-    private function saveQuoteData($qDate, $quoteAddedby, $ctrlNo, $ver, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime) {
+    private function saveQuoteData($qDate, $qDateForSearch, $quoteAddedby, $ctrlNo, $ver, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime) {
         $em = $this->getDoctrine()->getManager();
         $quote = new Quotes();
         $quote->setEstimatedate($qDate);
+        $quote->setEstDateForSearch($qDateForSearch);
         $quote->setEstimatorId($quoteAddedby);
         $quote->setControlNumber($ctrlNo);
         $quote->setVersion($ver);
@@ -1906,7 +1918,7 @@ class QuoteController extends Controller
 
     private function checkIfSearchValIsEstOrCompany($searchVal) {
         $type = '';
-        if (preg_match_all ("/E(-)(\\d+)/", $searchVal, $matches))
+        if (preg_match_all ("/(.)(-)(\\d+)/", $searchVal, $matches))
         {
             $type = 'estNo';
         } else {
