@@ -54,6 +54,13 @@ class Quotes
     /**
      * @var string
      *
+     * @ORM\Column(name="est_date_for_search", type="string", length=20, nullable=true)
+     */
+    private $estDateForSearch;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="delivery_date", type="string", length=30, nullable=true)
      */
     private $deliveryDate;
@@ -116,6 +123,22 @@ class Quotes
     public function setEstimatedate($estimatedate)
     {
         $this->estimatedate = $estimatedate;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEstDateForSearch()
+    {
+        return $this->estDateForSearch;
+    }
+
+    /**
+     * @param string $estDateForSearch
+     */
+    public function setEstDateForSearch($estDateForSearch)
+    {
+        $this->estDateForSearch = $estDateForSearch;
     }
 
     /**
