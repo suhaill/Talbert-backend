@@ -191,6 +191,30 @@ class VendorController extends Controller
 
     }
 
+    /**
+     * @Route("api/vendor/getMoreVendors")
+     * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
+     */
+    public function getMoreAction(Request $request) {
+        $arrApi = [];
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $getJson = $jsontoarraygenerator->getJson($request);
+        $vendor = $this->getDoctrine()->getRepository('AppBundle:Profile')->getMoreVendors($getJson);
+        if (empty($vendor)) {
+            $arrApi['status']=0;
+            $arrApi['message'] = 'No vendor found';
+            $statusCode = 422;
+        } else {
+            $arrApi['status']=1;
+            $arrApi['message'] = 'Successfully retreived the vendor list.';
+            $arrApi['data'] = $vendor;
+        }
+        return new JsonResponse($arrApi,$statusCode);
+    }
+
+
 
 
     /**
