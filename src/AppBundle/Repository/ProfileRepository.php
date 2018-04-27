@@ -16,8 +16,6 @@ class ProfileRepository extends \Doctrine\ORM\EntityRepository
 
     public function getVendors()
     {
-
-
         $qb = $this->createQueryBuilder('p');
         $qb->select(
             'p.userId','p.company','p.phone'
@@ -26,7 +24,9 @@ class ProfileRepository extends \Doctrine\ORM\EntityRepository
             'vp',
             Join::WITH,
             $qb->expr()->eq('p.userId', 'vp.userId')
-        );
+        )->orderBy('p.userId', 'DESC')
+            ->setFirstResult( 0 )
+            ->setMaxResults( 20 );
 
         try {
             return $qb->getQuery()->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
@@ -34,18 +34,71 @@ class ProfileRepository extends \Doctrine\ORM\EntityRepository
             throw new NoResultException("No record found");
             // return null;
         }
+    }
 
+    public function getMoreVendors($data) {
+        $pageNo = $data->get('current_page');
+        $limit = $data->get('limit');
+        $companyName = $data->get('vender_name');
+        $sortBy = $data->get('sort_by');
+        $order = $data->get('order');
+        $offset = ($pageNo - 1)  * $limit;
+        if (empty($companyName) && empty($sortBy) && empty($order)) {
+                $qb = $this->createQueryBuilder('p');
+                $qb->select(
+                    'p.userId','p.company','p.phone'
+                )->innerJoin(
+                    'AppBundle:VendorProfile',
+                    'vp',
+                    Join::WITH,
+                    $qb->expr()->eq('p.userId', 'vp.userId')
+                )->setFirstResult( $offset )
+                 ->setMaxResults( $limit )
+                 ->orderBy('p.userId', 'DESC');
 
-
-
-//
-//        $em = $this->getEntityManager();
-//        $query = $em->createQuery('SELECT p.company,p.phone,p.userId FROM AppBundle:Profile p');
-//        try {
-//            return $query->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY); // array of User objects
-//        } catch (\Doctrine\ORM\NoResultException $e) {
-//            return null;
-//        }
+        } elseif (!empty($companyName) && empty($sortBy) && empty($order)) {
+            $qb = $this->createQueryBuilder('p');
+            $qb->select(
+                'p.userId','p.company','p.phone'
+            )->innerJoin(
+                'AppBundle:VendorProfile',
+                'vp',
+                Join::WITH,
+                $qb->expr()->eq('p.userId', 'vp.userId')
+            )->setFirstResult( $offset )
+                ->setMaxResults( $limit )
+                ->orderBy('p.userId', 'DESC')
+                ->where('p.company LIKE :company')
+                ->setParameter('company',$companyName."%");
+        } elseif (empty($companyName) && !empty($sortBy) && !empty($order)) {
+            $qb = $this->createQueryBuilder('p');
+            $qb->select(
+                'p.userId','p.company','p.phone'
+            )->innerJoin(
+                'AppBundle:VendorProfile',
+                'vp',
+                Join::WITH,
+                $qb->expr()->eq('p.userId', 'vp.userId')
+            )->setFirstResult( $offset )
+                ->setMaxResults( $limit )
+                ->orderBy('p.'.$sortBy, $order);
+        } else {
+            $qb = $this->createQueryBuilder('p');
+            $qb->select(
+                'p.userId','p.company','p.phone'
+            )->innerJoin(
+                'AppBundle:VendorProfile',
+                'vp',
+                Join::WITH,
+                $qb->expr()->eq('p.userId', 'vp.userId')
+            );
+        }
+        try {
+            return $qb->getQuery()->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+        } catch (\Doctrine\ORM\NoResultException $e) {
+            throw new NoResultException("No record found");
+            // return null;
+        }
 
     }
     
@@ -69,9 +122,6 @@ class ProfileRepository extends \Doctrine\ORM\EntityRepository
             throw new NoResultException("No record found");
            // return null;
         }
-
-
-
 
     }
 
