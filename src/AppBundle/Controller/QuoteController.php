@@ -426,7 +426,7 @@ class QuoteController extends Controller
         $qId = $_DATA['qId'];
         $currUserId = $_DATA['currentuserId'];
         $currUserEmail = $_DATA['currUserEmail'];
-        $custEmail = $_DATA['custEmail'];
+        $custEmail = explode(',', $_DATA['custEmail']);
         $msg = $_DATA['msg'];
         $cmt = $_DATA['cmt'];
         $chkVal = $_DATA['chkVal'];
