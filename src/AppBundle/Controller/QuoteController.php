@@ -23,6 +23,9 @@ use AppBundle\Entity\Skins;
 use AppBundle\Entity\Files;
 use AppBundle\Entity\Profile;
 use AppBundle\Entity\DoorCalculator;
+use AppBundle\Entity\QuoteStatus;
+use AppBundle\Entity\OrderStatus;
+use AppBundle\Entity\Status;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -614,17 +617,40 @@ class QuoteController extends Controller
     private function updateOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $datime, $custPO, $deliveryDate) {
         $em = $this->getDoctrine()->getManager();
         $order = $em->getRepository(Orders::class)->findOneBy(array('quoteId'=> $qId));
+        $em->getConnection()->beginTransaction();
         if (!empty($order)) {
-            $order->setEstNumber($estNo);
-            $order->setOrderNumber($orderNum);
-            $order->setApprovedBy($approveBy);
-            $order->setVia($via);
-            $order->setOther($other);
-            $order->setOrderDate($datime);
-            $order->setPoNumber($custPO);
-            $order->setShipDate($deliveryDate);
-            $em->persist($order);
-            $em->flush();
+            try {
+                $order->setEstNumber($estNo);
+                $order->setOrderNumber($orderNum);
+                $order->setApprovedBy($approveBy);
+                $order->setVia($via);
+                $order->setOther($other);
+                $order->setOrderDate($datime);
+                $order->setPoNumber($custPO);
+                $order->setShipDate($deliveryDate);
+                $em->persist($order);
+                $em->flush();
+                $currentdatime = new \DateTime('now');
+                $orderStatus = $em->getRepository('AppBundle:OrderStatus')->findOneBy(['orderId'=>$order->getId(),'isActive'=>1]);
+                if(!empty($orderStatus)){
+                    $orderStatus->setUpdatedAt($currentdatime);
+                    $orderStatus->setIsActive(0);
+                    $em->persist($orderStatus);
+                    $em->flush();
+                }                
+                
+                $newOrderStatus = new OrderStatus();
+                $newOrderStatus->setOrderId($order->getId());
+                $newOrderStatus->setStatusId(1);
+                $newOrderStatus->setCreatedAt($currentdatime);
+                $newOrderStatus->setUpdatedAt($currentdatime);
+                $newOrderStatus->setIsActive(1);
+                $em->persist($newOrderStatus);
+                $em->flush();
+                $em->getConnection()->commit();
+            } catch (Exception $ex) {
+                $em->getConnection()->rollback();
+            }            
         }
     }
 
@@ -656,29 +682,70 @@ class QuoteController extends Controller
 
     private function saveOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $datime, $custPO, $deliveryDate) {
         $em = $this->getDoctrine()->getManager();
-        $orders = new Orders();
-        $orders->setQuoteId($qId);
-        $orders->setEstNumber($estNo);
-        $orders->setOrderNumber($orderNum);
-        $orders->setApprovedBy($approveBy);
-        $orders->setVia($via);
-        $orders->setOther($other);
-        $orders->setOrderDate($datime);
-        $orders->setPoNumber($custPO);
-        $orders->setShipDate($deliveryDate);
-        $em->persist($orders);
-        $em->flush();
+        $em->getConnection()->beginTransaction();
+        try {
+            $currentdatime = new \DateTime('now');
+            $orders = new Orders();
+            $orders->setQuoteId($qId);
+            $orders->setEstNumber($estNo);
+            $orders->setOrderNumber($orderNum);
+            $orders->setApprovedBy($approveBy);
+            $orders->setVia($via);
+            $orders->setOther($other);
+            $orders->setOrderDate($datime);
+            $orders->setPoNumber($custPO);
+            $orders->setShipDate($deliveryDate);
+            $em->persist($orders);
+            $em->flush();
+            $newOrderStatus = new OrderStatus();
+            $newOrderStatus->setOrderId($orders->getId());
+            $newOrderStatus->setStatusId(1);
+            $newOrderStatus->setCreatedAt($currentdatime);
+            $newOrderStatus->setUpdatedAt($currentdatime);
+            $newOrderStatus->setIsActive(1);
+            $em->persist($newOrderStatus);
+            $em->flush();
+            $em->getConnection()->commit();
+        } catch (Exception $ex) {
+            $em->getConnection()->rollback();
+        }
+        
     }
 
     private function updateQuoteStatus($qId, $status, $deliveryDate, $datime) {
         $em = $this->getDoctrine()->getManager();
-        $quote = $em->getRepository(Quotes::class)->findOneById($qId);
+        $quote = $em->getRepository(Quotes::class)->findOneById($qId);        
+        $em->getConnection()->beginTransaction();
         if (!empty($quote)) {
-            $quote->setStatus($status);
-            $quote->setUpdatedAt($datime);
-            $quote->setDeliveryDate($deliveryDate);
-            $em->persist($quote);
-            $em->flush();
+            try {
+                $quote->setStatus($status);
+                $quote->setUpdatedAt($datime);
+                $quote->setDeliveryDate($deliveryDate);
+                $em->persist($quote);
+                $em->flush();
+                $currentdatime = new \DateTime('now');
+                $quoteStatus = $em->getRepository('AppBundle:QuoteStatus')->findOneBy(['quoteId'=>$qId,'isActive'=>1]);
+//                $quoteStatus->setStatusId($this->getQuoteStatusId($status));
+                if(!empty($quoteStatus)){
+                    $quoteStatus->setUpdatedAt($currentdatime);
+                    $quoteStatus->setIsActive(0);
+                    $em->persist($quoteStatus);
+                    $em->flush();
+                }              
+                
+                $newQuoteStatus = new QuoteStatus();
+                $newQuoteStatus->setQuoteId($quote->getId());
+                $newQuoteStatus->setStatusId($this->getQuoteStatusId($status));
+                $newQuoteStatus->setCreatedAt($currentdatime);
+                $newQuoteStatus->setUpdatedAt($currentdatime);
+                $newQuoteStatus->setIsActive(1);
+                $em->persist($newQuoteStatus);
+                $em->flush();
+                $em->getConnection()->commit();
+            } catch (Exception $ex) {
+                $em->getConnection()->rollback();
+            }
+            
         }
     }
 
@@ -765,28 +832,51 @@ class QuoteController extends Controller
 
     private function updateData($qId, $qDate, $qDateForSearch, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status,  $comment, $deliveryDate, $expFee, $discount, $shipCost, $datime) {
         $em = $this->getDoctrine()->getManager();
+        $em->getConnection()->beginTransaction();
         $quote = $em->getRepository(Quotes::class)->findOneById($qId);
         if (!empty($quote)) {
-            $quote->setEstimatedate($qDate);
-            $quote->setEstDateForSearch($qDateForSearch);
-            $quote->setEstimatorId($quoteAddedby);
-            $quote->setCustomerId($custId);
-            $quote->setRefNum($refNo);
-            $quote->setSalesmanId($salsManId);
-            $quote->setJobName($job);
-            $quote->setTermId($termId);
-            $quote->setShipMethdId($shipMethod);
-            $quote->setShipAddId($shipAddId);
-            $quote->setLeadTime($leadTime);
-            $quote->setStatus($status);
-            $quote->setComment($comment);
-            $quote->setDeliveryDate($deliveryDate);
-            $quote->setExpFee($expFee);
-            $quote->setDiscount($discount);
-            $quote->setShipCharge($shipCost);
-            $quote->setUpdatedAt($datime);
-            $em->persist($quote);
-            $em->flush();
+            try {
+                $quote->setEstimatedate($qDate);
+                $quote->setEstDateForSearch($qDateForSearch);
+                $quote->setEstimatorId($quoteAddedby);
+                $quote->setCustomerId($custId);
+                $quote->setRefNum($refNo);
+                $quote->setSalesmanId($salsManId);
+                $quote->setJobName($job);
+                $quote->setTermId($termId);
+                $quote->setShipMethdId($shipMethod);
+                $quote->setShipAddId($shipAddId);
+                $quote->setLeadTime($leadTime);
+                $quote->setStatus($status);
+                $quote->setComment($comment);
+                $quote->setDeliveryDate($deliveryDate);
+                $quote->setExpFee($expFee);
+                $quote->setDiscount($discount);
+                $quote->setShipCharge($shipCost);
+                $quote->setUpdatedAt($datime);
+                $em->persist($quote);
+                $em->flush();
+                $quoteStatus = $em->getRepository('AppBundle:QuoteStatus')->findOneBy(['quoteId'=>$qId,'isActive'=>1]);
+//                $quoteStatus->setStatusId($this->getQuoteStatusId($status));
+                if(!empty($quoteStatus)){
+                    $quoteStatus->setUpdatedAt($datime);
+                    $quoteStatus->setIsActive(0);
+                    $em->persist($quoteStatus);
+                    $em->flush();
+                }                
+                
+                $newQuoteStatus = new QuoteStatus();
+                $newQuoteStatus->setQuoteId($quote->getId());
+                $newQuoteStatus->setStatusId($this->getQuoteStatusId($status));
+                $newQuoteStatus->setCreatedAt($datime);
+                $newQuoteStatus->setUpdatedAt($datime);
+                $newQuoteStatus->setIsActive(1);
+                $em->persist($newQuoteStatus);
+                $em->flush();
+                $em->getConnection()->commit();
+            } catch (Exception $ex) {
+                $em->getConnection()->rollback();
+            }            
             return 1;
         }
     }
@@ -1246,32 +1336,48 @@ class QuoteController extends Controller
 
     private function saveQuoteData($qDate, $qDateForSearch, $quoteAddedby, $ctrlNo, $ver, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime) {
         $em = $this->getDoctrine()->getManager();
-        $quote = new Quotes();
-        $quote->setEstimatedate($qDate);
-        $quote->setEstDateForSearch($qDateForSearch);
-        $quote->setEstimatorId($quoteAddedby);
-        $quote->setControlNumber($ctrlNo);
-        $quote->setVersion($ver);
-        $quote->setCustomerId($custId);
-        $quote->setRefNum($refNo);
-        $quote->setSalesmanId($salsManId);
-        $quote->setJobName($job);
-        $quote->setTermId($termId);
-        $quote->setShipMethdId($shipMethod);
-        $quote->setShipAddId($shipAddId);
-        $quote->setShipCharge($this->getShipChargeByAddId($shipAddId));
-        $quote->setLeadTime($leadTime);
-        $quote->setExpFee(0.00);
-        $quote->setDiscount(0.00);
-        $quote->setStatus($status);
-        $quote->setCreatedAt($datime);
-        $quote->setUpdatedAt($datime);
-        $em->persist($quote);
-        $em->flush();
-        $quote->setControlNumber($quote->getId());
-        $em->persist($quote);
-        $em->flush();
-        return $quote->getId();
+        $id='';
+        $em->getConnection()->beginTransaction();
+        try {
+            $quote = new Quotes();
+            $quote->setEstimatedate($qDate);
+            $quote->setEstDateForSearch($qDateForSearch);
+            $quote->setEstimatorId($quoteAddedby);
+            $quote->setControlNumber($ctrlNo);
+            $quote->setVersion($ver);
+            $quote->setCustomerId($custId);
+            $quote->setRefNum($refNo);
+            $quote->setSalesmanId($salsManId);
+            $quote->setJobName($job);
+            $quote->setTermId($termId);
+            $quote->setShipMethdId($shipMethod);
+            $quote->setShipAddId($shipAddId);
+            $quote->setShipCharge($this->getShipChargeByAddId($shipAddId));
+            $quote->setLeadTime($leadTime);
+            $quote->setExpFee(0.00);
+            $quote->setDiscount(0.00);
+            $quote->setStatus($status);
+            $quote->setCreatedAt($datime);
+            $quote->setUpdatedAt($datime);
+            $em->persist($quote);
+            $em->flush();
+            $quote->setControlNumber($quote->getId());
+            $em->persist($quote);
+            $em->flush();
+            $quoteStatus = new QuoteStatus();
+            $quoteStatus->setQuoteId($quote->getId());
+            $quoteStatus->setStatusId($this->getQuoteStatusId($status));
+            $quoteStatus->setCreatedAt($datime);
+            $quoteStatus->setUpdatedAt($datime);
+            $quoteStatus->setIsActive(1);
+            $em->persist($quoteStatus);
+            $em->flush();
+            $em->getConnection()->commit();
+            $id=$quote->getId();
+        } catch (Exception $ex) {
+            $em->getConnection()->rollback();
+        }
+        return $id;
     }
 
     private function getShipChargeByAddId($shipAddId) {
@@ -1925,6 +2031,17 @@ class QuoteController extends Controller
             $type = 'company';
         }
         return $type;
+    }
+    
+    private function getQuoteStatusId($name){
+        $query = $this->getDoctrine()->getManager();
+        $result = $query->createQueryBuilder()
+            ->select(['s.id'])
+            ->from('AppBundle:Status', 's')
+            ->where("s.statusName='".$name."' and s.type='Quote'")
+            ->getQuery()
+            ->getResult();
+            return !empty($result[0]['id'])?$result[0]['id']:6;
     }
 
 }
