@@ -134,13 +134,17 @@ class OrderController extends Controller
 //            $sortArray=['controlNumber'=>$orderBy];
             $columnName='q.estimatedate';
 //            $orderBy='DESC';
+        } else if($columnName=='id'){
+//            $sortArray=['controlNumber'=>$orderBy];
+            $columnName='o.id';
+//            $orderBy='DESC';
         } else {
 //            $sortArray=[$columnName=>$orderBy];
-            $columnName='q.id';
+            $columnName='q.estimatedate';
             $orderBy='DESC';
         }
 //        $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Approved')),$sortArray);
-        
+//        print_r($requestColumnName);die;
         $query = $this->getDoctrine()->getManager();
         $quotes = $query->createQueryBuilder()
             ->select(['q.controlNumber','q.version','q.customerId','q.status','q.estimatedate','q.id'])
@@ -152,7 +156,7 @@ class OrderController extends Controller
             ->orderBy($columnName,$orderBy)
             ->getQuery()
             ->getResult();
-        ;
+        
         
         if (empty($quotes) ) {
             $arrApi['status'] = 0;
@@ -202,9 +206,18 @@ class OrderController extends Controller
         try {
             $quoteId = $request->query->get('id');
             if (empty($quoteId)) {
-                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=>['Approved']),array('id'=>'desc'));
+//                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=>['Approved']),array('id'=>'desc'));
+                $query = $this->getDoctrine()->getManager();
+                $quotes = $query->createQueryBuilder()
+                    ->select(['q.id'])
+                    ->from('AppBundle:Quotes', 'q')
+                    ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+                    ->where("o.isActive = 1 and q.status='Approved'")
+                    ->orderBy('o.id','desc')
+                    ->getQuery()
+                    ->getResult();
                 if (!empty($quotes)) {
-                    $quoteId = $quotes[0]->getId();
+                    $quoteId = $quotes[0]['id'];
                 }
             }
             $this->updateQuoteData($quoteId);
@@ -805,7 +818,7 @@ class OrderController extends Controller
     }
     
     private function getOrderDataById($qId) {
-        return $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId);
+        return $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId,['estimatedate'=>'DESC']);
     }
     
     private function getSpeciesNameById($species_id) {
