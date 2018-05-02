@@ -30,7 +30,7 @@ class OrderController extends Controller
     public function getOrdersListAction(Request $request) {
         if ($request->getMethod() == 'GET') {
             $arrApi = array();
-            $orders = $this->getDoctrine()->getRepository('AppBundle:Orders')->findBy(array(), array('id' => 'DESC'));
+            $orders = $this->getDoctrine()->getRepository('AppBundle:Orders')->findBy(['isActive'=>1], ['id' => 'DESC']);
             if (empty($orders)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no order right now';
@@ -118,17 +118,46 @@ class OrderController extends Controller
         $orderBy = trim($data->get('orderBy'));
         $requestColumnName='';
         if($columnName=='' || $columnName=='customer'){
-            $requestColumnName=$columnName;
-            $requestOrderBy=$orderBy;
-            $columnName='id';
+//            $requestColumnName=$columnName;
+//            $requestOrderBy=$orderBy;
+            $columnName='u.fname';
+//            $orderBy='DESC';
+        } else if($columnName=='estimatorId'){
+//            $sortArray=['controlNumber'=>$orderBy];
+            $columnName='q.controlNumber';
+//            $orderBy='DESC';
+        } else if($columnName=='status'){
+//            $sortArray=['controlNumber'=>$orderBy];
+            $columnName='q.status';
+//            $orderBy='DESC';
+        } else if($columnName=='estimatedate'){
+//            $sortArray=['controlNumber'=>$orderBy];
+            $columnName='q.estimatedate';
+//            $orderBy='DESC';
+        } else if($columnName=='id'){
+//            $sortArray=['controlNumber'=>$orderBy];
+            $columnName='o.id';
+//            $orderBy='DESC';
+        } else {
+//            $sortArray=[$columnName=>$orderBy];
+            $columnName='q.estimatedate';
             $orderBy='DESC';
         }
-        if($columnName=='estimatorId'){
-            $sortArray=['controlNumber'=>$orderBy];
-        } else {
-            $sortArray=[$columnName=>$orderBy];
-        }
-        $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Approved')),$sortArray);
+//        $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Approved')),$sortArray);
+//        print_r($requestColumnName);die;
+        $query = $this->getDoctrine()->getManager();
+        $quotes = $query->createQueryBuilder()
+            ->select(['q.controlNumber','q.version','q.customerId','q.status','q.estimatedate','q.id'])
+            ->from('AppBundle:Quotes', 'q')
+            ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
+            ->addSelect(['u.company as companyname','u.fname','u.lname'])
+            ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+            ->where("o.isActive = 1 and q.status='Approved'")
+            ->orderBy($columnName,$orderBy)
+            ->getQuery()
+            ->getResult();
+        
+        
         if (empty($quotes) ) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'There is no order.';
@@ -138,19 +167,29 @@ class OrderController extends Controller
             $arrApi['message'] = 'Successfully retreived the order list.';
             $quoteList=[];
             for($i=0;$i<count($quotes);$i++) {
-                $quoteList[$i]['id'] = $quotes[$i]->getId();
-                $quoteList[$i]['estimateNumber'] = 'O-'.$quotes[$i]->getControlNumber().'-'.$quotes[$i]->getVersion();
-                $quoteList[$i]['customername'] = strtoupper($this->getCustomerNameById($quotes[$i]->getCustomerId()));
-                $quoteList[$i]['companyname'] = strtoupper($this->getCompanyById($quotes[$i]->getCustomerId()));
-                $quoteList[$i]['status'] = $quotes[$i]->getStatus();
-                $quoteList[$i]['estDate'] = $this->getEstimateDateFormate($quotes[$i]->getEstimateDate());
+//                $quoteList[$i]['id'] = $quotes[$i]->getId();
+//                $quoteList[$i]['estimateNumber'] = 'O-'.$quotes[$i]->getControlNumber().'-'.$quotes[$i]->getVersion();
+//                $quoteList[$i]['customername'] = strtoupper($this->getCustomerNameById($quotes[$i]->getCustomerId()));
+//                $quoteList[$i]['companyname'] = strtoupper($this->getCompanyById($quotes[$i]->getCustomerId()));
+//                $quoteList[$i]['status'] = $quotes[$i]->getStatus();
+//                $quoteList[$i]['estDate'] = $this->getEstimateDateFormate($quotes[$i]->getEstimateDate());
+                
+                $quoteList[$i]=[
+                    'id'=>$quotes[$i]['id'],
+                    'estimateNumber'=>'O-'.$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
+                    'customername'=>$quotes[$i]['fname'],
+                    'companyname'=>$quotes[$i]['companyname'],
+                    'status'=>$quotes[$i]['id'],
+                    'status'=>$quotes[$i]['status'],
+                    'estDate'=>$this->getEstimateDateFormate($quotes[$i]['estimatedate']),
+                ];
             }
-            
-            if($requestColumnName=='customer'){
-                $arrApi['data']['orders'] = $this->__arraySortByColumn($quoteList, 'customername',$requestOrderBy);
-            } else {
-                $arrApi['data']['orders'] = $quoteList;
-            }
+            $arrApi['data']['orders'] = $quoteList;
+//            if($requestColumnName=='customer'){
+//                $arrApi['data']['orders'] = $this->__arraySortByColumn($quoteList, 'customername',$requestOrderBy);
+//            } else {
+//                $arrApi['data']['orders'] = $quoteList;
+//            }
         }
         return new JsonResponse($arrApi, $statusCode);
     }
@@ -167,9 +206,18 @@ class OrderController extends Controller
         try {
             $quoteId = $request->query->get('id');
             if (empty($quoteId)) {
-                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=>['Approved']),array('id'=>'desc'));
+//                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=>['Approved']),array('id'=>'desc'));
+                $query = $this->getDoctrine()->getManager();
+                $quotes = $query->createQueryBuilder()
+                    ->select(['q.id'])
+                    ->from('AppBundle:Quotes', 'q')
+                    ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+                    ->where("o.isActive = 1 and q.status='Approved'")
+                    ->orderBy('o.id','desc')
+                    ->getQuery()
+                    ->getResult();
                 if (!empty($quotes)) {
-                    $quoteId = $quotes[0]->getId();
+                    $quoteId = $quotes[0]['id'];
                 }
             }
             $this->updateQuoteData($quoteId);
@@ -770,7 +818,7 @@ class OrderController extends Controller
     }
     
     private function getOrderDataById($qId) {
-        return $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId);
+        return $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId,['estimatedate'=>'DESC']);
     }
     
     private function getSpeciesNameById($species_id) {

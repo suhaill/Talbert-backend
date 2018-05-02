@@ -107,7 +107,11 @@ class Orders
      */
     private $shipDate;
 
-
+    /**
+     * @ORM\Column(type="boolean", nullable=false)
+     */
+    private $isActive=true;
+    
     /**
      * Get id
      *
@@ -300,6 +304,22 @@ class Orders
     public function getShipDate()
     {
         return $this->shipDate;
+    }
+    
+    /**
+     * @return mixed
+     */
+    public function getIsActive()
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param mixed $isActive
+     */
+    public function setIsActive($isActive)
+    {
+        $this->isActive = $isActive;
     }
 }
 
