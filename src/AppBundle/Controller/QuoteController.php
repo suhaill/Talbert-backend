@@ -2165,8 +2165,13 @@ class QuoteController extends Controller
             $totalLineItemCost= !empty($array['plyCost'])? str_replace(',','',$array['plyCost']):0
                             + !empty($array['doorCost'])?str_replace(',','',$array['doorCost']):0
                             + !empty($array['veneerCost'])?str_replace(',','',$array['veneerCost']):0;
-//            $quoteTotal =  str_replace(',','',$quote->getQuoteTot()) - $totalLineItemCost;
+            $projectTot =   $totalLineItemCost 
+                            + str_replace(',', '', $quote->getExpFee())
+                            - str_replace(',', '', $quote->getDiscount())
+                            + str_replace(',', '', $quote->getShipCharge())
+                            + str_replace(',', '', $quote->getSalesTax());
             $quote->setQuoteTot($totalLineItemCost);
+            $quote->setProjectTot($projectTot);
             $em->persist($quote);
             $em->flush();
             
