@@ -512,6 +512,11 @@ class Plywood
     private $isActive=true;
 
     /**
+     * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
+     */
+    private $isGreyedOut=false;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="cust_markup_percent", type="string", length=10, nullable=true, options={"default":25})
@@ -2175,6 +2180,22 @@ class Plywood
     public function setIsActive($isActive)
     {
         $this->isActive = $isActive;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getisGreyedOut()
+    {
+        return $this->isGreyedOut;
+    }
+
+    /**
+     * @param mixed $isGreyedOut
+     */
+    public function setIsGreyedOut($isGreyedOut)
+    {
+        $this->isGreyedOut = $isGreyedOut;
     }
 
     /**

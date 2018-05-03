@@ -92,7 +92,7 @@ class PlywoodController extends Controller
             $autoNumberArr = $getJson->get('autoNumber');
             $quoteId = trim($getJson->get('quoteId'));
             $lineItemNumberToBeUsed = trim($getJson->get('lineItemNumberToBeUsed'));
-            $custMarkup = trim($getJson->get('custMarkup') ? $getJson->get('custMarkup') : 0);
+            $custMarkup = trim($getJson->get('custMarkup') ? $getJson->get('custMarkup') : 25);
             $venCost = trim($getJson->get('venCost') ? $getJson->get('venCost') : 0);
             $venWaste = trim($getJson->get('venWaste') ? $getJson->get('venWaste') : 1);
             $subTotalVen = trim($getJson->get('subTotalVen') ? $getJson->get('subTotalVen') : 0);

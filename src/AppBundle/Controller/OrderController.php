@@ -211,7 +211,7 @@ class OrderController extends Controller
                 $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee())?str_replace(',','',number_format($quoteData->getLumFee(),2)):'00.00';
                 $arrApi['data']['shipCharge'] = !empty($quoteData->getShipCharge())?str_replace(',','',number_format($quoteData->getShipCharge(),2)):'00.00';
                 $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax())?str_replace(',','',number_format($quoteData->getSalesTax(),2)):'00.00';
-                $arrApi['data']['projectTot'] = !empty($quoteData->getProjectTot())?str_replace(',','',number_format($quoteData->getProjectTot(),2)):'00.00';
+                $arrApi['data']['projectTot'] = ($quoteData->getProjectTot() != $quoteData->getShipCharge()) ? !empty($quoteData->getProjectTot())?str_replace(',','',number_format($quoteData->getProjectTot(),2)):'00.00' : 0;
                 $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
             }
         }
@@ -861,6 +861,8 @@ class OrderController extends Controller
                     $lineItem[$i]['widthFraction'] = $this->float2rat($p->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($p->getLengthFraction());
                     $lineItem[$i]['grain'] = $this->getGrainPattern($p->getGrainPatternId());
+                    $lineItem[$i]['isGreyedOut'] = $p->getisGreyedOut();
+                    $lineItem[$i]['greyedOutClass'] = ($p->getisGreyedOut()) ? 'greyedOut' : '';
                     $i++;
                 }
             }
@@ -884,6 +886,8 @@ class OrderController extends Controller
                     $lineItem[$i]['widthFraction'] = $this->float2rat($v->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($v->getLengthFraction());
                     $lineItem[$i]['grain'] = $this->getGrainPattern($v->getGrainPatternId());
+                    $lineItem[$i]['isGreyedOut'] = $v->getisGreyedOut();
+                    $lineItem[$i]['greyedOutClass'] = ($v->getisGreyedOut()) ? 'greyedOut' : '';
                     $i++;
                 }
             }
@@ -931,6 +935,8 @@ class OrderController extends Controller
                     $lineItem[$i]['widthFraction'] = $this->float2rat($d->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($d->getLengthFraction());
                     $lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
+                    $lineItem[$i]['isGreyedOut'] = $d->getisGreyedOut();
+                    $lineItem[$i]['greyedOutClass'] = ($d->getisGreyedOut()) ? 'greyedOut' : '';
                     $i++;
                 }
             }

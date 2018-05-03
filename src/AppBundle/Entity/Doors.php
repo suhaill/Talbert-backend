@@ -676,6 +676,11 @@ class Doors
      * @ORM\Column(type="datetime")
      */
     private $updatedAt;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
+     */
+    private $isGreyedOut=false;
     
     /**
      * @var int
@@ -2752,6 +2757,22 @@ class Doors
     public function setUpdatedAt($updatedAt)
     {
         $this->updatedAt = $updatedAt;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getisGreyedOut()
+    {
+        return $this->isGreyedOut;
+    }
+
+    /**
+     * @param mixed $isGreyedOut
+     */
+    public function setIsGreyedOut($isGreyedOut)
+    {
+        $this->isGreyedOut = $isGreyedOut;
     }
 }
 
