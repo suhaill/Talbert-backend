@@ -519,6 +519,13 @@ class Plywood
     /**
      * @var string
      *
+     * @ORM\Column(name="back_order_est_no", type="string", length=20, nullable=true)
+     */
+    private $backOrderEstNo;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="cust_markup_percent", type="string", length=10, nullable=true, options={"default":25})
      */
     private $custMarkupPer;
@@ -2196,6 +2203,22 @@ class Plywood
     public function setIsGreyedOut($isGreyedOut)
     {
         $this->isGreyedOut = $isGreyedOut;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackOrderEstNo()
+    {
+        return $this->backOrderEstNo;
+    }
+
+    /**
+     * @param string $backOrderEstNo
+     */
+    public function setBackOrderEstNo($backOrderEstNo)
+    {
+        $this->backOrderEstNo = $backOrderEstNo;
     }
 
     /**

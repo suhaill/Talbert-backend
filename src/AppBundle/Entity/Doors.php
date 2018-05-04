@@ -681,6 +681,13 @@ class Doors
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
      */
     private $isGreyedOut=false;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="back_order_est_no", type="string", length=20, nullable=true)
+     */
+    private $backOrderEstNo;
     
     /**
      * @var int
@@ -2773,6 +2780,22 @@ class Doors
     public function setIsGreyedOut($isGreyedOut)
     {
         $this->isGreyedOut = $isGreyedOut;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackOrderEstNo()
+    {
+        return $this->backOrderEstNo;
+    }
+
+    /**
+     * @param string $backOrderEstNo
+     */
+    public function setBackOrderEstNo($backOrderEstNo)
+    {
+        $this->backOrderEstNo = $backOrderEstNo;
     }
 }
 

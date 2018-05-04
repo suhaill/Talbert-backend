@@ -23,6 +23,10 @@ use AppBundle\Entity\Skins;
 use AppBundle\Entity\Files;
 use AppBundle\Entity\Profile;
 use AppBundle\Entity\DoorCalculator;
+use AppBundle\Entity\QuoteStatus;
+use AppBundle\Entity\OrderStatus;
+use AppBundle\Entity\Status;
+use \AppBundle\Entity\LineItemStatus;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -226,6 +230,7 @@ class QuoteController extends Controller
             $data = $jsontoarraygenerator->getJson($request);
             $quoteId = trim($data->get('quoteId'));
             $lineItemIdArr= trim($data->get('lineItemIdArr'));
+            $backOrder= trim($data->get('backOrder'));
             $lineItemArr=[];
             if(!empty($lineItemIdArr)){
                 $lineItemIdArr= trim($lineItemIdArr,',');
@@ -235,7 +240,13 @@ class QuoteController extends Controller
                     $lineItemArr[$a[1]][]=$a[0];
                 }
             }
-            $editFlag=!empty($lineItemArr)?true:false;
+            if ($backOrder == 'backOrder') {
+                $editFlag = 'backOrder';
+            } else if (!empty($lineItemArr)) {
+                $editFlag = 'editOrder';
+            } else {
+                $editFlag = 'cloneQuote';
+            }
             $lineItemArrD=!empty($lineItemArr['D'])?$lineItemArr['D']:[];
             $lineItemArrP=!empty($lineItemArr['P'])?$lineItemArr['P']:[];
             $lineItemArrV=!empty($lineItemArr['V'])?$lineItemArr['V']:[];
@@ -250,9 +261,23 @@ class QuoteController extends Controller
                 $arrApi['message'] = 'Successfully cloned quote';
                 $clonedQuoteId = $this->cloneQuoteData($quoteData, $datime,$quoteId,$editFlag);
                 $arrApi['newCloneQuoteId']=$clonedQuoteId;
-                $arrApi['newClonePlywoodId']=$this->clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArrP,$editFlag);
-                $arrApi['newCloneVeneerId']=$this->cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArrV,$editFlag);
-                $arrApi['newCloneDoorId']=$this->cloneDoorData($quoteId, $clonedQuoteId, $datime,$lineItemArrD,$editFlag);
+                
+                $plyNew=$this->clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArrP,$editFlag);
+                $arrApi['newClonePlywoodId']=$plyNew['id'];
+                
+                $veneerNew=$this->cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArrV,$editFlag);
+                $arrApi['newCloneVeneerId']=$veneerNew['id'];
+                
+                $doorNew=$this->cloneDoorData($quoteId, $clonedQuoteId, $datime,$lineItemArrD,$editFlag);
+                $arrApi['newCloneDoorId']=$doorNew['id'];
+                
+                $this->updateEditOrderStatusWithQuoteCost([
+                    'clonedQuoteId'=>$clonedQuoteId,
+                    'quoteId'=>$quoteId,
+                    'plyCost'=>$plyNew['plyCost'],
+                    'veneerCost'=>$veneerNew['veneerCost'],
+                    'doorCost'=>$doorNew['doorCost']
+                ]);
             }
         }
         catch(Exception $e) {
@@ -616,14 +641,15 @@ class QuoteController extends Controller
         $data = $jsontoarraygenerator->getJson($request);
         $quoteId = $data->get('quoteId');
         $lineItemArr = explode(',', $data->get('lineItemIdArr'));
+        $estimateNo = $this->getEstimatenoByQId($data->get('newQuoteId'));
         for ($i=0; $i < count($lineItemArr)-1; $i++) {
             $lineItemIdArr = explode('-', $lineItemArr[$i]);
             if ($lineItemIdArr[1] == 'V') {
-                $this->excludePriceOfVeneer($lineItemIdArr[0]);
+                $this->excludePriceOfVeneer($lineItemIdArr[0], $estimateNo);
             } elseif ($lineItemIdArr[1] == 'P') {
-                $this->excludePriceOfPlywood($lineItemIdArr[0]);
+                $this->excludePriceOfPlywood($lineItemIdArr[0], $estimateNo);
             } else {
-                $this->excludePriceOfDoor($lineItemIdArr[0]);
+                $this->excludePriceOfDoor($lineItemIdArr[0], $estimateNo);
             }
         }
         $arrApi['status'] = 1;
@@ -634,7 +660,7 @@ class QuoteController extends Controller
 
     //Reusable codes
 
-    private function excludePriceOfVeneer($id) {
+    private function excludePriceOfVeneer($id, $estimateNo) {
         $em = $this->getDoctrine()->getManager();
         $veneer = $em->getRepository(Veneer::class)->findOneById($id);
         if (!empty($veneer)) {
@@ -661,12 +687,13 @@ class QuoteController extends Controller
             $veneer->setColorMatch(0);
             $veneer->setTotalCost(0.00);
             $veneer->setIsGreyedOut(1);
+            $veneer->setBackOrderEstNo($estimateNo);
             $em->persist($veneer);
             $em->flush();
         }
     }
 
-    private function excludePriceOfPlywood($id) {
+    private function excludePriceOfPlywood($id, $estimateNo) {
         $em = $this->getDoctrine()->getManager();
         $plywood = $em->getRepository(Plywood::class)->findOneById($id);
         if (!empty($plywood)) {
@@ -712,12 +739,13 @@ class QuoteController extends Controller
             $plywood->setColorMatch(0);
             $plywood->setTotalCost(0);
             $plywood->setIsGreyedOut(1);
+            $plywood->setBackOrderEstNo($estimateNo);
             $em->persist($plywood);
             $em->flush();
         }
     }
 
-    private function excludePriceOfDoor($id) {
+    private function excludePriceOfDoor($id, $estimateNo) {
         $em = $this->getDoctrine()->getManager();
         $door = $em->getRepository(DoorCalculator::class)->findOneBy(array('doorId'=> $id));
         if (!empty($door)) {
@@ -775,6 +803,7 @@ class QuoteController extends Controller
         $doors = $em->getRepository(Doors::class)->findOneById($id);
         if (!empty($doors)) {
             $doors->setIsGreyedOut(1);
+            $doors->setBackOrderEstNo($estimateNo);
             $em->persist($doors);
             $em->flush();
         }
@@ -787,17 +816,40 @@ class QuoteController extends Controller
     private function updateOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $datime, $custPO, $deliveryDate) {
         $em = $this->getDoctrine()->getManager();
         $order = $em->getRepository(Orders::class)->findOneBy(array('quoteId'=> $qId));
+        $em->getConnection()->beginTransaction();
         if (!empty($order)) {
-            $order->setEstNumber($estNo);
-            $order->setOrderNumber($orderNum);
-            $order->setApprovedBy($approveBy);
-            $order->setVia($via);
-            $order->setOther($other);
-            $order->setOrderDate($datime);
-            $order->setPoNumber($custPO);
-            $order->setShipDate($deliveryDate);
-            $em->persist($order);
-            $em->flush();
+            try {
+                $order->setEstNumber($estNo);
+                $order->setOrderNumber($orderNum);
+                $order->setApprovedBy($approveBy);
+                $order->setVia($via);
+                $order->setOther($other);
+                $order->setOrderDate($datime);
+                $order->setPoNumber($custPO);
+                $order->setShipDate($deliveryDate);
+                $em->persist($order);
+                $em->flush();
+                $currentdatime = new \DateTime('now');
+                $orderStatus = $em->getRepository('AppBundle:OrderStatus')->findOneBy(['orderId'=>$order->getId(),'isActive'=>1]);
+                if(!empty($orderStatus)){
+                    $orderStatus->setUpdatedAt($currentdatime);
+                    $orderStatus->setIsActive(0);
+                    $em->persist($orderStatus);
+                    $em->flush();
+                }                
+                
+                $newOrderStatus = new OrderStatus();
+                $newOrderStatus->setOrderId($order->getId());
+                $newOrderStatus->setStatusId(1);
+                $newOrderStatus->setCreatedAt($currentdatime);
+                $newOrderStatus->setUpdatedAt($currentdatime);
+                $newOrderStatus->setIsActive(1);
+                $em->persist($newOrderStatus);
+                $em->flush();
+                $em->getConnection()->commit();
+            } catch (Exception $ex) {
+                $em->getConnection()->rollback();
+            }            
         }
     }
 
@@ -829,29 +881,71 @@ class QuoteController extends Controller
 
     private function saveOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $datime, $custPO, $deliveryDate) {
         $em = $this->getDoctrine()->getManager();
-        $orders = new Orders();
-        $orders->setQuoteId($qId);
-        $orders->setEstNumber($estNo);
-        $orders->setOrderNumber($orderNum);
-        $orders->setApprovedBy($approveBy);
-        $orders->setVia($via);
-        $orders->setOther($other);
-        $orders->setOrderDate($datime);
-        $orders->setPoNumber($custPO);
-        $orders->setShipDate($deliveryDate);
-        $em->persist($orders);
-        $em->flush();
+        $em->getConnection()->beginTransaction();
+        try {
+            $currentdatime = new \DateTime('now');
+            $orders = new Orders();
+            $orders->setQuoteId($qId);
+            $orders->setEstNumber($estNo);
+            $orders->setOrderNumber($orderNum);
+            $orders->setApprovedBy($approveBy);
+            $orders->setVia($via);
+            $orders->setOther($other);
+            $orders->setOrderDate($datime);
+            $orders->setPoNumber($custPO);
+            $orders->setShipDate($deliveryDate);
+            $orders->setIsActive(1);
+            $em->persist($orders);
+            $em->flush();
+            $newOrderStatus = new OrderStatus();
+            $newOrderStatus->setOrderId($orders->getId());
+            $newOrderStatus->setStatusId(1);
+            $newOrderStatus->setCreatedAt($currentdatime);
+            $newOrderStatus->setUpdatedAt($currentdatime);
+            $newOrderStatus->setIsActive(1);
+            $em->persist($newOrderStatus);
+            $em->flush();
+            $em->getConnection()->commit();
+        } catch (Exception $ex) {
+            $em->getConnection()->rollback();
+        }
+        
     }
 
     private function updateQuoteStatus($qId, $status, $deliveryDate, $datime) {
         $em = $this->getDoctrine()->getManager();
-        $quote = $em->getRepository(Quotes::class)->findOneById($qId);
+        $quote = $em->getRepository(Quotes::class)->findOneById($qId);        
+        $em->getConnection()->beginTransaction();
         if (!empty($quote)) {
-            $quote->setStatus($status);
-            $quote->setUpdatedAt($datime);
-            $quote->setDeliveryDate($deliveryDate);
-            $em->persist($quote);
-            $em->flush();
+            try {
+                $quote->setStatus($status);
+                $quote->setUpdatedAt($datime);
+                $quote->setDeliveryDate($deliveryDate);
+                $em->persist($quote);
+                $em->flush();
+                $currentdatime = new \DateTime('now');
+                $quoteStatus = $em->getRepository('AppBundle:QuoteStatus')->findOneBy(['quoteId'=>$qId,'isActive'=>1]);
+//                $quoteStatus->setStatusId($this->getQuoteStatusId($status));
+                if(!empty($quoteStatus)){
+                    $quoteStatus->setUpdatedAt($currentdatime);
+                    $quoteStatus->setIsActive(0);
+                    $em->persist($quoteStatus);
+                    $em->flush();
+                }              
+                
+                $newQuoteStatus = new QuoteStatus();
+                $newQuoteStatus->setQuoteId($quote->getId());
+                $newQuoteStatus->setStatusId($this->getQuoteStatusId($status));
+                $newQuoteStatus->setCreatedAt($currentdatime);
+                $newQuoteStatus->setUpdatedAt($currentdatime);
+                $newQuoteStatus->setIsActive(1);
+                $em->persist($newQuoteStatus);
+                $em->flush();
+                $em->getConnection()->commit();
+            } catch (Exception $ex) {
+                $em->getConnection()->rollback();
+            }
+            
         }
     }
 
@@ -938,89 +1032,155 @@ class QuoteController extends Controller
 
     private function updateData($qId, $qDate, $qDateForSearch, $quoteAddedby, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status,  $comment, $deliveryDate, $expFee, $discount, $shipCost, $datime) {
         $em = $this->getDoctrine()->getManager();
+        $em->getConnection()->beginTransaction();
         $quote = $em->getRepository(Quotes::class)->findOneById($qId);
         if (!empty($quote)) {
-            $quote->setEstimatedate($qDate);
-            $quote->setEstDateForSearch($qDateForSearch);
-            $quote->setEstimatorId($quoteAddedby);
-            $quote->setCustomerId($custId);
-            $quote->setRefNum($refNo);
-            $quote->setSalesmanId($salsManId);
-            $quote->setJobName($job);
-            $quote->setTermId($termId);
-            $quote->setShipMethdId($shipMethod);
-            $quote->setShipAddId($shipAddId);
-            $quote->setLeadTime($leadTime);
-            $quote->setStatus($status);
-            $quote->setComment($comment);
-            $quote->setDeliveryDate($deliveryDate);
-            $quote->setExpFee($expFee);
-            $quote->setDiscount($discount);
-            $quote->setShipCharge($shipCost);
-            $quote->setUpdatedAt($datime);
-            $em->persist($quote);
-            $em->flush();
+            try {
+                $quote->setEstimatedate($qDate);
+                $quote->setEstDateForSearch($qDateForSearch);
+                $quote->setEstimatorId($quoteAddedby);
+                $quote->setCustomerId($custId);
+                $quote->setRefNum($refNo);
+                $quote->setSalesmanId($salsManId);
+                $quote->setJobName($job);
+                $quote->setTermId($termId);
+                $quote->setShipMethdId($shipMethod);
+                $quote->setShipAddId($shipAddId);
+                $quote->setLeadTime($leadTime);
+                $quote->setStatus($status);
+                $quote->setComment($comment);
+                $quote->setDeliveryDate($deliveryDate);
+                $quote->setExpFee($expFee);
+                $quote->setDiscount($discount);
+                $quote->setShipCharge($shipCost);
+                $quote->setUpdatedAt($datime);
+                $em->persist($quote);
+                $em->flush();
+                if($status!=$quote->getStatus()){
+                    $quoteStatus = $em->getRepository('AppBundle:QuoteStatus')->findOneBy(['quoteId'=>$qId,'isActive'=>1]);
+    //                $quoteStatus->setStatusId($this->getQuoteStatusId($status));
+                    if(!empty($quoteStatus)){
+                        $quoteStatus->setUpdatedAt($datime);
+                        $quoteStatus->setIsActive(0);
+                        $em->persist($quoteStatus);
+                        $em->flush();
+                    }                
+
+                    $newQuoteStatus = new QuoteStatus();
+                    $newQuoteStatus->setQuoteId($quote->getId());
+                    $newQuoteStatus->setStatusId($this->getQuoteStatusId($status));
+                    $newQuoteStatus->setCreatedAt($datime);
+                    $newQuoteStatus->setUpdatedAt($datime);
+                    $newQuoteStatus->setIsActive(1);
+                    $em->persist($newQuoteStatus);
+                    $em->flush();
+                }
+                
+                $em->getConnection()->commit();
+            } catch (Exception $ex) {
+                $em->getConnection()->rollback();
+            }            
             return 1;
         }
     }
 
-    private function cloneQuoteData($qData, $datime,$quoteId,$editFlag=false) {
+    private function cloneQuoteData($qData, $datime,$quoteId,$editFlag='cloneQuote') {
         $em = $this->getDoctrine()->getManager();
-        $quote = new Quotes();
-        if($editFlag==true){
-            $quote->setVersion($qData->getVersion()+1);
-            $quote->setControlNumber($qData->getControlNumber());
-            $quote->setRefid($quoteId);
-        } else {
-            $quote->setVersion($qData->getVersion());
-            $quote->setControlNumber($this->getLastControlNumber()+1);
-            $quote->setRefid($qData->getId());
+        $em->getConnection()->beginTransaction();
+        try {
+            $quote = new Quotes();
+            if($editFlag=='editOrder'){
+                $quote->setVersion($qData->getVersion()+1);
+                $quote->setControlNumber($qData->getControlNumber());
+                $quote->setRefid($quoteId);
+            } else {
+                $quote->setVersion($qData->getVersion());
+                $quote->setControlNumber($this->getLastControlNumber()+1);
+                $quote->setRefid($qData->getId());
+            }
+            $quote->setEstimatedate($qData->getEstimatedate());
+            $quote->setEstimatorId($qData->getEstimatorId());
+            //$quote->setControlNumber($this->getLastControlNumber()+1);
+            $quote->setCustomerId($qData->getCustomerId());
+            $quote->setRefNum($qData->getRefNum());
+            $quote->setSalesmanId($qData->getSalesmanId());
+            $quote->setJobName($qData->getJobName());
+            $quote->setTermId($qData->getTermId());
+            $quote->setShipMethdId($qData->getShipMethdId());
+            $quote->setShipAddId($qData->getShipAddId());
+            $quote->setLeadTime($qData->getLeadTime());
+            $quote->setStatus('Current');
+            $quote->setComment($qData->getComment());
+            $quote->setCreatedAt($datime);
+            $quote->setUpdatedAt($datime);
+            $quote->setQuoteTot($qData->getQuoteTot());
+            $quote->setExpFee($qData->getExpFee());
+            $quote->setDiscount($qData->getDiscount());
+            $quote->setLumFee($qData->getLumFee());
+            $quote->setShipCharge($qData->getShipCharge());
+            $quote->setSalesTax($qData->getSalesTax());
+            $quote->setProjectTot($qData->getProjectTot());
+            $em->persist($quote);
+            $em->flush();
+            if($editFlag=='editOrder'){
+                $order = $em->getRepository(Orders::class)->findOneBy(['quoteId'=>$quoteId]);
+                $order->setIsActive(0);
+                $em->persist($order);
+//            print_r($order);die;
+                $em->flush();
+            }
+
+            $em->getConnection()->commit();
+        } catch (Exception $ex) {
+            $em->getConnection()->rollback();
         }
-        $quote->setEstimatedate($qData->getEstimatedate());
-        $quote->setEstimatorId($qData->getEstimatorId());
-        //$quote->setControlNumber($this->getLastControlNumber()+1);
-        $quote->setEstDateForSearch($qData->getEstDateForSearch());
-        $quote->setCustomerId($qData->getCustomerId());
-        $quote->setRefNum($qData->getRefNum());
-        $quote->setSalesmanId($qData->getSalesmanId());
-        $quote->setJobName($qData->getJobName());
-        $quote->setTermId($qData->getTermId());
-        $quote->setShipMethdId($qData->getShipMethdId());
-        $quote->setShipAddId($qData->getShipAddId());
-        $quote->setLeadTime($qData->getLeadTime());
-        $quote->setStatus('Current');
-        $quote->setComment($qData->getComment());
-        $quote->setCreatedAt($datime);
-        $quote->setUpdatedAt($datime);
-        $quote->setQuoteTot($qData->getQuoteTot());
-        $quote->setExpFee($qData->getExpFee());
-        $quote->setDiscount($qData->getDiscount());
-        $quote->setLumFee($qData->getLumFee());
-        $quote->setShipCharge($qData->getShipCharge());
-        $quote->setSalesTax($qData->getSalesTax());
-        $quote->setProjectTot($qData->getProjectTot());
-        $em->persist($quote);
-        $em->flush();
+
         return $quote->getId();
     }
 
-    private function clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[],$editFlag=false) {
+    private function clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[],$editFlag="cloneQuote") {
         $em = $this->getDoctrine()->getEntityManager('default');
-        $condition=$editFlag==true?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
+        $condition=($editFlag=="editOrder" || $editFlag=='backOrder')?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
         $ply = $em->getRepository('AppBundle:Plywood')->findBy($condition);
+        $lineItemCost=0;
+        
         if (!empty($ply)) {
-            
-            foreach ($ply as $entity) {
-                $newEntity = clone $entity;
-                $newEntity
-                        ->setId(null)
-                        ->setQuoteId($clonedQuoteId)
-                ;
-                $em->persist($newEntity);
-            }
-            $em->flush();
+            $em->getConnection()->beginTransaction();
+            try {
+                $datime = new \DateTime('now');
+                foreach ($ply as $entity) {
+                    $lineItemCost=$lineItemCost+$entity->getTotalCost();
+                    $newEntity = clone $entity;
+                    $newEntity
+                            ->setId(null)
+                            ->setQuoteId($clonedQuoteId)
+                            ->setCreatedAt($datime)
+                            ->setUpdatedAt($datime)
+                    ;
+                    $em->persist($newEntity);
+                    $em->flush();
+                    if($editFlag=="editOrder"){
+                        $lineItemStatus=new LineItemStatus();
+                        $lineItemStatus->setLineItemId($newEntity->getId());
+                        $lineItemStatus->setStatusId(10);
+                        $lineItemStatus->setLineItemType('Plywood');
+                        $lineItemStatus->setIsActive(1);
+                        $lineItemStatus->setCreatedAt($datime);
+                        $lineItemStatus->setUpdatedAt($datime);
+                        $em->persist($lineItemStatus);
+                        $em->flush();
+                    }
+
+                }
+                $em->getConnection()->commit();
+            } catch (Exception $ex) {
+                $em->getConnection()->rollback();
+            }            
             $newPly = $em->getRepository('AppBundle:Plywood')->findOneBy(['quoteId'=>$clonedQuoteId],['id'=>'ASC']);
-            return !empty($newPly->getId())?$newPly->getId():'';
+            return [
+                'id'=>!empty($newPly->getId())?$newPly->getId():'',
+                'plyCost'=>$lineItemCost
+            ];
 //            for ($i=0; $i< 1; $i++) {
 //                $ply[$i]->setQuoteId($clonedQuoteId);
                 /*$plywd = new Plywood();
@@ -1119,17 +1279,54 @@ class QuoteController extends Controller
 //            }
             
         } else {
-            return '';
+            return [
+                'id'=>'',
+                'plyCost'=>$lineItemCost
+            ];
         }
     }
 
     private function cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[],$editFlag=false) {
         $em = $this->getDoctrine()->getEntityManager('default');
-        $condition=$editFlag==true?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
+        $condition=($editFlag=="editOrder" || $editFlag=='backOrder')?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
         $veneeerData = $em->getRepository('AppBundle:Veneer')->findBy($condition);
         //print_r($veneeerData);die;
+        $veneerCost=0;
+        
         if (!empty($veneeerData)) {
-            foreach ($veneeerData as $entity) {
+            $em->getConnection()->beginTransaction();
+            try {
+                $datime = new \DateTime('now');
+                foreach ($veneeerData as $entity) {
+                    $veneerCost=$veneerCost+$entity->getTotalCost();
+                    $newEntity = clone $entity;
+                    $newEntity
+                            ->setId(null)
+                            ->setQuoteId($clonedQuoteId)
+                            ->setCreatedAt($datime)
+                            ->setUpdatedAt($datime)
+                    ;
+                    $em->persist($newEntity);
+                    $em->flush();
+                    if($editFlag=="editOrder"){
+                        $lineItemStatus=new LineItemStatus();
+                        $lineItemStatus->setLineItemId($newEntity->getId());
+                        $lineItemStatus->setStatusId(11);
+                        $lineItemStatus->setLineItemType('Veneer');
+                        $lineItemStatus->setIsActive(1);
+                        $lineItemStatus->setCreatedAt($datime);
+                        $lineItemStatus->setUpdatedAt($datime);
+                        $em->persist($lineItemStatus);
+                        $em->flush();
+                    }
+
+                }
+                $em->getConnection()->commit();
+            } catch (Exception $ex) {
+                $em->getConnection()->rollback();
+            } 
+            /*foreach ($veneeerData as $entity) {
+                $veneerCost=$veneerCost+$entity->getTotalCost();
                 $newEntity = clone $entity;
                 $newEntity
                         ->setId(null)
@@ -1137,9 +1334,12 @@ class QuoteController extends Controller
                 ;
                 $em->persist($newEntity);
             }
-            $em->flush();
+            $em->flush();*/
             $newV= $em->getRepository('AppBundle:Veneer')->findOneBy(['quoteId'=>$clonedQuoteId],['id'=>'ASC']);
-            return !empty($newV->getId())?$newV->getId():'';
+            return [
+                'id'=>!empty($newV->getId())?$newV->getId():'',
+                'veneerCost'=>$veneerCost
+            ];
             /*$em = $this->getDoctrine()->getManager();
             for ($i=0; $i< count($veneeerData); $i++) {
                 $veneer = new Veneer();
@@ -1191,16 +1391,21 @@ class QuoteController extends Controller
                 $this->cloneAttachments($veneeerData[$i]->getId(), $veneer->getId(), 'Veneer', $datime);
             }*/
         } else {
-            return '';
+            return [
+                'id'=>'',
+                'veneerCost'=>$veneerCost
+            ];
         }
     }
     
     private function cloneDoorData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[],$editFlag=false) {
         
         $em = $this->getDoctrine()->getEntityManager('default');
-        $em->getConnection()->beginTransaction();
+        
+        $doorCost=0;
         try {
-            $condition=$editFlag==true?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
+            $em->getConnection()->beginTransaction();
+            $condition=($editFlag=="editOrder" || $editFlag=='backOrder')?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
             $doorData = $em->getRepository('AppBundle:Doors')->findBy($condition);
             if (!empty($doorData)) {
                 foreach ($doorData as $entity) {
@@ -1211,6 +1416,7 @@ class QuoteController extends Controller
                     $doorCalData = $em->getRepository('AppBundle:DoorCalculator')->findBy(['doorId' => $entity->getId()]);
                     if(!empty($doorCalData)){
                         foreach ($doorCalData as $value) {
+                            $doorCost=$doorCost+$value->getTotalCost();
                             $newDoorCalEntity = clone $value;
                             $newDoorCalEntity->setId(NULL)->setDoorId($newEntity->getId());
                             $em->persist($newDoorCalEntity);
@@ -1227,6 +1433,18 @@ class QuoteController extends Controller
                             $em->flush();
                         }
                     }
+                    if($editFlag=="editOrder"){
+                        $lineItemStatus=new LineItemStatus();
+                        $lineItemStatus->setLineItemId($newEntity->getId());
+                        $lineItemStatus->setStatusId(12);
+                        $lineItemStatus->setLineItemType('Door');
+                        $lineItemStatus->setIsActive(1);
+                        $lineItemStatus->setCreatedAt($datime);
+                        $lineItemStatus->setUpdatedAt($datime);
+                        $em->persist($lineItemStatus);
+                        $em->flush();
+                    }
+
                 }
             }
             $em->getConnection()->commit();
@@ -1235,9 +1453,15 @@ class QuoteController extends Controller
         }
         if (!empty($doorData)) {
             $newD= $em->getRepository('AppBundle:Doors')->findOneBy(['quoteId'=>$clonedQuoteId],['id'=>'ASC']);
-            return !empty($newD->getId())?$newD->getId():'';
+            return [
+                'id'=>!empty($newD->getId())?$newD->getId():'',
+                'doorCost'=>$doorCost
+            ];
         } else {
-            return '';
+            return [
+                'id'=>'',
+                'doorCost'=>$doorCost
+            ];
         }        
     }
 
@@ -1419,32 +1643,48 @@ class QuoteController extends Controller
 
     private function saveQuoteData($qDate, $qDateForSearch, $quoteAddedby, $ctrlNo, $ver, $custId, $refNo, $salsManId, $job, $termId, $shipMethod, $shipAddId, $leadTime, $status, $datime) {
         $em = $this->getDoctrine()->getManager();
-        $quote = new Quotes();
-        $quote->setEstimatedate($qDate);
-        $quote->setEstDateForSearch($qDateForSearch);
-        $quote->setEstimatorId($quoteAddedby);
-        $quote->setControlNumber($ctrlNo);
-        $quote->setVersion($ver);
-        $quote->setCustomerId($custId);
-        $quote->setRefNum($refNo);
-        $quote->setSalesmanId($salsManId);
-        $quote->setJobName($job);
-        $quote->setTermId($termId);
-        $quote->setShipMethdId($shipMethod);
-        $quote->setShipAddId($shipAddId);
-        $quote->setShipCharge($this->getShipChargeByAddId($shipAddId));
-        $quote->setLeadTime($leadTime);
-        $quote->setExpFee(0.00);
-        $quote->setDiscount(0.00);
-        $quote->setStatus($status);
-        $quote->setCreatedAt($datime);
-        $quote->setUpdatedAt($datime);
-        $em->persist($quote);
-        $em->flush();
-        $quote->setControlNumber($quote->getId());
-        $em->persist($quote);
-        $em->flush();
-        return $quote->getId();
+        $id='';
+        $em->getConnection()->beginTransaction();
+        try {
+            $quote = new Quotes();
+            $quote->setEstimatedate($qDate);
+            $quote->setEstDateForSearch($qDateForSearch);
+            $quote->setEstimatorId($quoteAddedby);
+            $quote->setControlNumber($ctrlNo);
+            $quote->setVersion($ver);
+            $quote->setCustomerId($custId);
+            $quote->setRefNum($refNo);
+            $quote->setSalesmanId($salsManId);
+            $quote->setJobName($job);
+            $quote->setTermId($termId);
+            $quote->setShipMethdId($shipMethod);
+            $quote->setShipAddId($shipAddId);
+            $quote->setShipCharge($this->getShipChargeByAddId($shipAddId));
+            $quote->setLeadTime($leadTime);
+            $quote->setExpFee(0.00);
+            $quote->setDiscount(0.00);
+            $quote->setStatus($status);
+            $quote->setCreatedAt($datime);
+            $quote->setUpdatedAt($datime);
+            $em->persist($quote);
+            $em->flush();
+            $quote->setControlNumber($quote->getId());
+            $em->persist($quote);
+            $em->flush();
+            $quoteStatus = new QuoteStatus();
+            $quoteStatus->setQuoteId($quote->getId());
+            $quoteStatus->setStatusId($this->getQuoteStatusId($status));
+            $quoteStatus->setCreatedAt($datime);
+            $quoteStatus->setUpdatedAt($datime);
+            $quoteStatus->setIsActive(1);
+            $em->persist($quoteStatus);
+            $em->flush();
+            $em->getConnection()->commit();
+            $id=$quote->getId();
+        } catch (Exception $ex) {
+            $em->getConnection()->rollback();
+        }
+        return $id;
     }
 
     private function getShipChargeByAddId($shipAddId) {
@@ -1512,12 +1752,12 @@ class QuoteController extends Controller
         return $d = $dateArr[1].'/'.$dateArr[2].'/'.$dateArr[0];
     }
 
-    private function getQuoteDataById($qId,$editFlag=false) {
-        if($editFlag==true){
-            $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneBy(['controlNumber'=>$qId],
-                    ['version'=>'DESC'],1,0);
-        } else {
+    private function getQuoteDataById($qId,$editFlag='cloneQuote') {
+        if($editFlag=="cloneQuote"){
             $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId);
+        } else {
+            $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneBy(['controlNumber'=>$qId],
+                ['version'=>'DESC'],1,0);
         }
         return $result;
     }
@@ -2098,6 +2338,54 @@ class QuoteController extends Controller
             $type = 'company';
         }
         return $type;
+    }
+    
+    private function getQuoteStatusId($name){
+        $query = $this->getDoctrine()->getManager();
+        $result = $query->createQueryBuilder()
+            ->select(['s.id'])
+            ->from('AppBundle:Status', 's')
+            ->where("s.statusName='".$name."' and s.type='Quote'")
+            ->getQuery()
+            ->getResult();
+            return !empty($result[0]['id'])?$result[0]['id']:6;
+    }
+    
+    private function updateEditOrderStatusWithQuoteCost($array){
+        $em = $this->getDoctrine()->getManager();
+        $em->getConnection()->beginTransaction();
+        try {
+            
+            $quote = $em->getRepository(Quotes::class)->findOneById($array['clonedQuoteId']);
+            $totalLineItemCost= !empty($array['plyCost'])? str_replace(',','',$array['plyCost']):0
+                            + !empty($array['doorCost'])?str_replace(',','',$array['doorCost']):0
+                            + !empty($array['veneerCost'])?str_replace(',','',$array['veneerCost']):0;
+            $projectTot =   $totalLineItemCost 
+                            + str_replace(',', '', $quote->getExpFee())
+                            - str_replace(',', '', $quote->getDiscount())
+                            + str_replace(',', '', $quote->getShipCharge())
+                            + str_replace(',', '', $quote->getSalesTax());
+            $quote->setQuoteTot($totalLineItemCost);
+            $quote->setProjectTot($projectTot);
+            $em->persist($quote);
+            $em->flush();
+            
+            
+            $em->getConnection()->commit();
+        } catch (Exception $ex) {
+            $em->getConnection()->rollback();
+        }
+        
+    }
+
+    private function p($a){
+        print_r($a);die;
+    }
+
+    private function getEstimatenoByQId($qid) {
+        $em = $this->getDoctrine()->getManager();
+        $quote = $em->getRepository(Quotes::class)->findOneById($qid);
+        return 'E-'.$quote->getControlNumber().'-'.$quote->getVersion();
     }
 
 }
