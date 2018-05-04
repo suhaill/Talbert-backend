@@ -187,6 +187,18 @@ class Veneer
     private $isActive=true;
 
     /**
+     * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
+     */
+    private $isGreyedOut=false;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="back_order_est_no", type="string", length=20, nullable=true)
+     */
+    private $backOrderEstNo;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="cust_markup_percent", type="string", length=10, nullable=true)
@@ -909,6 +921,38 @@ class Veneer
     public function setIsActive($isActive)
     {
         $this->isActive = $isActive;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getisGreyedOut()
+    {
+        return $this->isGreyedOut;
+    }
+
+    /**
+     * @param mixed $isGreyedOut
+     */
+    public function setIsGreyedOut($isGreyedOut)
+    {
+        $this->isGreyedOut = $isGreyedOut;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackOrderEstNo()
+    {
+        return $this->backOrderEstNo;
+    }
+
+    /**
+     * @param string $backOrderEstNo
+     */
+    public function setBackOrderEstNo($backOrderEstNo)
+    {
+        $this->backOrderEstNo = $backOrderEstNo;
     }
 
     /**

@@ -676,6 +676,18 @@ class Doors
      * @ORM\Column(type="datetime")
      */
     private $updatedAt;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
+     */
+    private $isGreyedOut=false;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="back_order_est_no", type="string", length=20, nullable=true)
+     */
+    private $backOrderEstNo;
     
     /**
      * @var int
@@ -2752,6 +2764,38 @@ class Doors
     public function setUpdatedAt($updatedAt)
     {
         $this->updatedAt = $updatedAt;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getisGreyedOut()
+    {
+        return $this->isGreyedOut;
+    }
+
+    /**
+     * @param mixed $isGreyedOut
+     */
+    public function setIsGreyedOut($isGreyedOut)
+    {
+        $this->isGreyedOut = $isGreyedOut;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackOrderEstNo()
+    {
+        return $this->backOrderEstNo;
+    }
+
+    /**
+     * @param string $backOrderEstNo
+     */
+    public function setBackOrderEstNo($backOrderEstNo)
+    {
+        $this->backOrderEstNo = $backOrderEstNo;
     }
 }
 
