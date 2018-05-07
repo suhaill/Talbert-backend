@@ -108,7 +108,7 @@ class Orders
     private $shipDate;
 
     /**
-     * @ORM\Column(type="boolean", nullable=false)
+     * @ORM\Column(type="boolean", nullable=false, options={"default":1})
      */
     private $isActive=true;
     

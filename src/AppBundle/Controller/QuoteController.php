@@ -186,7 +186,7 @@ class QuoteController extends Controller
                 $arrApi['data']['salesman'] = $this->getSalesmanNameById($quoteData->getSalesmanId());
                 $arrApi['data']['salesmanId'] = $quoteData->getSalesmanId();
                 $arrApi['data']['job'] = $quoteData->getJobName();
-                $arrApi['data']['term'] = $quoteData->getTermId();
+                $arrApi['data']['term'] = (string) $quoteData->getTermId();
                 $arrApi['data']['shipMethod'] = $this->getShipMethodNamebyId($quoteData->getShipMethdId());
                 $arrApi['data']['shipMethodId'] = $quoteData->getShipMethdId();
                 $arrApi['data']['billAdd'] = $this->getBillAddById($quoteData->getCustomerId());

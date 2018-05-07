@@ -289,6 +289,8 @@ class VeneerController extends Controller
                             $arrApi['data']['colorMatch'] = $veneer->getColorMatch();
                             $arrApi['data']['totalCost'] = $veneer->getTotalCost();                            
                             $arrApi['data']['lineItemNum'] = $veneer->getLineItemNum();
+                            $arrApi['data']['widthFraction'] = $veneer->getWidthFraction();                            
+                            $arrApi['data']['lengthFraction'] = $veneer->getLengthFraction();
 
                         }
                     }

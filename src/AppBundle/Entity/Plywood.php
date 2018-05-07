@@ -507,7 +507,7 @@ class Plywood
     private $updatedAt;
 
     /**
-     * @ORM\Column(type="boolean", nullable=false)
+     * @ORM\Column(name="is_active",type="boolean", nullable=false)
      */
     private $isActive=true;
 
