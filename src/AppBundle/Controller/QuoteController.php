@@ -230,6 +230,7 @@ class QuoteController extends Controller
             $data = $jsontoarraygenerator->getJson($request);
             $quoteId = trim($data->get('quoteId'));
             $lineItemIdArr= trim($data->get('lineItemIdArr'));
+            $backOrder= trim($data->get('backOrder'));
             $lineItemArr=[];
             if(!empty($lineItemIdArr)){
                 $lineItemIdArr= trim($lineItemIdArr,',');
@@ -239,7 +240,13 @@ class QuoteController extends Controller
                     $lineItemArr[$a[1]][]=$a[0];
                 }
             }
-            $editFlag=!empty($lineItemArr)?true:false;
+            if ($backOrder == 'backOrder') {
+                $editFlag = 'backOrder';
+            } else if (!empty($lineItemArr)) {
+                $editFlag = 'editOrder';
+            } else {
+                $editFlag = 'cloneQuote';
+            }
             $lineItemArrD=!empty($lineItemArr['D'])?$lineItemArr['D']:[];
             $lineItemArrP=!empty($lineItemArr['P'])?$lineItemArr['P']:[];
             $lineItemArrV=!empty($lineItemArr['V'])?$lineItemArr['V']:[];
@@ -622,8 +629,185 @@ class QuoteController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    /**
+     * @Route("/api/quote/excludeLineItemPriceFromOrder")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     */
+    public function excludeLineItemPriceFromOrderAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $quoteId = $data->get('quoteId');
+        $lineItemArr = explode(',', $data->get('lineItemIdArr'));
+        $estimateNo = $this->getEstimatenoByQId($data->get('newQuoteId'));
+        for ($i=0; $i < count($lineItemArr)-1; $i++) {
+            $lineItemIdArr = explode('-', $lineItemArr[$i]);
+            if ($lineItemIdArr[1] == 'V') {
+                $this->excludePriceOfVeneer($lineItemIdArr[0], $estimateNo);
+            } elseif ($lineItemIdArr[1] == 'P') {
+                $this->excludePriceOfPlywood($lineItemIdArr[0], $estimateNo);
+            } else {
+                $this->excludePriceOfDoor($lineItemIdArr[0], $estimateNo);
+            }
+        }
+        $arrApi['status'] = 1;
+        $arrApi['message'] = 'Success';
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
 
     //Reusable codes
+
+    private function excludePriceOfVeneer($id, $estimateNo) {
+        $em = $this->getDoctrine()->getManager();
+        $veneer = $em->getRepository(Veneer::class)->findOneById($id);
+        if (!empty($veneer)) {
+            $veneer->setCustMarkupPer(25);
+            $veneer->setVenCost(0);
+            $veneer->setVenWaste(1);
+            $veneer->setSubTotalVen(0);
+            $veneer->setCoreCost(0);
+            $veneer->setSubTotalCore(0);
+            $veneer->setCoreWaste(1);
+            $veneer->setSubTotalBackr(0);
+            $veneer->setBackrCost(0);
+            $veneer->setBackrWaste(1);
+            $veneer->setRunningCost(0);
+            $veneer->setRunningWaste(1);
+            $veneer->getSubTotalrunning(0);
+            $veneer->setTotCostPerPiece(0.00);
+            $veneer->setMarkup(0.00);
+            $veneer->setSellingPrice(0.00);
+            $veneer->setLineitemTotal(0.00);
+            $veneer->setMachineSetup(0);
+            $veneer->setMachineTooling(0);
+            $veneer->setPreFinishSetup(0);
+            $veneer->setColorMatch(0);
+            $veneer->setTotalCost(0.00);
+            $veneer->setIsGreyedOut(1);
+            $veneer->setBackOrderEstNo($estimateNo);
+            $em->persist($veneer);
+            $em->flush();
+        }
+    }
+
+    private function excludePriceOfPlywood($id, $estimateNo) {
+        $em = $this->getDoctrine()->getManager();
+        $plywood = $em->getRepository(Plywood::class)->findOneById($id);
+        if (!empty($plywood)) {
+            $plywood->setCustMarkupPer(25);
+            $plywood->setCalcTW(0);
+            $plywood->setVenCost(0);
+            $plywood->setVenWaste(1);
+            $plywood->setSubTotalVen(0);
+            $plywood->setCoreCost(0);
+            $plywood->setCoreWaste(1);
+            $plywood->setSubTotalCore(0);
+            $plywood->setBackrCost(0);
+            $plywood->setBackrWaste(1);
+            $plywood->setSubTotalBackr(0);
+            $plywood->setPanelCost(0);
+            $plywood->setPanelWaste(1);
+            $plywood->setSubTotalPanel(0);
+            $plywood->setFinishCost(0);
+            $plywood->setFinishWaste(1);
+            $plywood->setSubTotalFinish(0);
+            $plywood->setEdgeintCost(0);
+            $plywood->setEdgeintWaste(1);
+            $plywood->setSubTotalEdgeint(0);
+            $plywood->setEdgevCost(0);
+            $plywood->setEdgevWaste(1);
+            $plywood->setSubTotalEdgev(0);
+            $plywood->setFinishEdgeCost(0);
+            $plywood->setFinishEdgeWaste(1);
+            $plywood->setSubTotalFinishEdge(0);
+            $plywood->setMillingCost(0);
+            $plywood->setMillingWaste(1);
+            $plywood->setSubTotalMilling(0);
+            $plywood->setRunningCost(0);
+            $plywood->setRunningWaste(1);
+            $plywood->setSubTotalrunning(0);
+            $plywood->setTotalcostPerPiece(0);
+            $plywood->setMarkup(0);
+            $plywood->setSellingPrice(0);
+            $plywood->setLineitemTotal(0);
+            $plywood->setMachineSetup(0);
+            $plywood->setMachineTooling(0);
+            $plywood->setPreFinishSetup(0);
+            $plywood->setColorMatch(0);
+            $plywood->setTotalCost(0);
+            $plywood->setIsGreyedOut(1);
+            $plywood->setBackOrderEstNo($estimateNo);
+            $em->persist($plywood);
+            $em->flush();
+        }
+    }
+
+    private function excludePriceOfDoor($id, $estimateNo) {
+        $em = $this->getDoctrine()->getManager();
+        $door = $em->getRepository(DoorCalculator::class)->findOneBy(array('doorId'=> $id));
+        if (!empty($door)) {
+            $door->setCustMarkupPer(25);
+            $door->setVenCost(0.00);
+            $door->setVenWaste(1);
+            $door->setSubTotalVen(0.00);
+            $door->setCoreCost(0.00);
+            $door->setCoreWaste(1);
+            $door->setSubTotalCore(0.00);
+            $door->setBackrCost(0.00);
+            $door->setBackrWaste(1);
+            $door->setSubTotalBackr(0.00);
+            $door->setFinishCost(0.00);
+            $door->setFinishWaste(1);
+            $door->setSubTotalFinish(0.00);
+            $door->setEdgeintCost(0.00);
+            $door->setEdgeintWaste(1);
+            $door->setSubTotalEdgeint(0.00);
+            $door->setEdgevCost(0.00);
+            $door->setEdgevWaste(1);
+            $door->setSubTotalEdgev(0.00);
+            $door->setFinishEdgeCost(0.00);
+            $door->setFinishEdgeWaste(1);
+            $door->setSubTotalFinishEdge(0.00);
+            $door->setMillingCost(0.00);
+            $door->setMillingWaste(1);
+            $door->setSubTotalMilling(0.00);
+            $door->setRunningCost(0.00);
+            $door->setRunningWaste(1);
+            $door->setSubTotalrunning(0.00);
+            $door->setFlatPrice(0.00);
+            $door->setDoorFrame(0.00);
+            $door->setLouvers(0.00);
+            $door->setLightOpening(0.00);
+            $door->setSurfaceMachining(0.00);
+            $door->setStyles(0.00);
+            $door->setMachining(0.00);
+            $door->setFacePreps(0.00);
+            $door->setGlass(0.00);
+            $door->setBlocking(0.00);
+            $door->setTotalcostPerPiece(0.00);
+            $door->setMarkup(0.00);
+            $door->setSellingPrice(0.00);
+            $door->setLineitemTotal(0.00);
+            $door->setMachineSetup(0.00);
+            $door->setMachineTooling(0.00);
+            $door->setPreFinishSetup(0.00);
+            $door->setColorMatch(0.00);
+            $door->setTotalCost(0.00);
+            $door->setCalcTW(0);
+            $em->persist($door);
+            $em->flush();
+        }
+        $doors = $em->getRepository(Doors::class)->findOneById($id);
+        if (!empty($doors)) {
+            $doors->setIsGreyedOut(1);
+            $doors->setBackOrderEstNo($estimateNo);
+            $em->persist($doors);
+            $em->flush();
+        }
+    }
 
     private function getOrderNumber($estNo) {
         return str_replace('E', 'O' , $estNo);
@@ -900,12 +1084,12 @@ class QuoteController extends Controller
         }
     }
 
-    private function cloneQuoteData($qData, $datime,$quoteId,$editFlag=false) {
+    private function cloneQuoteData($qData, $datime,$quoteId,$editFlag='cloneQuote') {
         $em = $this->getDoctrine()->getManager();
         $em->getConnection()->beginTransaction();
         try {
             $quote = new Quotes();
-            if($editFlag==true){
+            if($editFlag=='editOrder'){
                 $quote->setVersion($qData->getVersion()+1);
                 $quote->setControlNumber($qData->getControlNumber());
                 $quote->setRefid($quoteId);
@@ -917,7 +1101,6 @@ class QuoteController extends Controller
             $quote->setEstimatedate($qData->getEstimatedate());
             $quote->setEstimatorId($qData->getEstimatorId());
             //$quote->setControlNumber($this->getLastControlNumber()+1);
-
             $quote->setCustomerId($qData->getCustomerId());
             $quote->setRefNum($qData->getRefNum());
             $quote->setSalesmanId($qData->getSalesmanId());
@@ -939,22 +1122,25 @@ class QuoteController extends Controller
             $quote->setProjectTot($qData->getProjectTot());
             $em->persist($quote);
             $em->flush();
-            $order = $em->getRepository(Orders::class)->findOneBy(['quoteId'=>$quoteId]);
-            $order->setIsActive(0);
-            $em->persist($order);
+            if($editFlag=='editOrder'){
+                $order = $em->getRepository(Orders::class)->findOneBy(['quoteId'=>$quoteId]);
+                $order->setIsActive(0);
+                $em->persist($order);
 //            print_r($order);die;
-            $em->flush();
+                $em->flush();
+            }
+
             $em->getConnection()->commit();
         } catch (Exception $ex) {
             $em->getConnection()->rollback();
         }
-        
+
         return $quote->getId();
     }
 
-    private function clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[],$editFlag=false) {
+    private function clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[],$editFlag="cloneQuote") {
         $em = $this->getDoctrine()->getEntityManager('default');
-        $condition=$editFlag==true?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
+        $condition=($editFlag=="editOrder" || $editFlag=='backOrder')?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
         $ply = $em->getRepository('AppBundle:Plywood')->findBy($condition);
         $lineItemCost=0;
         
@@ -973,15 +1159,18 @@ class QuoteController extends Controller
                     ;
                     $em->persist($newEntity);
                     $em->flush();
-                    $lineItemStatus=new LineItemStatus();
-                    $lineItemStatus->setLineItemId($newEntity->getId());
-                    $lineItemStatus->setStatusId(10);
-                    $lineItemStatus->setLineItemType('Plywood');
-                    $lineItemStatus->setIsActive(1);
-                    $lineItemStatus->setCreatedAt($datime);
-                    $lineItemStatus->setUpdatedAt($datime);
-                    $em->persist($lineItemStatus);
-                    $em->flush();
+                    if($editFlag=="editOrder"){
+                        $lineItemStatus=new LineItemStatus();
+                        $lineItemStatus->setLineItemId($newEntity->getId());
+                        $lineItemStatus->setStatusId(10);
+                        $lineItemStatus->setLineItemType('Plywood');
+                        $lineItemStatus->setIsActive(1);
+                        $lineItemStatus->setCreatedAt($datime);
+                        $lineItemStatus->setUpdatedAt($datime);
+                        $em->persist($lineItemStatus);
+                        $em->flush();
+                    }
+
                 }
                 $em->getConnection()->commit();
             } catch (Exception $ex) {
@@ -1099,7 +1288,7 @@ class QuoteController extends Controller
 
     private function cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArr=[],$editFlag=false) {
         $em = $this->getDoctrine()->getEntityManager('default');
-        $condition=$editFlag==true?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
+        $condition=($editFlag=="editOrder" || $editFlag=='backOrder')?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
         $veneeerData = $em->getRepository('AppBundle:Veneer')->findBy($condition);
         //print_r($veneeerData);die;
         $veneerCost=0;
@@ -1119,15 +1308,18 @@ class QuoteController extends Controller
                     ;
                     $em->persist($newEntity);
                     $em->flush();
-                    $lineItemStatus=new LineItemStatus();
-                    $lineItemStatus->setLineItemId($newEntity->getId());
-                    $lineItemStatus->setStatusId(11);
-                    $lineItemStatus->setLineItemType('Veneer');
-                    $lineItemStatus->setIsActive(1);
-                    $lineItemStatus->setCreatedAt($datime);
-                    $lineItemStatus->setUpdatedAt($datime);
-                    $em->persist($lineItemStatus);
-                    $em->flush();
+                    if($editFlag=="editOrder"){
+                        $lineItemStatus=new LineItemStatus();
+                        $lineItemStatus->setLineItemId($newEntity->getId());
+                        $lineItemStatus->setStatusId(11);
+                        $lineItemStatus->setLineItemType('Veneer');
+                        $lineItemStatus->setIsActive(1);
+                        $lineItemStatus->setCreatedAt($datime);
+                        $lineItemStatus->setUpdatedAt($datime);
+                        $em->persist($lineItemStatus);
+                        $em->flush();
+                    }
+
                 }
                 $em->getConnection()->commit();
             } catch (Exception $ex) {
@@ -1213,7 +1405,7 @@ class QuoteController extends Controller
         $doorCost=0;
         try {
             $em->getConnection()->beginTransaction();
-            $condition=$editFlag==true?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
+            $condition=($editFlag=="editOrder" || $editFlag=='backOrder')?['quoteId'=>$quoteId,'id'=>$lineItemArr]:['quoteId'=>$quoteId];
             $doorData = $em->getRepository('AppBundle:Doors')->findBy($condition);
             if (!empty($doorData)) {
                 foreach ($doorData as $entity) {
@@ -1241,15 +1433,18 @@ class QuoteController extends Controller
                             $em->flush();
                         }
                     }
-                    $lineItemStatus=new LineItemStatus();
-                    $lineItemStatus->setLineItemId($newEntity->getId());
-                    $lineItemStatus->setStatusId(12);
-                    $lineItemStatus->setLineItemType('Door');
-                    $lineItemStatus->setIsActive(1);
-                    $lineItemStatus->setCreatedAt($datime);
-                    $lineItemStatus->setUpdatedAt($datime);
-                    $em->persist($lineItemStatus);
-                    $em->flush();
+                    if($editFlag=="editOrder"){
+                        $lineItemStatus=new LineItemStatus();
+                        $lineItemStatus->setLineItemId($newEntity->getId());
+                        $lineItemStatus->setStatusId(12);
+                        $lineItemStatus->setLineItemType('Door');
+                        $lineItemStatus->setIsActive(1);
+                        $lineItemStatus->setCreatedAt($datime);
+                        $lineItemStatus->setUpdatedAt($datime);
+                        $em->persist($lineItemStatus);
+                        $em->flush();
+                    }
+
                 }
             }
             $em->getConnection()->commit();
@@ -1557,12 +1752,12 @@ class QuoteController extends Controller
         return $d = $dateArr[1].'/'.$dateArr[2].'/'.$dateArr[0];
     }
 
-    private function getQuoteDataById($qId,$editFlag=false) {
-        if($editFlag==true){
-            $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneBy(['controlNumber'=>$qId],
-                    ['version'=>'DESC'],1,0);
-        } else {
+    private function getQuoteDataById($qId,$editFlag='cloneQuote') {
+        if($editFlag=="cloneQuote"){
             $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId);
+        } else {
+            $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneBy(['controlNumber'=>$qId],
+                ['version'=>'DESC'],1,0);
         }
         return $result;
     }
@@ -2185,6 +2380,12 @@ class QuoteController extends Controller
 
     private function p($a){
         print_r($a);die;
+    }
+
+    private function getEstimatenoByQId($qid) {
+        $em = $this->getDoctrine()->getManager();
+        $quote = $em->getRepository(Quotes::class)->findOneById($qid);
+        return 'E-'.$quote->getControlNumber().'-'.$quote->getVersion();
     }
 
 }
