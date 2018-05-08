@@ -164,7 +164,6 @@ class QuoteController extends Controller
             }
             $this->updateQuoteData($quoteId);
             $quoteData = $this->getQuoteDataById($quoteId);
-//            print_r($quoteData);die;
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'This quote does not exists';
@@ -231,6 +230,7 @@ class QuoteController extends Controller
             $quoteId = trim($data->get('quoteId'));
             $lineItemIdArr= trim($data->get('lineItemIdArr'));
             $backOrder= trim($data->get('backOrder'));
+            $estnumber=trim($data->get('estnumber'));
             $lineItemArr=[];
             if(!empty($lineItemIdArr)){
                 $lineItemIdArr= trim($lineItemIdArr,',');
@@ -251,7 +251,7 @@ class QuoteController extends Controller
             $lineItemArrP=!empty($lineItemArr['P'])?$lineItemArr['P']:[];
             $lineItemArrV=!empty($lineItemArr['V'])?$lineItemArr['V']:[];
             $datime = new \DateTime('now');
-            $quoteData = $this->getQuoteDataById($quoteId,$editFlag);
+            $quoteData = $this->getQuoteDataById($quoteId,$editFlag,$estnumber);
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'This quote does not exists';
@@ -1092,10 +1092,11 @@ class QuoteController extends Controller
             if($editFlag=='editOrder'){
                 $quote->setVersion($qData->getVersion()+1);
                 $quote->setControlNumber($qData->getControlNumber());
-                $quote->setRefid($quoteId);
+                $quote->setRefid($qData->getControlNumber());
             } else {
-                $quote->setVersion($qData->getVersion());
-                $quote->setControlNumber($this->getLastControlNumber()+1);
+                $quote->setVersion(1);
+//                $quote->setControlNumber($this->getLastControlNumber()+1);
+                $quote->setControlNumber($this->getLastControlNumberById()+1);
                 $quote->setRefid($qData->getId());
             }
             $quote->setEstimatedate($qData->getEstimatedate());
@@ -1752,11 +1753,15 @@ class QuoteController extends Controller
         return $d = $dateArr[1].'/'.$dateArr[2].'/'.$dateArr[0];
     }
 
-    private function getQuoteDataById($qId,$editFlag='cloneQuote') {
+    private function getQuoteDataById($qId,$editFlag='cloneQuote',$estnumber='') {
         if($editFlag=="cloneQuote"){
             $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId);
         } else {
-            $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneBy(['controlNumber'=>$qId],
+            $estnumber1= explode('-', $estnumber);
+            $controlVersion = $estnumber1[1];
+            $version = $estnumber1[2];
+            $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneBy(['controlNumber'=>$controlVersion,
+                'version'=>$version],
                 ['version'=>'DESC'],1,0);
         }
         return $result;
@@ -2386,6 +2391,13 @@ class QuoteController extends Controller
         $em = $this->getDoctrine()->getManager();
         $quote = $em->getRepository(Quotes::class)->findOneById($qid);
         return 'E-'.$quote->getControlNumber().'-'.$quote->getVersion();
+    }
+    
+    private function getLastControlNumberById() {
+        $lastQuote = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneBy(array(),array('id'=>'desc'));
+        if (!empty($lastQuote)) {
+            return $lastQuote->getId();
+        }
     }
 
 }
