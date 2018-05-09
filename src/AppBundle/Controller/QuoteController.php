@@ -899,7 +899,7 @@ class QuoteController extends Controller
             $em->flush();
             $newOrderStatus = new OrderStatus();
             $newOrderStatus->setOrderId($orders->getId());
-            $newOrderStatus->setStatusId(1);
+            $newOrderStatus->setStatusId(5);
             $newOrderStatus->setCreatedAt($currentdatime);
             $newOrderStatus->setUpdatedAt($currentdatime);
             $newOrderStatus->setIsActive(1);

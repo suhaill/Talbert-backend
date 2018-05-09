@@ -18,6 +18,7 @@ use AppBundle\Entity\Orders;
 use AppBundle\Entity\Quotes;
 use AppBundle\Entity\Profile;
 use AppBundle\Entity\DoorCalculator;
+use AppBundle\Entity\State;
 
 class OrderController extends Controller
 {
@@ -128,7 +129,7 @@ class OrderController extends Controller
 //            $orderBy='DESC';
         } else if($columnName=='status'){
 //            $sortArray=['controlNumber'=>$orderBy];
-            $columnName='q.status';
+            $columnName='s.statusName';
 //            $orderBy='DESC';
         } else if($columnName=='estimatedate'){
 //            $sortArray=['controlNumber'=>$orderBy];
@@ -147,16 +148,19 @@ class OrderController extends Controller
 //        print_r($requestColumnName);die;
         $query = $this->getDoctrine()->getManager();
         $quotes = $query->createQueryBuilder()
-            ->select(['q.controlNumber','q.version','q.customerId','q.status','q.estimatedate','q.id'])
+            ->select(['q.controlNumber','q.version','q.customerId','q.estimatedate','q.id','o.id as orderId','os.statusId',
+                's.statusName as status','u.company as companyname','u.fname','u.lname'])
             ->from('AppBundle:Quotes', 'q')
             ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
-            ->addSelect(['u.company as companyname','u.fname','u.lname'])
+//            ->addSelect([])
             ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+            ->leftJoin('AppBundle:OrderStatus', 'os', 'WITH', "o.id = os.orderId")
+            ->leftJoin('AppBundle:Status', 's', 'WITH', "os.statusId=s.id ")
+//            ->addSelect(['s.status'])
             ->where("o.isActive = 1 and q.status='Approved'")
             ->orderBy($columnName,$orderBy)
             ->getQuery()
             ->getResult();
-        
         
         if (empty($quotes) ) {
             $arrApi['status'] = 0;
@@ -179,7 +183,7 @@ class OrderController extends Controller
                     'estimateNumber'=>'O-'.$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
                     'customername'=>$quotes[$i]['fname'],
                     'companyname'=>$quotes[$i]['companyname'],
-                    'status'=>$quotes[$i]['id'],
+                    'orderId'=>$quotes[$i]['orderId'],
                     'status'=>$quotes[$i]['status'],
                     'estDate'=>$this->getEstimateDateFormate($quotes[$i]['estimatedate']),
                 ];
@@ -1404,5 +1408,148 @@ class OrderController extends Controller
 
     private function convertMmToInches($mm) {
         return $mm * 0.0393701;
+    }
+    
+    /**
+     * @Route("/api/order/searchOrder")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     * params: None
+     */
+    public function searchOrderAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $pageNo = $data->get('current_page');
+        $limit = $data->get('limit');
+        $sortBy = $data->get('sort_by');
+        $order = $data->get('order');
+        $searchVal = trim($data->get('searchVal'));
+        $startDate = $data->get('startDate');
+        $endDate = $data->get('endDate');
+        $type = $data->get('type');
+        $offset = ($pageNo - 1)  * $limit;
+        if (false) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Parameter missing.';
+            $statusCode = 422;
+        } else {
+            try {
+                $searchType = $this->checkIfSearchValIsEstOrCompany($searchVal);
+                $condition='o.isActive = :active and q.status= :status and ';
+                $concat = '';
+                if ($searchType == 'estNo') {
+                    $estimate = explode('-',$searchVal);
+                    $condition.="q.controlNumber= :searchVal ";
+                    $keyword = $estimate[1];
+                    $concat = " AND ";
+                } else if ($searchType == 'company'){
+                    if($type=='status'){
+                        $keyword=$searchVal;                  
+                        $condition.="os.statusId = :searchVal ";
+                        $concat = " AND ";
+                    } else {
+                        $keyword='%'.$searchVal.'%';                  
+                        $condition.="u.company Like :searchVal ";
+                        $concat = " AND ";
+                    }                    
+                }
+                if(!empty($startDate) && !empty($endDate)){
+                    $condition = $condition.$concat." q.estimatedate >= :from AND q.estimatedate <= :to ";
+                } else if(!empty($startDate) && empty($endDate) || ($startDate == $endDate && !empty($endDate) && !empty($startDate))){
+                    $condition = $condition.$concat." q.estimatedate >= :from ";
+                } else if(empty($startDate) && !empty($endDate)){
+                    $condition = $condition.$concat." q.estimatedate <= :to ";
+                }
+                
+                $query = $this->getDoctrine()->getManager();
+                $query1=$query->createQueryBuilder()
+                    ->select(['q.controlNumber','q.version','q.customerId','q.estimatedate','q.id','o.id as orderId',
+                        'os.statusId','s.statusName as status','u.company as companyname','u.fname','u.lname'])
+                    ->from('AppBundle:Quotes', 'q')
+                    ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
+                    ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+                    ->leftJoin('AppBundle:OrderStatus', 'os', 'WITH', "o.id = os.orderId")
+                    ->leftJoin('AppBundle:Status', 's', 'WITH', "os.statusId=s.id ")
+                    ->where($condition)
+                    ->setParameter('active', 1)
+                    ->setParameter('status', 'Approved')
+                    ->setParameter('searchVal', $keyword);
+                if(!empty($startDate) && !empty($endDate)){
+                    $query1->setParameter('from', date('Y-m-d',strtotime($startDate)))
+                    ->setParameter('to', date('Y-m-d',strtotime($endDate)));
+                } else if(!empty($startDate) && empty($endDate) || ($startDate == $endDate && !empty($endDate) && !empty($startDate))){
+                    $query1->setParameter('from', date('Y-m-d',strtotime($startDate)));
+                } else if(empty($startDate) && !empty($endDate)){
+                    $query1->setParameter('to', date('Y-m-d',strtotime($endDate)));
+                }
+                $quotes=$query1->getQuery()->getResult();
+                if (empty($quotes) ) {
+                    $arrApi['status'] = 0;
+                    $arrApi['message'] = 'There is no order.';
+                    $statusCode = 422;
+                } else {
+                    $arrApi['status'] = 1;
+                    $arrApi['message'] = 'Successfully retreived the order list.';
+                    $quoteList=[];
+                    for($i=0;$i<count($quotes);$i++) {
+                        $quoteList[$i]=[
+                            'id'=>$quotes[$i]['id'],
+                            'estimateNumber'=>'O-'.$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
+                            'customername'=>$quotes[$i]['fname'],
+                            'companyname'=>$quotes[$i]['companyname'],
+                            'orderId'=>$quotes[$i]['orderId'],
+                            'status'=>$quotes[$i]['status'],
+                            'estDate'=>$this->getEstimateDateFormate($quotes[$i]['estimatedate']),
+                        ];
+                    }
+                    $arrApi['data']['orders'] = $quoteList;
+                }
+                return new JsonResponse($arrApi, $statusCode);                
+            }
+            catch(Exception $e) {
+                throw $e->getMessage();
+            }
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+    
+    private function checkIfSearchValIsEstOrCompany($searchVal) {
+        $type = '';
+        if (preg_match_all ("/(.)(-)(\\d+)/", $searchVal, $matches))
+        {
+            $type = 'estNo';
+        } else {
+            $type = 'company';
+        }
+        return $type;
+    }
+    
+    /**
+     * @Route("/api/status/orderStatusList")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("GET")
+     * params: None
+     */
+    public function getStatusListAction(Request $request){
+        $arrApi = [];
+        $statusCode = 200;
+        $status = $this->getDoctrine()->getRepository('AppBundle:Status')->findBy(['type'=>'Order','isActive'=>1]);
+        if(!empty($status)){
+            $arrApi['status'] = 1;
+            $arrApi['message'] = 'Successfully retreived order status list!';
+            foreach ($status as $v) {
+                $arrApi['data'][]=[
+                    'id'=>$v->getId(),
+                    'statusName'=>$v->getStatusName()
+                ];
+            }
+        } else {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'This quote does not exists';
+            $statusCode = 422;
+        }
+        return new JsonResponse($arrApi, $statusCode);
     }
 }
