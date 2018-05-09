@@ -35,7 +35,11 @@ class Status
      */
     private $type;
 
-
+    /**
+     * @ORM\Column(type="boolean", nullable=false, options={"default":1})
+     */
+    private $isActive=true;
+    
     /**
      * Get id
      *
@@ -92,6 +96,22 @@ class Status
     public function getType()
     {
         return $this->type;
+    }
+    
+    /**
+     * @return mixed
+     */
+    public function getIsActive()
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param mixed $isActive
+     */
+    public function setIsActive($isActive)
+    {
+        $this->isActive = $isActive;
     }
 }
 
