@@ -1514,11 +1514,10 @@ class OrderController extends Controller
      * @Method("GET")
      * params: None
      */
-    public function getStatusListAction(Request $request){
+    public function getOrderStatusListAction(Request $request){
         $arrApi = [];
         $statusCode = 200;
-        $status = $this->getDoctrine()->getRepository('AppBundle:Status')->findBy(['type'=>'Order','isActive'=>1],
-                ['statusName'=>'ASC']);
+        $status= $this->getStatusList('Order');
         if(!empty($status)){
             $arrApi['status'] = 1;
             $arrApi['message'] = 'Successfully retreived order status list!';
@@ -1530,9 +1529,47 @@ class OrderController extends Controller
             }
         } else {
             $arrApi['status'] = 0;
-            $arrApi['message'] = 'This quote does not exists';
+            $arrApi['message'] = 'The status list does not exists';
             $statusCode = 422;
         }
         return new JsonResponse($arrApi, $statusCode);
+    }
+    
+    /**
+     * @Route("/api/status/quoteStatusList")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("GET")
+     * params: None
+     */
+    
+    public function getQuoteStatusListAction(Request $request){
+        $arrApi = [];
+        $statusCode = 200;
+        $status= $this->getStatusList('Quote');
+        
+        if(!empty($status)){
+            $arrApi['status'] = 1;
+            $arrApi['message'] = 'Successfully retreived quote status list!';
+            foreach ($status as $v) {
+                if($v->getId()!=9){
+                    $arrApi['data'][]=[
+                        'id'=>$v->getId(),
+                        'statusName'=>$v->getStatusName()
+                    ];
+                }
+                
+            }
+        } else {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'The status list does not exists';
+            $statusCode = 422;
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+    
+    private function getStatusList($type){
+        $status = $this->getDoctrine()->getRepository('AppBundle:Status')->findBy(['type'=>$type,'isActive'=>1],
+                ['statusName'=>'ASC']);
+        return $status;
     }
 }
