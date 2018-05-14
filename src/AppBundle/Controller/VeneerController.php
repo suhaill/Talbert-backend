@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Doors;
 use AppBundle\Service\JsonToArrayGenerator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -21,6 +22,7 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
+use AppBundle\Entity\LineItemStatus;
 
 class VeneerController extends Controller
 {
@@ -81,6 +83,7 @@ class VeneerController extends Controller
                 $pattern, $grainDirectionId, $gradeId, $thicknessId, $width, $isNetSize, 
                 $length, $coreTypeId, $backer, $isFlexSanded, $sequenced, $lumberFee,
                 $comments,$createdAt,$fileId,$quoteId,$formtype,$widthFraction,$lengthFraction,$lineItemNumberToBeUsed);
+                $this->insertLinitemStatusRow($quoteId, $lastInserted, 'Veneer', $createdAt);
                 $arrApi['lastInserted'] = $lastInserted;
             
             }
@@ -90,6 +93,21 @@ class VeneerController extends Controller
         }
 
         return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function insertLinitemStatusRow($quoteId, $lastInserted, $lineitemType, $createdAt) {
+        $em = $this->getDoctrine()->getManager();
+        $lineItemStatus = new LineItemStatus();
+        $lineItemStatus->setQuoteOrOrderId($quoteId);
+        $lineItemStatus->setType('Quote');
+        $lineItemStatus->setLineItemId($lastInserted);
+        $lineItemStatus->setStatusId(1);
+        $lineItemStatus->setLineItemType($lineitemType);
+        $lineItemStatus->setIsActive(1);
+        $lineItemStatus->setCreatedAt($createdAt);
+        $lineItemStatus->setUpdatedAt($createdAt);
+        $em->persist($lineItemStatus);
+        $em->flush();
     }
 
     private function saveVeneerData($quantity, $speciesId,$pattern, $grainDirectionId, $gradeId, $thicknessId, $width,
@@ -491,7 +509,6 @@ class VeneerController extends Controller
     /**
      * @Route("api/veneer/saveVeneerCalculatedPrice")
      * @Method("POST")
-     * @Security("is_granted('ROLE_USER')")
      */
     public function saveVeneerCalculatedPriceAction(Request $request) {
         $arrApi = array();
