@@ -24,6 +24,20 @@ class LineItemStatus
     /**
      * @var int
      *
+     * @ORM\Column(name="quote_or_order_id", type="integer")
+     */
+    private $quoteOrOrderId;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="type", type="string", columnDefinition="enum('Quote', 'Order')")
+     */
+    private $type;
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="line_item_id", type="integer")
      */
     private $lineItemId;
@@ -72,6 +86,38 @@ class LineItemStatus
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return int
+     */
+    public function getQuoteOrOrderId()
+    {
+        return $this->quoteOrOrderId;
+    }
+
+    /**
+     * @param int $quoteOrOrderId
+     */
+    public function setQuoteOrOrderId($quoteOrOrderId)
+    {
+        $this->quoteOrOrderId = $quoteOrOrderId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
     }
 
     /**

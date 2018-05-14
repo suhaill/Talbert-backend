@@ -22,6 +22,7 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Knp\Snappy\Pdf;
 use Symfony\Component\Filesystem\Filesystem;
+use AppBundle\Entity\LineItemStatus;
 
 class DoorController extends Controller
 {
@@ -61,6 +62,7 @@ class DoorController extends Controller
                 $statusCode = 422;
             } else {
                 $isDoorSaved = $this->saveDoorData($data);
+                $this->insertLinitemStatusRow($qid, $isDoorSaved, 'Door', $createdAt);
                 $arrApi['data']['lastInsertId'] = $isDoorSaved;
                 $arrApi['data']['qId'] = $qid;
                 if (empty($isDoorSaved)) {
@@ -636,6 +638,21 @@ class DoorController extends Controller
         $em->persist($door);
         $em->flush();
         return $door->getId();
+    }
+
+    private function insertLinitemStatusRow($quoteId, $lastInserted, $lineitemType, $createdAt) {
+        $em = $this->getDoctrine()->getManager();
+        $lineItemStatus = new LineItemStatus();
+        $lineItemStatus->setQuoteOrOrderId($quoteId);
+        $lineItemStatus->setType('Quote');
+        $lineItemStatus->setLineItemId($lastInserted);
+        $lineItemStatus->setStatusId(1);
+        $lineItemStatus->setLineItemType($lineitemType);
+        $lineItemStatus->setIsActive(1);
+        $lineItemStatus->setCreatedAt($createdAt);
+        $lineItemStatus->setUpdatedAt($createdAt);
+        $em->persist($lineItemStatus);
+        $em->flush();
     }
 
     private function saveDoorSkinData($data, $doorId) {
