@@ -852,78 +852,107 @@ class OrderController extends Controller
     
     private function getVeneerslistbyQuoteId($qId) {
         $lineItem = array();
-        $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $qId,'isActive'=>1));
-        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId,'isActive'=>1));
-        $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $qId, 'status'=> 1));
+        $query = $this->getDoctrine()->getManager();
+        $plywoodRecords = $query->createQueryBuilder()
+            ->select(['p.id, p.quantity, p.speciesId, p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo, s.statusName'])
+            ->from('AppBundle:Plywood', 'p')
+            ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
+            ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId")
+            ->orderBy('p.id','ASC')
+            ->setParameter('quoteId', $qId)
+            ->setParameter('lineItemType', 'Plywood')
+            ->getQuery()
+            ->getResult();
+        $veneerRecords = $query->createQueryBuilder()
+            ->select(['v.id, v.quantity, v.speciesId, v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, s.statusName'])
+            ->from('AppBundle:Veneer', 'v')
+            ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
+            ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND v.quoteId = :quoteId")
+            ->orderBy('v.id','ASC')
+            ->setParameter('quoteId', $qId)
+            ->setParameter('lineItemType', 'Veneer')
+            ->getQuery()
+            ->getResult();
+        $doorRecords = $query->createQueryBuilder()
+            ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, s.statusName'])
+            ->from('AppBundle:Doors', 'd')
+            ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
+            ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND d.quoteId = :quoteId")
+            ->orderBy('d.id','ASC')
+            ->setParameter('quoteId', $qId)
+            ->setParameter('lineItemType', 'Door')
+            ->getQuery()
+            ->getResult();
         $i=0;
         if (!empty($plywoodRecords) || !empty($veneerRecords) || !empty($doorRecords)) {
             if (!empty($plywoodRecords)) {
                 foreach ($plywoodRecords as $p) {
-                    if($p->getFinishThickType() == 'inch'){
-                        if($p->getFinishThickId()>0){
-                            $thickness=$p->getFinishThickId().($p->getFinThickFraction()!=0?' '.$this->float2rat($p->getFinThickFraction()):'').'"';
+                    if($p['finishThickType'] == 'inch'){
+                        if($p['finishThickId']>0){
+                            $thickness=$p['finishThickId'].($p['finThickFraction']!=0?' '.$this->float2rat($p['finThickFraction']):'').'"';
                         } else {
-                            $thickness=$this->float2rat($p->getFinThickFraction()).'"';
+                            $thickness=$this->float2rat($p['finThickFraction']).'"';
                         }
                     } else {
-//                        $thickness=$this->float2rat($this->convertMmToInches($p->getFinishThickId()));
-                        $thickness=$p->getFinishThickId().' '.$p->getFinishThickType();
+                        $thickness=$p['finishThickId'].' '.$p['finishThickType'];
                     }
-                    $lineItem[$i]['id'] = $p->getId();
+                    $lineItem[$i]['id'] = $p['id'];
                     $lineItem[$i]['type'] = 'plywood';
                     $lineItem[$i]['url'] = 'line-item/edit-plywood';
-                    $lineItem[$i]['quantity'] = $p->getQuantity();
-                    $lineItem[$i]['species'] = $this->getSpeciesNameById($p->getSpeciesId());
-                    $lineItem[$i]['pattern'] = $this->getPatternNameById($p->getPatternMatch());
-                    $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($p->getGradeId()))[0];
-                    $lineItem[$i]['back'] = $this->getBackNameById($p->getBackerId());
-//                    $lineItem[$i]['thickness'] = ($p->getFinishThickType() == 'inch') ? $this->float2rat($p->getFinishThickId()) : $this->float2rat($this->convertMmToInches($p->getFinishThickId()));
+                    $lineItem[$i]['quantity'] = $p['quantity'];
+                    $lineItem[$i]['species'] = $this->getSpeciesNameById($p['speciesId']);
+                    $lineItem[$i]['pattern'] = $this->getPatternNameById($p['patternMatch']);
+                    $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($p['gradeId']))[0];
+                    $lineItem[$i]['back'] = $this->getBackNameById($p['backerId']);
                     $lineItem[$i]['thickness'] = $thickness;
-                    $lineItem[$i]['width'] = $p->getPlywoodWidth();
-                    $lineItem[$i]['length'] = $p->getPlywoodLength();
-                    $lineItem[$i]['core'] = $this->getCoreNameById($p->getCoreType());
-                    $lineItem[$i]['edge'] = 'NA';//$this->getEdgeNameById($p->getEdgeDetail());
-                    $lineItem[$i]['unitPrice'] = $p->getSellingPrice();
-                    $lineItem[$i]['totalPrice'] = $p->getTotalCost();
-                    $lineItem[$i]['widthFraction'] = $this->float2rat($p->getWidthFraction());
-                    $lineItem[$i]['lengthFraction'] = $this->float2rat($p->getLengthFraction());
-                    $lineItem[$i]['grain'] = $this->getGrainPattern($p->getGrainPatternId());
-                    $lineItem[$i]['isGreyedOut'] = $p->getisGreyedOut();
-                    $lineItem[$i]['greyedOutClass'] = ($p->getisGreyedOut()) ? 'greyedOut' : '';
-                    $lineItem[$i]['greyedOutEstNo'] = $p->getBackOrderEstNo();
+                    $lineItem[$i]['width'] = $p['plywoodWidth'];
+                    $lineItem[$i]['length'] = $p['plywoodLength'];
+                    $lineItem[$i]['core'] = $this->getCoreNameById($p['coreType']);
+                    $lineItem[$i]['edge'] = 'NA';
+                    $lineItem[$i]['unitPrice'] = $p['sellingPrice'];
+                    $lineItem[$i]['totalPrice'] = $p['totalCost'];
+                    $lineItem[$i]['widthFraction'] = $this->float2rat($p['widthFraction']);
+                    $lineItem[$i]['lengthFraction'] = $this->float2rat($p['lengthFraction']);
+                    $lineItem[$i]['grain'] = $this->getGrainPattern($p['grainPatternId']);
+                    $lineItem[$i]['isGreyedOut'] = $p['statusName'];
+                    $lineItem[$i]['greyedOutClass'] = ($p['statusName'] == 'LineItemBackOrder') ? 'greyedOut' : '';
+                    $lineItem[$i]['greyedOutEstNo'] = $p['backOrderEstNo'];
                     $i++;
                 }
             }
             if (!empty($veneerRecords)) {
                 foreach ($veneerRecords as $v) {
-                    $lineItem[$i]['id'] = $v->getId();
+                    $lineItem[$i]['id'] = $v['id'];
                     $lineItem[$i]['type'] = 'veneer';
                     $lineItem[$i]['url'] = 'line-item/edit-veneer';
-                    $lineItem[$i]['quantity'] = $v->getQuantity();
-                    $lineItem[$i]['species'] = $this->getSpeciesNameById($v->getSpeciesId());
-                    $lineItem[$i]['pattern'] = $this->getPatternNameById($v->getPatternId());
-                    $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($v->getGradeId()))[0];
-                    $lineItem[$i]['back'] = $this->getBackNameById($v->getBacker());
-                    $lineItem[$i]['thickness'] = $this->getThicknessNameById($v->getThicknessId());
-                    $lineItem[$i]['width'] = $v->getWidth();
-                    $lineItem[$i]['length'] = $v->getLength();
-                    $lineItem[$i]['core'] = $this->getCoreNameById($v->getCoreTypeId());
+                    $lineItem[$i]['quantity'] = $v['quantity'];
+                    $lineItem[$i]['species'] = $this->getSpeciesNameById($v['speciesId']);
+                    $lineItem[$i]['pattern'] = $this->getPatternNameById($v['patternId']);
+                    $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($v['gradeId']))[0];
+                    $lineItem[$i]['back'] = $this->getBackNameById($v['backer']);
+                    $lineItem[$i]['thickness'] = $this->getThicknessNameById($v['thicknessId']);
+                    $lineItem[$i]['width'] = $v['width'];
+                    $lineItem[$i]['length'] = $v['length'];
+                    $lineItem[$i]['core'] = $this->getCoreNameById($v['coreTypeId']);
                     $lineItem[$i]['edge'] = 'NA';
-                    $lineItem[$i]['unitPrice'] = $v->getSellingPrice();
-                    $lineItem[$i]['totalPrice'] = $v->getTotalCost();
-                    $lineItem[$i]['widthFraction'] = $this->float2rat($v->getWidthFraction());
-                    $lineItem[$i]['lengthFraction'] = $this->float2rat($v->getLengthFraction());
-                    $lineItem[$i]['grain'] = $this->getGrainPattern($v->getGrainPatternId());
-                    $lineItem[$i]['isGreyedOut'] = $v->getisGreyedOut();
-                    $lineItem[$i]['greyedOutClass'] = ($v->getisGreyedOut()) ? 'greyedOut' : '';
-                    $lineItem[$i]['greyedOutEstNo'] = $v->getBackOrderEstNo();
+                    $lineItem[$i]['unitPrice'] = $v['sellingPrice'];
+                    $lineItem[$i]['totalPrice'] = $v['totalCost'];
+                    $lineItem[$i]['widthFraction'] = $this->float2rat($v['widthFraction']);
+                    $lineItem[$i]['lengthFraction'] = $this->float2rat($v['lengthFraction']);
+                    $lineItem[$i]['grain'] = $this->getGrainPattern($v['grainPatternId']);
+                    $lineItem[$i]['isGreyedOut'] = $v['statusName'];
+                    $lineItem[$i]['greyedOutClass'] = ($v['statusName'] == 'LineItemBackOrder') ? 'greyedOut' : '';
+                    $lineItem[$i]['greyedOutEstNo'] = $v['backOrderEstNo'];
                     $i++;
                 }
             }
             if (!empty($doorRecords)) {
                 foreach ($doorRecords as $d) {
                     $doorCosts = $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->
-                            findOneBy(['doorId' => $d->getId()]);
+                            findOneBy(['doorId' => $d['id']]);
                     if(!empty($doorCosts)){
                         $totalcostPerPiece = !empty($doorCosts->getSellingPrice())?$doorCosts->getSellingPrice():0;
                         $totalCost = !empty($doorCosts->getTotalCost())?$doorCosts->getTotalCost():0;
@@ -931,42 +960,40 @@ class OrderController extends Controller
                         $totalcostPerPiece=0;
                         $totalCost=0;
                     }
-                    if($d->getFinishThickType() == 'inch'){
-                        if($d->getFinishThickId()>0){
-                            $thickness=$d->getFinishThickId().($d->getFinThickFraction()!=0?' '.$this->float2rat($d->getFinThickFraction()):'').'"';
+                    if($d['finishThickType'] == 'inch'){
+                        if($d['finishThickId']>0){
+                            $thickness=$d['finishThickId'].($d['finThickFraction']!=0?' '.$this->float2rat($d['finThickFraction']):'').'"';
                         } else {
-                            $thickness=$this->float2rat($d->getFinThickFraction()).'"';
+                            $thickness=$this->float2rat($d['finThickFraction']).'"';
                         }
                     } else {
-//                        $thickness=$this->float2rat($this->convertMmToInches($p->getFinishThickId()));
-                        $thickness=$d->getFinishThickId().' '.$d->getFinishThickType();
+                        $thickness=$d['finishThickId'].' '.$d['finishThickType'];
                     }
-                    $lineItem[$i]['id'] = $d->getId();
+                    $lineItem[$i]['id'] = $d['id'];
                     $lineItem[$i]['type'] = 'door';
                     $lineItem[$i]['url'] = 'door/edit-door';
-                    $lineItem[$i]['quantity'] = $d->getQty();
-                    if ($this->getSpeciesNameById($this->getSpeciesIdByDoorId($d->getId())) == null) {
+                    $lineItem[$i]['quantity'] = $d['qty'];
+                    if ($this->getSpeciesNameById($this->getSpeciesIdByDoorId($d['id'])) == null) {
                         $lineItem[$i]['species'] = 'Other';
                     } else {
-                        $lineItem[$i]['species'] = $this->getSpeciesNameById($this->getSpeciesIdByDoorId($d->getId()));
+                        $lineItem[$i]['species'] = $this->getSpeciesNameById($this->getSpeciesIdByDoorId($d['id']));
                     }
-                    $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d->getId()));
-                    $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($this->getGradeIdByDoorId($d->getId())))[0];
+                    $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d['id']));
+                    $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($this->getGradeIdByDoorId($d['id'])))[0];
                     $lineItem[$i]['back'] = 'NA';//$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
-//                    $lineItem[$i]['thickness'] = ($d->getFinishThickType() == 'inch') ? $this->float2rat($d->getFinishThickId()) : $this->float2rat($this->convertMmToInches($d->getFinishThickId()));
                     $lineItem[$i]['thickness']=$thickness;
-                    $lineItem[$i]['width'] = $d->getWidth();
-                    $lineItem[$i]['length'] = $d->getLength();
+                    $lineItem[$i]['width'] = $d['width'];
+                    $lineItem[$i]['length'] = $d['length'];
                     $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
                     $lineItem[$i]['edge'] = 'NA';
                     $lineItem[$i]['unitPrice'] = $totalcostPerPiece;
                     $lineItem[$i]['totalPrice'] = $totalCost;
-                    $lineItem[$i]['widthFraction'] = $this->float2rat($d->getWidthFraction());
-                    $lineItem[$i]['lengthFraction'] = $this->float2rat($d->getLengthFraction());
-                    $lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
-                    $lineItem[$i]['isGreyedOut'] = $d->getisGreyedOut();
-                    $lineItem[$i]['greyedOutClass'] = ($d->getisGreyedOut()) ? 'greyedOut' : '';
-                    $lineItem[$i]['greyedOutEstNo'] = $d->getBackOrderEstNo();
+                    $lineItem[$i]['widthFraction'] = $this->float2rat($d['widthFraction']);
+                    $lineItem[$i]['lengthFraction'] = $this->float2rat($d['lengthFraction']);
+                    $lineItem[$i]['grain'] = $this->getGrainPattern($d['id'],'door');
+                    $lineItem[$i]['isGreyedOut'] = $d['statusName'];
+                    $lineItem[$i]['greyedOutClass'] = ($d['statusName'] == 'LineItemBackOrder') ? 'greyedOut' : '';
+                    $lineItem[$i]['greyedOutEstNo'] = $d['backOrderEstNo'];
                     $i++;
                 }
             }

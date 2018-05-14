@@ -261,12 +261,12 @@ class QuoteController extends Controller
                 $arrApi['message'] = 'Successfully cloned quote';
                 $clonedQuoteId = $this->cloneQuoteData($quoteData, $datime,$quoteId,$editFlag);
                 $arrApi['newCloneQuoteId']=$clonedQuoteId;
-                
-                $plyNew=$this->clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArrP,$editFlag);
-                $arrApi['newClonePlywoodId']=$plyNew['id'];
-                
+
                 $veneerNew=$this->cloneVeneerData($quoteId, $clonedQuoteId, $datime,$lineItemArrV,$editFlag);
                 $arrApi['newCloneVeneerId']=$veneerNew['id'];
+
+                $plyNew=$this->clonePlywoodData($quoteId, $clonedQuoteId, $datime,$lineItemArrP,$editFlag);
+                $arrApi['newClonePlywoodId']=$plyNew['id'];
                 
                 $doorNew=$this->cloneDoorData($quoteId, $clonedQuoteId, $datime,$lineItemArrD,$editFlag);
                 $arrApi['newCloneDoorId']=$doorNew['id'];
@@ -748,14 +748,15 @@ class QuoteController extends Controller
         $quoteId = $data->get('quoteId');
         $lineItemArr = explode(',', $data->get('lineItemIdArr'));
         $estimateNo = $this->getEstimatenoByQId($data->get('newQuoteId'));
+        $datime = new \DateTime('now');
         for ($i=0; $i < count($lineItemArr)-1; $i++) {
             $lineItemIdArr = explode('-', $lineItemArr[$i]);
             if ($lineItemIdArr[1] == 'V') {
-                $this->excludePriceOfVeneer($lineItemIdArr[0], $estimateNo);
+                $this->excludePriceOfVeneer($lineItemIdArr[0], $estimateNo, $quoteId, 'Quote', 'Veneer', $datime);
             } elseif ($lineItemIdArr[1] == 'P') {
-                $this->excludePriceOfPlywood($lineItemIdArr[0], $estimateNo);
+                $this->excludePriceOfPlywood($lineItemIdArr[0], $estimateNo, $quoteId, 'Quote', 'Plywood', $datime);
             } else {
-                $this->excludePriceOfDoor($lineItemIdArr[0], $estimateNo);
+                $this->excludePriceOfDoor($lineItemIdArr[0], $estimateNo, $quoteId, 'Quote', 'Door', $datime);
             }
         }
         $arrApi['status'] = 1;
@@ -763,10 +764,20 @@ class QuoteController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    /**
+     * @Route("/api/quote/testing")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("GET")
+     */
+    public function testingAction(Request $request) {
+        echo 'testing';die;
+    }
+
 
     //Reusable codes
 
-    private function excludePriceOfVeneer($id, $estimateNo) {
+    private function excludePriceOfVeneer($id, $estimateNo, $orderId, $quoteOrOrder, $lineitemType, $datime) {
+        $this->changeLineitemStatusRowForVeneer($orderId, $quoteOrOrder, $id, $lineitemType, $datime);
         $em = $this->getDoctrine()->getManager();
         $veneer = $em->getRepository(Veneer::class)->findOneById($id);
         if (!empty($veneer)) {
@@ -792,14 +803,27 @@ class QuoteController extends Controller
             $veneer->setPreFinishSetup(0);
             $veneer->setColorMatch(0);
             $veneer->setTotalCost(0.00);
-            $veneer->setIsGreyedOut(1);
+            //$veneer->setLinitemStatusId($lineitemStatusId);
             $veneer->setBackOrderEstNo($estimateNo);
             $em->persist($veneer);
             $em->flush();
         }
     }
 
-    private function excludePriceOfPlywood($id, $estimateNo) {
+    private function changeLineitemStatusRowForVeneer($orderId, $quoteOrOrder, $lineitemId, $lineitemType, $datime) {
+        $em = $this->getDoctrine()->getManager();
+        $lineItemStatus = $em->getRepository(LineItemStatus::class)->findOneBy(array('quoteOrOrderId'=> $orderId, 'type'=> $quoteOrOrder, 'lineItemId'=> $lineitemId, 'lineItemType'=> $lineitemType, 'isActive'=> 1));
+        if (!empty($lineItemStatus)) {
+            $lineItemStatus->setStatusId(13);
+            $lineItemStatus->setType('Order');
+            $lineItemStatus->setUpdatedAt($datime);
+            $em->persist($lineItemStatus);
+            $em->flush();
+        }
+    }
+
+    private function excludePriceOfPlywood($id, $estimateNo, $orderId, $quoteOrOrder, $lineitemType, $datime) {
+        $this->changeLineitemStatusRowForPlywood($orderId, $quoteOrOrder, $id, $lineitemType, $datime);
         $em = $this->getDoctrine()->getManager();
         $plywood = $em->getRepository(Plywood::class)->findOneById($id);
         if (!empty($plywood)) {
@@ -844,14 +868,27 @@ class QuoteController extends Controller
             $plywood->setPreFinishSetup(0);
             $plywood->setColorMatch(0);
             $plywood->setTotalCost(0);
-            $plywood->setIsGreyedOut(1);
+//            $plywood->setLinitemStatusId($lineitemStatusId);
             $plywood->setBackOrderEstNo($estimateNo);
             $em->persist($plywood);
             $em->flush();
         }
     }
 
-    private function excludePriceOfDoor($id, $estimateNo) {
+    private function changeLineitemStatusRowForPlywood($orderId, $quoteOrOrder, $lineitemId, $lineitemType, $datime) {
+        $em = $this->getDoctrine()->getManager();
+        $lineItemStatus = $em->getRepository(LineItemStatus::class)->findOneBy(array('quoteOrOrderId'=> $orderId, 'type'=> $quoteOrOrder, 'lineItemId'=> $lineitemId, 'lineItemType'=> $lineitemType, 'isActive'=> 1));
+        if (!empty($lineItemStatus)) {
+            $lineItemStatus->setStatusId(13);
+            $lineItemStatus->setType('Order');
+            $lineItemStatus->setUpdatedAt($datime);
+            $em->persist($lineItemStatus);
+            $em->flush();
+        }
+    }
+
+    private function excludePriceOfDoor($id, $estimateNo, $orderId, $quoteOrOrder, $lineitemType, $datime) {
+        $this->changeLineitemStatusRowForDoor($orderId, $quoteOrOrder, $id, $lineitemType, $datime);
         $em = $this->getDoctrine()->getManager();
         $door = $em->getRepository(DoorCalculator::class)->findOneBy(array('doorId'=> $id));
         if (!empty($door)) {
@@ -908,9 +945,21 @@ class QuoteController extends Controller
         }
         $doors = $em->getRepository(Doors::class)->findOneById($id);
         if (!empty($doors)) {
-            $doors->setIsGreyedOut(1);
+//            $doors->setLinitemStatusId($lineitemStatusId);
             $doors->setBackOrderEstNo($estimateNo);
             $em->persist($doors);
+            $em->flush();
+        }
+    }
+
+    private function changeLineitemStatusRowForDoor($orderId, $quoteOrOrder, $lineitemId, $lineitemType, $datime) {
+        $em = $this->getDoctrine()->getManager();
+        $lineItemStatus = $em->getRepository(LineItemStatus::class)->findOneBy(array('quoteOrOrderId'=> $orderId, 'type'=> $quoteOrOrder, 'lineItemId'=> $lineitemId, 'lineItemType'=> $lineitemType, 'isActive'=> 1));
+        if (!empty($lineItemStatus)) {
+            $lineItemStatus->setStatusId(13);
+            $lineItemStatus->setType('Order');
+            $lineItemStatus->setUpdatedAt($datime);
+            $em->persist($lineItemStatus);
             $em->flush();
         }
     }
@@ -1271,10 +1320,12 @@ class QuoteController extends Controller
                     ;
                     $em->persist($newEntity);
                     $em->flush();
-                    if($editFlag=="editOrder"){
+                    if($editFlag=="editOrder"  || $editFlag=='backOrder'){
                         $lineItemStatus=new LineItemStatus();
+                        $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
+                        $lineItemStatus->setType('Quote');
                         $lineItemStatus->setLineItemId($newEntity->getId());
-                        $lineItemStatus->setStatusId(10);
+                        $lineItemStatus->setStatusId(1);
                         $lineItemStatus->setLineItemType('Plywood');
                         $lineItemStatus->setIsActive(1);
                         $lineItemStatus->setCreatedAt($datime);
@@ -1420,10 +1471,12 @@ class QuoteController extends Controller
                     ;
                     $em->persist($newEntity);
                     $em->flush();
-                    if($editFlag=="editOrder"){
+                    if($editFlag=="editOrder" || $editFlag=='backOrder'){
                         $lineItemStatus=new LineItemStatus();
+                        $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
+                        $lineItemStatus->setType('Quote');
                         $lineItemStatus->setLineItemId($newEntity->getId());
-                        $lineItemStatus->setStatusId(10);
+                        $lineItemStatus->setStatusId(1);
                         $lineItemStatus->setLineItemType('Veneer');
                         $lineItemStatus->setIsActive(1);
                         $lineItemStatus->setCreatedAt($datime);
@@ -1545,10 +1598,12 @@ class QuoteController extends Controller
                             $em->flush();
                         }
                     }
-                    if($editFlag=="editOrder"){
+                    if($editFlag=="editOrder" || $editFlag=='backOrder'){
                         $lineItemStatus=new LineItemStatus();
+                        $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
+                        $lineItemStatus->setType('Quote');
                         $lineItemStatus->setLineItemId($newEntity->getId());
-                        $lineItemStatus->setStatusId(10);
+                        $lineItemStatus->setStatusId(1);
                         $lineItemStatus->setLineItemType('Door');
                         $lineItemStatus->setIsActive(1);
                         $lineItemStatus->setCreatedAt($datime);
@@ -1556,7 +1611,6 @@ class QuoteController extends Controller
                         $em->persist($lineItemStatus);
                         $em->flush();
                     }
-
                 }
             }
             $em->getConnection()->commit();

@@ -678,9 +678,9 @@ class Doors
     private $updatedAt;
 
     /**
-     * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
+     * @ORM\Column(name="linitem_status_id", type="integer", nullable=true)
      */
-    private $isGreyedOut=false;
+    private $linitem_status_id;
 
     /**
      * @var string
@@ -2769,17 +2769,17 @@ class Doors
     /**
      * @return mixed
      */
-    public function getisGreyedOut()
+    public function getLinitemStatusId()
     {
-        return $this->isGreyedOut;
+        return $this->linitem_status_id;
     }
 
     /**
-     * @param mixed $isGreyedOut
+     * @param mixed $linitem_status_id
      */
-    public function setIsGreyedOut($isGreyedOut)
+    public function setLinitemStatusId($linitem_status_id)
     {
-        $this->isGreyedOut = $isGreyedOut;
+        $this->linitem_status_id = $linitem_status_id;
     }
 
     /**

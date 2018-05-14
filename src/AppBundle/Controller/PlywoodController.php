@@ -17,6 +17,7 @@ use AppBundle\Entity\Files;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use AppBundle\Entity\LineItemStatus;
 
 class PlywoodController extends Controller
 {
@@ -193,6 +194,7 @@ class PlywoodController extends Controller
                     $unitMesureCostId, $running, $runningDescription, $unitMesureCostIdR,$isLabels,
                     $numberLabels, $lumberFee, $autoNumber, $comments, $createdAt, $fileId, $quoteId,
                     $formtype, $edgeSameOnB, $edgeSameOnR, $edgeSameOnL, $custMarkup, $venCost, $venWaste, $subTotalVen, $coreCost, $coreWaste, $subTotalCore, $backrCost, $backrWaste, $subTotalBackr, $panelCost, $panelWaste, $subTotPanel, $finishCost, $finishWaste, $subTotalWaste, $edgeIntCost, $edgeIntWaste, $subTotalEdgeint, $edgeVCost, $edgeVWaste, $subTotalEdgev, $finishEdgeCost, $finishEdgeWaste, $subTotalFinishEdge, $millingCost, $millingWaste, $subTotalmilling, $rfCostP,$rfWasteP, $subTotRfP,$totalCostPerPiece,  $markup, $sellingPrice, $lineitemTotal, $machineSetup, $machineTooling, $preFinishSetup, $totalCost, $calCTw, $colorMatch);
+                $this->insertLinitemStatusRow($quoteId, $lastInserted, 'Plywood', $createdAt);
                 $arrApi['lastInserted'] = $lastInserted;
             }
         }
@@ -200,6 +202,22 @@ class PlywoodController extends Controller
             throw $e->getMessage();
         }
         return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function insertLinitemStatusRow($quoteId, $lastInserted, $lineitemType, $createdAt)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $lineItemStatus = new LineItemStatus();
+        $lineItemStatus->setQuoteOrOrderId($quoteId);
+        $lineItemStatus->setType('Quote');
+        $lineItemStatus->setLineItemId($lastInserted);
+        $lineItemStatus->setStatusId(1);
+        $lineItemStatus->setLineItemType($lineitemType);
+        $lineItemStatus->setIsActive(1);
+        $lineItemStatus->setCreatedAt($createdAt);
+        $lineItemStatus->setUpdatedAt($createdAt);
+        $em->persist($lineItemStatus);
+        $em->flush();
     }
 
     private function savePlywoodData($quantity, $lineItemNumberToBeUsed, $speciesId,
