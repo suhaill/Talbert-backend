@@ -1322,9 +1322,14 @@ class QuoteController extends Controller
                     $em->persist($newEntity);
                     $em->flush();
                     if($editFlag=="editOrder"  || $editFlag=='backOrder'){
+                        if($editFlag=="editOrder"){
+                            $type = 'Order';
+                        } else if($editFlag=='backOrder'){
+                            $type = 'Quote';                            
+                        }
                         $lineItemStatus=new LineItemStatus();
                         $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
-                        $lineItemStatus->setType('Quote');
+                        $lineItemStatus->setType($type);
                         $lineItemStatus->setLineItemId($newEntity->getId());
                         $lineItemStatus->setStatusId(1);
                         $lineItemStatus->setLineItemType('Plywood');
@@ -1472,10 +1477,15 @@ class QuoteController extends Controller
                     ;
                     $em->persist($newEntity);
                     $em->flush();
-                    if($editFlag=="editOrder" || $editFlag=='backOrder'){
+                    if($editFlag=="editOrder" || $editFlag=='backOrder'){                        
+                        if($editFlag=="editOrder"){
+                            $type = 'Order';
+                        } else if($editFlag=='backOrder'){
+                            $type = 'Quote';                            
+                        }
                         $lineItemStatus=new LineItemStatus();
                         $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
-                        $lineItemStatus->setType('Quote');
+                        $lineItemStatus->setType($type);
                         $lineItemStatus->setLineItemId($newEntity->getId());
                         $lineItemStatus->setStatusId(1);
                         $lineItemStatus->setLineItemType('Veneer');
@@ -1599,10 +1609,15 @@ class QuoteController extends Controller
                             $em->flush();
                         }
                     }
-                    if($editFlag=="editOrder" || $editFlag=='backOrder'){
+                    if($editFlag=="editOrder" || $editFlag=='backOrder'){                                               
+                        if($editFlag=="editOrder"){
+                            $type = 'Order';
+                        } else if($editFlag=='backOrder'){
+                            $type = 'Quote';                            
+                        }
                         $lineItemStatus=new LineItemStatus();
                         $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
-                        $lineItemStatus->setType('Quote');
+                        $lineItemStatus->setType($type);
                         $lineItemStatus->setLineItemId($newEntity->getId());
                         $lineItemStatus->setStatusId(1);
                         $lineItemStatus->setLineItemType('Door');
