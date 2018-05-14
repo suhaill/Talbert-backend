@@ -201,6 +201,7 @@ class QuoteController extends Controller
                 $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee())?str_replace(',','',number_format($quoteData->getLumFee(),2)):'00.00';
                 $arrApi['data']['shipCharge'] = !empty($quoteData->getShipCharge())?str_replace(',','',number_format($quoteData->getShipCharge(),2)):'00.00';
                 $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax())?str_replace(',','',number_format($quoteData->getSalesTax(),2)):'00.00';
+                $arrApi['data']['termName'] = $this->getTermName($quoteData->getTermId());
                 if ($quoteData->getQuoteTot() == 0) {
                     $arrApi['data']['projectTot'] = '00.00';
                 } else {
@@ -1321,9 +1322,14 @@ class QuoteController extends Controller
                     $em->persist($newEntity);
                     $em->flush();
                     if($editFlag=="editOrder"  || $editFlag=='backOrder'){
+                        if($editFlag=="editOrder"){
+                            $type = 'Order';
+                        } else if($editFlag=='backOrder'){
+                            $type = 'Quote';                            
+                        }
                         $lineItemStatus=new LineItemStatus();
                         $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
-                        $lineItemStatus->setType('Quote');
+                        $lineItemStatus->setType($type);
                         $lineItemStatus->setLineItemId($newEntity->getId());
                         $lineItemStatus->setStatusId(1);
                         $lineItemStatus->setLineItemType('Plywood');
@@ -1471,10 +1477,15 @@ class QuoteController extends Controller
                     ;
                     $em->persist($newEntity);
                     $em->flush();
-                    if($editFlag=="editOrder" || $editFlag=='backOrder'){
+                    if($editFlag=="editOrder" || $editFlag=='backOrder'){                        
+                        if($editFlag=="editOrder"){
+                            $type = 'Order';
+                        } else if($editFlag=='backOrder'){
+                            $type = 'Quote';                            
+                        }
                         $lineItemStatus=new LineItemStatus();
                         $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
-                        $lineItemStatus->setType('Quote');
+                        $lineItemStatus->setType($type);
                         $lineItemStatus->setLineItemId($newEntity->getId());
                         $lineItemStatus->setStatusId(1);
                         $lineItemStatus->setLineItemType('Veneer');
@@ -1598,10 +1609,15 @@ class QuoteController extends Controller
                             $em->flush();
                         }
                     }
-                    if($editFlag=="editOrder" || $editFlag=='backOrder'){
+                    if($editFlag=="editOrder" || $editFlag=='backOrder'){                                               
+                        if($editFlag=="editOrder"){
+                            $type = 'Order';
+                        } else if($editFlag=='backOrder'){
+                            $type = 'Quote';                            
+                        }
                         $lineItemStatus=new LineItemStatus();
                         $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
-                        $lineItemStatus->setType('Quote');
+                        $lineItemStatus->setType($type);
                         $lineItemStatus->setLineItemId($newEntity->getId());
                         $lineItemStatus->setStatusId(1);
                         $lineItemStatus->setLineItemType('Door');
@@ -2564,5 +2580,13 @@ class QuoteController extends Controller
             return $lastQuote->getId();
         }
     }
-
+    
+    private function getTermName($id){
+        $lastQuote = $this->getDoctrine()->getRepository('AppBundle:Terms')->findOneById($id);
+        if (!empty($lastQuote)) {
+            return $lastQuote->getName();
+        } else {
+            return '';
+        }
+    }
 }
