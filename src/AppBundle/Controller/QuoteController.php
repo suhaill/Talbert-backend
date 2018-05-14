@@ -496,7 +496,113 @@ class QuoteController extends Controller
      * @Method("POST")
      * params: None
      */
+    
     public function searchQuoteAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+//        $pageNo = $data->get('current_page');
+//        $limit = $data->get('limit');
+//        $sortBy = $data->get('sort_by');
+//        $order = $data->get('order');
+        $searchVal = trim($data->get('searchVal'));
+        $startDate = $data->get('startDate');
+        $endDate = $data->get('endDate');
+        $type = $data->get('type');
+//        $offset = ($pageNo - 1)  * $limit;
+        if (false) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'Parameter missing.';
+            $statusCode = 422;
+        } else {
+            try {
+                $searchType = $this->checkIfSearchValIsEstOrCompany($searchVal);
+                $condition="q.status != :status and qs.statusId!='' and qs.isActive=1 ";
+                $concat = ' and ';
+                if ($searchType == 'estNo') {
+                    $estimate = explode('-',$searchVal);
+                    $condition.=$concat."q.controlNumber= :searchVal ";
+                    $keyword = $estimate[1];
+//                    $concat = " AND ";
+                } else if ($searchType == 'company'){
+                    if($type=='status'){
+                        if($searchVal!='all'){
+                            $keyword=$searchVal;                  
+                            $condition.=$concat."qs.statusId = :searchVal ";
+//                            $concat = " AND ";
+                        }                        
+                    } else {
+                        $keyword='%'.$searchVal.'%';                  
+                        $condition.=$concat."u.company Like :searchVal ";
+//                        $concat = " AND ";
+                    }                    
+                }
+                if(!empty($startDate) && !empty($endDate)){
+                    $condition = $condition.$concat." q.estimatedate >= :from AND q.estimatedate <= :to ";
+                } else if(!empty($startDate) && empty($endDate) || ($startDate == $endDate && !empty($endDate) && !empty($startDate))){
+                    $condition = $condition.$concat." q.estimatedate >= :from ";
+                } else if(empty($startDate) && !empty($endDate)){
+                    $condition = $condition.$concat." q.estimatedate <= :to ";
+                }
+                $query = $this->getDoctrine()->getManager();
+                $query1=$query->createQueryBuilder()
+                ->select(['q.controlNumber','q.version','q.customerId','q.estimatedate','q.id',
+                        'qs.statusId',
+                        's.statusName as status',
+                        'u.company as companyname','u.fname','u.lname'
+                        ])
+                    ->from('AppBundle:Quotes', 'q')
+//                    ->leftJoin('AppBundle:Quotes', 'q', 'WITH', "q.id = o.quoteId")
+                    ->innerJoin('AppBundle:QuoteStatus', 'qs', 'WITH', "q.id = qs.quoteId")
+                    ->leftJoin('AppBundle:Status', 's', 'WITH', "qs.statusId=s.id ")
+                    ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
+                    ->where($condition)
+                    ->setParameter('status', 'Approved');
+                if($searchVal!='all'){
+                    $query1->setParameter('searchVal', $keyword);
+                }
+                if(!empty($startDate) && !empty($endDate)){
+                    $query1->setParameter('from', date('Y-m-d',strtotime($startDate)))
+                    ->setParameter('to', date('Y-m-d',strtotime($endDate)));
+                } else if(!empty($startDate) && empty($endDate) || ($startDate == $endDate && !empty($endDate) && !empty($startDate))){
+                    $query1->setParameter('from', date('Y-m-d',strtotime($startDate)));
+                } else if(empty($startDate) && !empty($endDate)){
+                    $query1->setParameter('to', date('Y-m-d',strtotime($endDate)));
+                }
+                $quotes=$query1->orderBy('q.estimatedate','DESC')->getQuery()->getResult();
+//                $quotes=$query1->getQuery()->getSQL();print_r($quotes);die;
+                if (empty($quotes) ) {
+                    $arrApi['status'] = 0;
+                    $arrApi['message'] = 'There is no order.';
+                    $statusCode = 422;
+                } else {
+                    $arrApi['status'] = 1;
+                    $arrApi['message'] = 'Successfully retreived the order list.';
+                    $quoteList=[];
+                    for($i=0;$i<count($quotes);$i++) {
+                        $quoteList[$i]=[
+                            'id'=>$quotes[$i]['id'],
+                            'estimateNumber'=>'E-'.$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
+                            'customername'=>$quotes[$i]['fname'],
+                            'companyname'=>$quotes[$i]['companyname'],
+//                            'orderId'=>$quotes[$i]['orderId'],
+                            'status'=>$quotes[$i]['status'],
+                            'estDate'=>$this->getEstimateDateFormate($quotes[$i]['estimatedate']),
+                        ];
+                    }
+                    $arrApi['data']['quotes'] = $quoteList;
+                }
+                return new JsonResponse($arrApi, $statusCode);                
+            }
+            catch(Exception $e) {
+                throw $e->getMessage();
+            }
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+    
+    public function searchQuoteActionOld(Request $request) {
         $arrApi = array();
         $statusCode = 200;
         $jsontoarraygenerator = new JsonToArrayGenerator();
@@ -1085,6 +1191,11 @@ class QuoteController extends Controller
         $quote = $em->getRepository(Quotes::class)->findOneById($qId);
         if (!empty($quote)) {
             try {
+                if($status!=$quote->getStatus()){
+                    $updateStatusFlag = true;
+                } else {
+                    $updateStatusFlag = false;
+                }
                 $quote->setEstimatedate($qDate);
                 $quote->setEstDateForSearch($qDateForSearch);
                 $quote->setEstimatorId($quoteAddedby);
@@ -1105,7 +1216,7 @@ class QuoteController extends Controller
                 $quote->setUpdatedAt($datime);
                 $em->persist($quote);
                 $em->flush();
-                if($status!=$quote->getStatus()){
+                if($updateStatusFlag==true){
                     $quoteStatus = $em->getRepository('AppBundle:QuoteStatus')->findOneBy(['quoteId'=>$qId,'isActive'=>1]);
     //                $quoteStatus->setStatusId($this->getQuoteStatusId($status));
                     if(!empty($quoteStatus)){
