@@ -311,7 +311,11 @@ class QuoteController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-
+    private function convertToDecimal($fraction)
+    {
+        $numbers=explode("/",$fraction);
+        return round($numbers[0]/$numbers[1],6);
+    }
 
     /**
      * @Route("/api/quote/printQuotePdf/{id}")
@@ -378,6 +382,24 @@ class QuoteController extends Controller
 
         //print_R($arrApi['data']);
 
+        $calSqrft = 0;
+
+        foreach($arrApi['data']['lineitems'] as $key=>$qData){
+
+            if($qData['type'] == 'plywood'){
+                $index = ($key+1)." P"; 
+            }
+            else if($qData['type'] == 'veneer'){
+                $index = ($key+1)." V"; 
+            }
+            else{
+                $index = ($key+1)." D"; 
+            }
+
+            $calSqrft += ((float)($qData['width'] + $this->convertToDecimal($qData['widthFraction']))*(float)($qData['length'] + $this->convertToDecimal($qData['lengthFraction'])))/144;
+
+        }
+
         $html = "<html>
                 <head>
                     <style>
@@ -439,7 +461,7 @@ class QuoteController extends Controller
                                         <td>Job Name: ".$arrApi['data']['job']."</td>
                                         <td>Delivery Date: ".$arrApi['data']['deliveryDate']."</td>
                                         <td>Ship Via: ".$arrApi['data']['shipMethod']."</td>
-                                        <td>SqFt: ".$arrApi['data']['estnumber']."</td>
+                                        <td>SqFt: ".number_format($calSqrft,2)."</td>
                                     </tr>
                                 </table>
                             </div>
@@ -477,6 +499,9 @@ class QuoteController extends Controller
                                             $index = ($key+1)." D"; 
                                         }
 
+                                        //$calSqrft2 = ((float)($qData['width'] + $this->convertToDecimal($qData['widthFraction']))*(float)($qData['length'] + $this->convertToDecimal($qData['lengthFraction'])))/144;
+
+
                                         $html .= "<tr>
                                             <th>".$index."</th>
                                             <td>".$qData['quantity']."</td>
@@ -494,16 +519,15 @@ class QuoteController extends Controller
 
                                     }
                                     
-                                        
                                     $html .= "</tbody>
-                                </table>
-                                <table class='totalPrice'>
-                                    <tr>
-                                        <td>Special Tooling - Description</td>
-                                        <td class='price'>$350.00</td>
-                                    </tr>
-                                </table>
-                            </div>
+                                            </table>
+                                            <table class='totalPrice'>
+                                                <tr>
+                                                    <td>Special Tooling - Description</td>
+                                                    <td class='price'>$350.00</td>
+                                                </tr>
+                                            </table>
+                                        </div>
                             
             
                             <div class='invoiceFooter'>
@@ -529,8 +553,8 @@ class QuoteController extends Controller
                                         </td>
                                         <td>
                                             <div class='approved'>
-                                                <p>Approved by: John Smithe via phone</p>
-                                                <p>05.18.18 | 11:05 a.m.</p>
+                                                <p>&nbsp;&nbsp;&nbsp;</p>
+                                                <p>&nbsp;&nbsp;&nbsp;</p>
                                             </div>
                                         </td>
                                         <td>
