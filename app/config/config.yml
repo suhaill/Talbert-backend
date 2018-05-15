@@ -8,6 +8,7 @@ imports:
 parameters:
     locale: en
     upload_file_destination: '%kernel.project_dir%/web/uploads/'
+    images_destination: '%kernel.project_dir%/web/images/'
     allowed_extensions: ['pdf','xls','xlsx','PDF','XLS','XLSX']
 framework:
     #esi: ~
