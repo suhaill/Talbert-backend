@@ -317,6 +317,11 @@ class QuoteController extends Controller
         return round($numbers[0]/$numbers[1],6);
     }
 
+    private function getUnitNameById($id) {
+        return ($id == 1) ? 'Running foot' : ($id == 2) ? 'Side' : ($id == 3) ? 'Square Foot' : 'Piece';
+    }
+
+
     /**
      * @Route("/api/quote/printQuotePdf/{id}")
      * @Method("GET")
@@ -511,9 +516,18 @@ class QuoteController extends Controller
                                             <td>".$qData['pattern']."</td>
                                             <td>".$qData['back']."</td>
                                             <td>".$qData['width']."-".$qData['widthFraction']." x ".$qData['length']."-".$qData['lengthFraction']." x ".$qData['thickness']."</td>
-                                            <td>".$qData['core']."</td>
-                                            <td class='t-left'>Edge Detail: ".$qData['edge']."</td>
-                                            <td>$".$qData['unitPrice']."</td>
+                                            <td>".$qData['core']."</td>";
+                                        $html .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+                                        $html .= ($qData['milling'] == 1) ? "Miling: ".$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
+                                        if ($qData['finish'] == 'UV') {
+                                            $html .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']." %-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                                        } elseif ($qData['finish'] == 'Paint') {
+                                            $html .= "Finish: Paint-".$qData['facPaint']."-".$qData['uvCuredId']."-".$qData['sheenId']." %".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                                        }
+                                        $html .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
+                                        $html .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
+
+                                        $html .="<td>$".$qData['unitPrice']."</td>
                                             <td>$".$qData['totalPrice']."</td>
                                         </tr>";
 
@@ -2278,6 +2292,22 @@ class QuoteController extends Controller
         }
     }
 
+    private function getFirstLabel($labels) {
+        return explode(',', $labels)[0];
+    }
+
+    private function getUVCuredNameById($id) {
+        return ($id == 2) ? 'Pacific Collection' : ($id == 3) ? 'Custom Stain Match' : '';
+    }
+
+    private function getSheenById($id) {
+        return ($id == 1) ? '3' : ($id == 2) ? '5' : ($id == 3) ? '10' : ($id == 4) ? '20' : ($id == 5) ? '30' : ($id == 6) ? '40' : ($id == 7) ? '50' : ($id == 8) ? '60' : ($id == 9) ? '70' : ($id == 10) ? '80' : ($id == 11) ? '90' : ($id == 12) ? '100' : '0';
+    }
+
+    private function getFacPaintById($id) {
+        return ($id == 1) ? 'Prime Only' : ($id == 2) ? 'White / Light Color' : 'Dark Color';
+    }
+
     private function getVeneerslistbyQuoteId($qId) {
         $lineItem = array();
         $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $qId,'isActive'=>1));
@@ -2316,6 +2346,25 @@ class QuoteController extends Controller
                     $lineItem[$i]['widthFraction'] = $this->float2rat($p->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($p->getLengthFraction());
                     $lineItem[$i]['grain'] = $this->getGrainPattern($p->getGrainPatternId());
+                    $lineItem[$i]['edgeDetail'] = ($p->getEdgeDetail()) ? 1 : 0;
+                    $lineItem[$i]['topEdge'] = $p->getTopEdge();
+                    $lineItem[$i]['bottomEdge'] = $p->getBottomEdge();
+                    $lineItem[$i]['rightEdge'] = $p->getRightEdge();
+                    $lineItem[$i]['leftEdge'] = $p->getLeftEdge();
+                    $lineItem[$i]['milling'] = ($p->getMilling()) ? '1' : 0 ;
+                    $lineItem[$i]['unitMesureCostId'] = $p->getUnitMesureCostId();
+                    $lineItem[$i]['finish'] = $p->getFinish();
+                    $lineItem[$i]['uvCuredId'] = $this->getUVCuredNameById($p->getUvCuredId());
+                    $lineItem[$i]['sheenId'] = $this->getSheenById($p->getSheenId());
+                    $lineItem[$i]['shameOnId'] = ($p->getShameOnId()) ? 'BS' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($p->getCoreSameOnbe()) ? ',BE' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($p->getCoreSameOnte()) ? ',TE' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($p->getCoreSameOnre()) ? ',RE' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($p->getCoreSameOnle()) ? ',LE' : '';
+                    $lineItem[$i]['facPaint'] = $this->getFacPaintById($p->getFacPaint());
+                    $lineItem[$i]['isLabels'] = $p->getIsLabels();
+                    $lineItem[$i]['autoNumber'] = $this->getFirstLabel($p->getAutoNumber());
+                    $lineItem[$i]['comment'] = $p->getComments();
                     $i++;
                 }
             }
@@ -2340,6 +2389,25 @@ class QuoteController extends Controller
                     $lineItem[$i]['widthFraction'] = $this->float2rat($v->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($v->getLengthFraction());
                     $lineItem[$i]['grain'] = $this->getGrainPattern($v->getGrainPatternId());
+                    $lineItem[$i]['edgeDetail'] = 0;
+                    $lineItem[$i]['topEdge'] = 1;
+                    $lineItem[$i]['bottomEdge'] = 1;
+                    $lineItem[$i]['rightEdge'] = 1;
+                    $lineItem[$i]['leftEdge'] = 1;
+                    $lineItem[$i]['milling'] = 0;
+                    $lineItem[$i]['unitMesureCostId'] = 0;
+                    $lineItem[$i]['finish'] = 'None';
+                    $lineItem[$i]['uvCuredId'] = 0;
+                    $lineItem[$i]['sheenId'] = 0;
+                    $lineItem[$i]['shameOnId'] = 0;
+                    $lineItem[$i]['coreSameOnbe'] = '';
+                    $lineItem[$i]['coreSameOnte'] = '';
+                    $lineItem[$i]['coreSameOnre'] = '';
+                    $lineItem[$i]['coreSameOnle'] = '';
+                    $lineItem[$i]['facPaint'] = 0;
+                    $lineItem[$i]['isLabels'] = 0;
+                    $lineItem[$i]['autoNumber'] = 0;
+                    $lineItem[$i]['comment'] = $v->getComments();
                     $i++;
                 }
             }
@@ -2387,13 +2455,33 @@ class QuoteController extends Controller
                     $lineItem[$i]['widthFraction'] = $this->float2rat($d->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($d->getLengthFraction());
                     $lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
+                    $lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
+                    $lineItem[$i]['edgeDetail'] = ($d->getEdgeFinish()) ? '1' : 0;
+                    $lineItem[$i]['topEdge'] = $d->getTopEdge();
+                    $lineItem[$i]['bottomEdge'] = $d->getBottomEdge();
+                    $lineItem[$i]['rightEdge'] = $d->getRightEdge();
+                    $lineItem[$i]['leftEdge'] = $d->getLeftEdge();
+                    $lineItem[$i]['milling'] = ($d->isMilling()) ? '1' : 0 ;
+                    $lineItem[$i]['unitMesureCostId'] = $d->getUnitMesureCostId();
+                    $lineItem[$i]['finish'] = $d->getFinish();
+                    $lineItem[$i]['uvCuredId'] = $this->getUVCuredNameById($d->getUvCured());
+                    $lineItem[$i]['sheenId'] = $this->getSheenById($d->getSheen());
+                    $lineItem[$i]['shameOnId'] = ($d->getSameOnBack()) ? 'BS' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($d->getSameOnBottom()) ? ',BE' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($d->getSameOnTop()) ? ',TE' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($d->getSameOnRight()) ? ',RE' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($d->getSameOnLeft()) ? ',LE' : '';
+                    $lineItem[$i]['facPaint'] = $this->getFacPaintById($d->getFacPaint());
+                    $lineItem[$i]['isLabels'] = $d->getIsLabel();
+                    $lineItem[$i]['autoNumber'] = $this->getFirstLabel($d->getAutoNumber());
+                    $lineItem[$i]['comment'] = $d->getComment();
                     $i++;
                 }
             }
             return $lineItem;
         }
     }
-    
+
     private function getGrainPattern($id,$type=''){
         if($type=='door'){
             $grainId= $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(['id'=>$id]);
