@@ -19,6 +19,12 @@ use AppBundle\Entity\Quotes;
 use AppBundle\Entity\Profile;
 use AppBundle\Entity\DoorCalculator;
 use AppBundle\Entity\State;
+use AppBundle\Entity\Plywood;
+use AppBundle\Entity\Veneer;
+use AppBundle\Entity\Doors;
+use Knp\Snappy\Pdf;
+use Symfony\Component\Filesystem\Filesystem;
+
 
 class OrderController extends Controller
 {
@@ -854,11 +860,13 @@ class OrderController extends Controller
         $lineItem = array();
         $query = $this->getDoctrine()->getManager();
         $plywoodRecords = $query->createQueryBuilder()
-            ->select(['p.id, p.quantity, p.speciesId, p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo, s.statusName'])
+            ->select(['p.id, p.quantity, p.speciesId, p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType,
+                p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction,
+                p.lengthFraction,p.grainPatternId,p.backOrderEstNo, s.statusName'])
             ->from('AppBundle:Plywood', 'p')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId and lis.statusId=1")
             ->orderBy('p.id','ASC')
             ->setParameter('quoteId', $qId)
             ->setParameter('lineItemType', 'Plywood')
@@ -869,7 +877,7 @@ class OrderController extends Controller
             ->from('AppBundle:Veneer', 'v')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND v.quoteId = :quoteId")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND v.quoteId = :quoteId and lis.statusId=1")
             ->orderBy('v.id','ASC')
             ->setParameter('quoteId', $qId)
             ->setParameter('lineItemType', 'Veneer')
@@ -880,7 +888,7 @@ class OrderController extends Controller
             ->from('AppBundle:Doors', 'd')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND d.quoteId = :quoteId")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND d.quoteId = :quoteId and lis.statusId=1")
             ->orderBy('d.id','ASC')
             ->setParameter('quoteId', $qId)
             ->setParameter('lineItemType', 'Door')
@@ -1598,5 +1606,786 @@ class OrderController extends Controller
         $status = $this->getDoctrine()->getRepository('AppBundle:Status')->findBy(['type'=>$type,'isActive'=>1],
                 ['statusName'=>'ASC']);
         return $status;
+    }
+    
+    /**
+     * @Route("/api/order/printOrderTicket")
+     * @Security("is_granted('ROLE_USER')")
+     * @Method("POST")
+     * params: None
+     */
+    public function printOrderTicketAction(Request $request){
+        $arrApi = [];
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $quoteId=!empty($data->get('quote_id'))?trim($data->get('quote_id')):'';
+        $plywoodData= $this->getPlywoodDataByQuoteId($quoteId);
+        $veneerData= $this->getVeneerDataByQuoteId($quoteId);
+//        $doorData= $this->getDoorDataByQuoteId($quoteId);
+//        print_r($plywoodData);die;
+        $veneerHtml = '';
+        if(!empty($veneerData)){
+            foreach ($veneerData as $v) {
+                $veneerHtml.='<div style="page-break-after:always" *ngFor="let v of data">
+            <div class="ticketWrap">
+                <div class="ticketScreen veneer">
+                    <table class="ticketHead">
+                        <tr>
+                            <td class="lftLogo"><img src="assets/img/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                            <td class="dep" >Veneer Department</td>
+                        </tr>
+                    </table>
+                    <table class="ticketDesc">
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><label class="custName">'.$v['username'].'</label></td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc">'.$v['refNum'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc">'.$v['estNumber'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><hr></td>
+                        </tr>
+                    </table>
+                    <table class="ticketDesc">
+                        <tr>
+                            <td class="cellLabel"><label>Quantity</label></td>
+                            <td class="cellDesc">'.$v['quantity'].' Pieces</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Species</label></td>
+                            <td class="cellDesc">'.$v['SpecieName'].' - '.$v['patternName'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Size</label></td>
+                            <td class="cellDesc">'.$v['width'].' - '.$v['length'].'"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Thickness</label></td>
+                            <td class="cellDesc">'.$v['thicknessName'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Grade</label></td>
+                            <td class="cellDesc">'.$v['faceGradeName'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Back</label></td>
+                            <td class="cellDesc">'.$v['backerName'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Grain Direction</label></td>
+                            <td class="cellDesc">'.$v['grainDirectionName'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Sequenced</label></td>
+                            <td class="cellDesc">'.$v['sequenced'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Labels</label></td>
+                            <td class="cellDesc">No</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Notes:</label></td>
+                            <td class="cellDesc"><span class="noteTxt">'.$v['comments'].'</span></td>
+                        </tr>
+                    </table>
+
+                    <table class="ticketFoot">
+                        <tr>
+                            <td class="cellLabel"><label>Due</label></td>
+                            <td class="cellDesc"><label class="custName">'.date('Y-m-d',strtotime($v['deliveryDate'])).'</label></td>
+                        </tr>
+                        <tr>
+                            <td class="lftFoot"><!--<img src="assets/img/ticket-images/veneer-lft-img.png" alt="">--></td>
+                            <td class="dep footIN">
+                                <table>
+                                    <tr>
+                                        <td class="itBx"><span class="itTxt">Item '.$v['lineItemNum'].'</span></td>
+                                        <td class="footImg">
+                                            <img src="assets/img/ticket-images/foot-img-1.png" alt="">
+                                            <!-- <img src="assets/img/ticket-images/foot-img-2.png" alt=""> -->
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div><br/><br/>
+            <!-- End: \ Ticket for Sanding Department -->
+            <div class="ticketWrap">
+                <div class="ticketScreen sanding">
+                    <table class="ticketHead">
+                        <tr>
+                            <td class="lftLogo"><img src="assets/img/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                            <td class="dep">Sanding Department</td>
+                        </tr>
+                    </table>
+                    <table class="ticketDesc">
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><label class="custName">'.$v['username'].'</label></td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc">'.$v['refNum'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc">'.$v['estNumber'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><hr></td>
+                        </tr>
+                    </table>
+                    <table class="ticketDesc">
+                        <tr>
+                            <td class="cellLabel"><label>Quantity</label></td>
+                            <td class="cellDesc">'.$v['quantity'].' Pieces</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Species/Face</label></td>
+                            <td class="cellDesc">'.$v['SpecieName'].' - '.$v['patternName'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Finished Size</label></td>
+                            <td class="cellDesc">'.$v['width'].'" x '.$v['length'].'"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Finished Thickness</label></td>
+                            <td class="cellDesc">'.$v['thicknessName'].'"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Notes:</label></td>
+                            <td class="cellDesc"><span class="noteTxt">'.$v['comments'].'</span></td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Labels</label></td>
+                            <td class="cellDesc">No</td>
+                        </tr>
+                    </table>
+
+                    <table class="ticketFoot">
+                        <tr>
+                            <td class="cellLabel"><label>Due</label></td>
+                            <td class="cellDesc"><label class="custName">'.date('Y-m-d',strtotime($v['deliveryDate'])).'</label></td>
+                        </tr>
+                        <tr>
+                            <td class="lftFoot">&nbsp;</td>
+                            <td class="dep footIN">
+                                <table>
+                                    <tr>
+                                        <td class="itBx"><span class="itTxt">Item '.$v['lineItemNum'].'</span></td>
+                                        <td class="footImg">
+                                            <img src="assets/img/ticket-images/foot-img-1.png" alt="">
+                                            <!-- <img src="assets/img/ticket-images/foot-img-2.png" alt=""> -->
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div><br/>
+        </div>';
+            }            
+        }
+        
+        $plywoodHtml='';
+        if(!empty($plywoodData)){
+            foreach ($plywoodData as $v) {
+                $topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+                $bottomEdgeName = !empty($v['bottomEdgeName']) ? $v['bottomEdgeName'] : 'N/A';
+                $rightEdgeName = !empty($v['rightEdgeName']) ? $v['rightEdgeName'] : 'N/A';
+                $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
+                $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
+                $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
+                $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+                $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
+                $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
+                $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
+                $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
+                $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
+                
+                
+                $edge = '';
+                if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') || 
+                    ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') || 
+                    ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') || 
+                    ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None'))
+                {
+                    if($topEdgeName !== 'N/A' && $topEdgeName !== 'None'){
+                        $edge.='TE: '.$topEdgeName.' &nbsp; |  &nbsp;'.$topEdgeMaterialName.' &nbsp; |  &nbsp;'.$topSpeciesName.' <br>';
+                    }
+                    if($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None'){
+                        $edge.='TE: '.$bottomEdgeName.' &nbsp; |  &nbsp;'.$bottomEdgeMaterialName.' &nbsp; |  &nbsp;'.$bottomSpeciesName.' <br>';
+                    }
+                    if($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None'){
+                        $edge.='TE: '.$rightEdgeName.' &nbsp; |  &nbsp;'.$rightEdgeMaterialName.' &nbsp; |  &nbsp;'.$rightSpeciesName.' <br>';
+                    }
+                    if($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None'){
+                        $edge.='TE: '.$leftEdgeName.' &nbsp; |  &nbsp;'.$leftEdgeMaterialName.' &nbsp; |  &nbsp;'.$leftSpeciesName.' <br>';
+                    }
+                } else {
+                    $edge = 'No';
+                }
+                $plywoodHtml.='
+                    <div style="page-break-after:always" *ngFor="let v of data">
+            <div class="ticketWrap">
+                <div class="ticketScreen veneer">
+                    <table class="ticketHead">
+                        <tr>
+                            <td class="lftLogo"><img src="assets/img/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                            <td class="dep" >Veneer Department</td>
+                        </tr>
+                    </table>
+                    <table class="ticketDesc">
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><label class="custName">'.$v['username'].'</label></td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc">'.$v['refNum'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc">'.$v['estNumber'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><hr></td>
+                        </tr>
+                    </table>
+                    <table class="ticketDesc">
+                        <tr>
+                            <td class="cellLabel"><label>Quantity</label></td>
+                            <td class="cellDesc">'.$v['quantity'].' Pieces</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Species</label></td>
+                            <td class="cellDesc">'.$v['SpecieName'].' - '.$v['patternName'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Size</label></td>
+                            <td class="cellDesc">'.($v['width']+1).'" x '.$v['length'].'"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Thickness</label></td>
+                            <td class="cellDesc">'.$v['thicknessName'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Grade</label></td>
+                            <td class="cellDesc">'.$v['faceGradeName'].'</td>
+                        </tr>
+                       ';
+                if(!empty($v['backerName'])){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label></label></td>
+                                <td class="cellDesc">'.$v['backerName'].'</td>
+                            </tr>';
+                }
+                $plywoodHtml.='<tr>
+                            <td class="cellLabel"><label>Grain Direction</label></td>
+                            <td class="cellDesc">'.$v['grainDirectionName'].'</td>
+                        </tr>';
+                if(!empty($v['isSequenced']) && $v['isSequenced']==1){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label>Sequenced</label></td>
+                                <td class="cellDesc">'.($v['isSequenced']==1?'Yes':'').'</td>
+                            </tr>';
+                }
+                if(!empty($v['comments'])){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label>Notes:</label></td>
+                                <td class="cellDesc">'.($v['comments']).'</td>
+                            </tr>';
+                }
+                if(!empty($v['backerName'])){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label></label></td>
+                                <td class="cellDesc">'.($v['backerName']).'</td>
+                            </tr>';
+                }
+                if(empty($v['isSequenced']) && $v['isSequenced']==0){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label></label></td>
+                                <td class="cellDesc"></td>
+                            </tr>';
+                }
+                if(empty($v['comments'])){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label></label></td>
+                                <td class="cellDesc"></td>
+                            </tr>';
+                }
+                if(empty($v['backerName'])){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label></label></td>
+                                <td class="cellDesc"></td>
+                            </tr>';
+                }
+                $plywoodHtml.='<tr>
+                            <td class="cellLabel"><label></label></td>
+                            <td class="cellDesc"></td>
+                        </tr></table>
+
+                    <table class="ticketFoot">
+                        <tr>
+                            <td class="cellLabel"><label>Due</label></td>
+                            <td class="cellDesc"><label class="custName">'.date('Y-m-d',strtotime($v['deliveryDate'])).'</label></td>
+                        </tr>
+                        <tr>
+                            <td class="lftFoot"><!--<img src="assets/img/ticket-images/veneer-lft-img.png" alt="">--></td>
+                            <td class="dep footIN">
+                                <table>
+                                    <tr>
+                                        <td class="itBx"><span class="itTxt">Item '.$v['lineItemNum'].'</span></td>
+                                        <td class="footImg">
+                                            <img src="assets/img/ticket-images/foot-img-1.png" alt="">
+                                            <!-- <img src="assets/img/ticket-images/foot-img-2.png" alt=""> -->
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div><br/><br/>
+            <div class="ticketWrap">
+                <div class="ticketScreen core">
+                    <table class="ticketHead">
+                        <tr>
+                            <td class="lftLogo"><img src="assets/img/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                            <td class="dep">Core Department</td>
+                        </tr>
+                    </table>
+                    <table class="ticketDesc">
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><label class="custName">'.$v['username'].'</label></td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc">'.$v['refNum'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc">'.$v['estNumber'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><hr></td>
+                        </tr>
+                    </table>
+                    <table class="ticketDesc">
+                        <tr>
+                            <td class="cellLabel"><label>Quantity</label></td>
+                            <td class="cellDesc">'.$v['quantity'].' Pieces</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Species</label></td>
+                            <td class="cellDesc">'.$v['SpecieName'].' - '.$v['patternName'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Size</label></td>
+                            <td class="cellDesc">'.($v['width']+1).'" x '.$v['length'].'"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Thickness</label></td>
+                            <td class="cellDesc">'.$v['panelThicknessName'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Grade</label></td>
+                            <td class="cellDesc">'.$v['faceGradeName'].'</td>
+                        </tr>';
+                if(!empty($v['backerName'])){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label>Back</label></td>
+                                <td class="cellDesc">'.$v['backerName'].'</td>
+                            </tr>';
+                }
+                if(!empty($edge)){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label>Edge</label></td>
+                                <td class="cellDesc">'.$edge.'</td>
+                            </tr>';
+                }
+                if(!empty($v['comments'])){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label>Notes:</label></td>
+                                <td class="cellDesc">'.$v['comments'].'</td>
+                            </tr>';
+                }
+                if(empty($v['backerName'])){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label></label></td>
+                                <td class="cellDesc"></td>
+                            </tr>';
+                }
+                if(empty($edge)){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label></label></td>
+                                <td class="cellDesc"></td>
+                            </tr>';
+                }
+                if(empty($v['comments'])){
+                    $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label>:/label></td>
+                                <td class="cellDesc"></td>
+                            </tr>';
+                }
+                $plywoodHtml.='<tr>
+                            <td class="cellLabel"><label></label></td>
+                            <td class="cellDesc"></td>
+                        </tr>';
+                $plywoodHtml.='</table>
+                        <table class="ticketFoot">
+                        <tr>
+                            <td class="cellLabel"><label>Due</label></td>
+                            <td class="cellDesc"><label class="custName">'.date('Y-m-d',strtotime($v['deliveryDate'])).'</label></td>
+                        </tr>
+                        <tr>
+                            <td class="lftFoot">&nbsp;</td>
+                            <td class="dep footIN">
+                                <table>
+                                    <tr>
+                                        <td class="itBx"><span class="itTxt">Item '.$v['lineItemNum'].'</span></td>
+                                        <td class="footImg">
+                                            <img src="assets/img/ticket-images/foot-img-1.png" alt="">
+                                            <img src="assets/img/ticket-images/foot-img-2.png" alt="">
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div><br/>
+            <!-- End: \ Ticket for Sanding Department -->
+            <div class="ticketWrap">
+                <div class="ticketScreen sanding">
+                    <table class="ticketHead">
+                        <tr>
+                            <td class="lftLogo"><img src="assets/img/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                            <td class="dep">Sanding Department</td>
+                        </tr>
+                    </table>
+                    <table class="ticketDesc">
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><label class="custName">'.$v['username'].'</label></td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc">'.$v['refNum'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc">'.$v['estNumber'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><hr></td>
+                        </tr>
+                    </table>
+                    <table class="ticketDesc">
+                        <tr>
+                            <td class="cellLabel"><label>Quantity</label></td>
+                            <td class="cellDesc">'.$v['quantity'].' Pieces</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Species/Face</label></td>
+                            <td class="cellDesc">'.$v['SpecieName'].' - '.$v['patternName'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Finished Size</label></td>
+                            <td class="cellDesc">'.$v['width'].'" x '.$v['length'].'"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Finished Thickness</label></td>
+                            <td class="cellDesc">'.$v['thicknessName'].'"</td>
+                        </tr>';
+                if(!empty($v['comments'])){
+                    $plywoodHtml.='<tr>
+                        <td class="cellLabel"><label>Notes:</label></td>
+                        <td class="cellDesc">'.$v['comments'].'</td>
+                    </tr>
+                    ';
+                }
+                if(empty($v['comments'])){
+                    $plywoodHtml.='<tr>
+                        <td class="cellLabel"><label></label></td>
+                        <td class="cellDesc"></td>
+                    </tr>
+                    ';
+                }
+                $plywoodHtml.='<tr>
+                                <td class="cellLabel"><label></label></td>
+                                <td class="cellDesc"></td>
+                            </tr>
+                            </table>
+
+                    <table class="ticketFoot">
+                        <tr>
+                            <td class="cellLabel"><label>Due</label></td>
+                            <td class="cellDesc"><label class="custName">'.date('Y-m-d',strtotime($v['deliveryDate'])).'</label></td>
+                        </tr>
+                        <tr>
+                            <td class="lftFoot">&nbsp;</td>
+                            <td class="dep footIN">
+                                <table>
+                                    <tr>
+                                        <td class="itBx"><span class="itTxt">Item '.$v['lineItemNum'].'</span></td>
+                                        <td class="footImg">
+                                            <img src="assets/img/ticket-images/foot-img-1.png" alt="">
+                                            <!-- <img src="assets/img/ticket-images/foot-img-2.png" alt=""> -->
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div><br/>
+        </div>';
+            }
+        }
+        $html='<!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                @media print {
+                    body {
+                       -webkit-print-color-adjust: exact;
+                       -moz-print-color-adjust: exact;
+                       print-color-adjust: exact;
+                       margin:0mm;
+                    }
+                 }
+                 @page {
+                    size: A5 Portrait;
+                    margin:0;
+                }
+                body{
+                    font-family:"Libre Franklin",
+                    Arial,sans-serif;font-weight:400;
+                }
+                table{width:100%;border-collapse:collapse;border-spacing:0;}
+                h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}
+                table.ticketFoot{margin-top:50px;}
+                .ticketWrap{width:600px; margin:auto; min-height:800px;}
+                .ticketWrap.broad{width:1132px;}
+                .ticketScreen{padding:40px 0;}
+                .ticketHead{margin-bottom:30px;}
+                .lftLogo,.cellLabel{width:121px;line-height:0;}
+                .lftFoot{width:111px;line-height:0;}
+                .ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}
+                td.dep{padding:0 30px;color:#ffffff;font-size:30px;font-weight:600;height:95px;}
+                .lftLogo img{margin:0 0 0 6px;display:block;padding:0;}
+                .ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}
+                td.cellDesc{font-size:20px; line-height:21px; color:#212121; vertical-align:top;}
+                td.cellLabel{font-size:20px; line-height:21px; color:#999999;text-align:right; vertical-align:top;}
+                .ticketDesc td.cellDesc{padding-left:0;}
+                .cellLabel label{padding-right:10px;display:inline-block;padding-top:0px}
+                label.custName,td.cellDesc label.custName{font-size:42px;font-weight:600;color:#212121;padding:0;line-height:1;}
+                table.ticketDesc td{padding:3px 6px;}
+                td.cellDesc label{
+                    padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:11px;font-weight:600;
+                }
+                table td hr{
+                    height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;
+                }
+                td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}
+                td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}
+                td.dep.footIN{height:auto;padding:10px 15px 15px 0;}
+                .footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}
+                td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}
+                .footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}
+                .footImg img{margin:0 16px;display:inline;}
+                .ticketFoot td.cellDesc label.custName{font-size:32px;}
+                .ticketWrap table.hlfGrdTable{width:100%;}
+                .ticketWrap table.hlfGrdTable td{
+                    width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;
+                }
+                .ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}
+                .ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}
+                .ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{
+                    padding-left:6px;padding-right:6px;border:0;
+                }
+                .ticketWrap table.hlfGrdTable td.fstGrd{
+                    padding-left:0;padding-right:0;border:0;
+                }
+                .ticketWrap.broad table.ticketHead .lftLogo,
+                .ticketWrap.broad table.ticketFoot .cellLabel,
+                .ticketWrap.broad table.ticketFoot .lftFoot{
+                    width:131px;
+                }
+                .ticketWrap.broad .lftLogo img{margin-left:16px;}
+                .ticketWrap table.ticketDesc td.cellDesc td,
+                .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}
+                .ticketWrap table.ticketDesc td.cellDesc td,
+                .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,
+                td.w20p{width:20%;}
+                .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#efa500;}
+                .sanding td.dep{background-color:#a5b500;}.door td.dep,.shipping td.dep{background-color:#808080;}
+    }
+                </style>
+                <link href="//fonts.googleapis.com/css?family=Libre+Franklin:400,600" rel="stylesheet">
+            </head>
+            <body>
+            '.$veneerHtml.$plywoodHtml.'
+            </body>
+        </html>';
+        $pdfName = 'uploads/order_tickets/OrderTicketPDF-'.$quoteId.'-'.time().'.pdf';
+        $quotePdfUrl = $this->createQuoteLineitemPDF($html, $pdfName, $request);
+        print_r($veneerData);die;
+       
+    }
+    
+    private function getPlywoodDataByQuoteId($quoteId){
+        if(!empty($quoteId)){
+            $query = $this->getDoctrine()->getManager();
+            $result = $query->createQueryBuilder()
+                ->select(['v.quantity','v.plywoodWidth as width','v.plywoodLength as length','v.comments','v.speciesId','v.topEdge','v.bottomEdge',
+                    'v.rightEdge','v.leftEdge', "v.finishThickId as pThicknessName",'v.finishThickType',
+                    "v.finThickFraction","v.thickness as panelThicknessName",'v.lineItemNum','v.isSequenced'])
+                ->from('AppBundle:Plywood', 'v')
+                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
+                ->addSelect(['q.refNum','q.deliveryDate'])
+                ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
+                ->addSelect(['u.company as username'])
+                ->leftJoin('AppBundle:Species', 's', 'WITH', "v.speciesId = s.id")
+                ->addSelect(['s.name as SpecieName'])
+                ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "v.patternId = p.id")
+                ->addSelect(['p.name as patternName'])
+                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
+                ->addSelect(['t.name as thicknessName'])
+                ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
+                ->addSelect(['fg.name as faceGradeName'])
+                ->leftJoin('AppBundle:Backer', 'b', 'WITH', "v.backerId = b.id")
+                ->addSelect(['b.name as backerName'])
+                ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "v.grainDirectionId = gd.id")
+                ->addSelect(['gd.name as grainDirectionName'])
+                ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+                ->addSelect(['o.orderDate as orderDate','o.estNumber as estNumber'])
+                ->leftJoin('AppBundle:EdgeFinish', 'tef', 'WITH', "v.topEdge = tef.id")
+                ->addSelect(['tef.name as topEdgeName'])
+                ->leftJoin('AppBundle:EdgeFinish', 'bef', 'WITH', "v.bottomEdge = bef.id")
+                ->addSelect(['bef.name as bottomEdgeName'])
+                ->leftJoin('AppBundle:EdgeFinish', 'ref', 'WITH', "v.rightEdge = ref.id")
+                ->addSelect(['ref.name as rightEdgeName'])
+                ->leftJoin('AppBundle:EdgeFinish', 'lef', 'WITH', "v.leftEdge = lef.id")
+                ->addSelect(['lef.name as leftEdgeName'])
+                    
+                ->leftJoin('AppBundle:SizeEdgeMaterial', 'tem', 'WITH', "v.edgeMaterialId = tem.id")
+                ->addSelect(['tem.name as topEdgeMaterialName'])
+                ->leftJoin('AppBundle:SizeEdgeMaterial', 'bem', 'WITH', "v.bedgeMaterialId = bem.id")
+                ->addSelect(['bem.name as bottomEdgeMaterialName'])
+                ->leftJoin('AppBundle:SizeEdgeMaterial', 'rem', 'WITH', "v.redgeMaterialId = rem.id")
+                ->addSelect(['rem.name as rightEdgeMaterialName'])
+                ->leftJoin('AppBundle:SizeEdgeMaterial', 'lem', 'WITH', "v.ledgeMaterialId = lem.id")
+                ->addSelect(['lem.name as leftEdgeMaterialName'])
+                    
+                ->leftJoin('AppBundle:Species', 'ts', 'WITH', "v.edgeFinishSpeciesId = ts.id")
+                ->addSelect(['ts.name as topSpeciesName'])
+                ->leftJoin('AppBundle:Species', 'bs', 'WITH', "v.bedgeFinishSpeciesId = bs.id")
+                ->addSelect(['bs.name as bottomSpeciesName'])
+                ->leftJoin('AppBundle:Species', 'rs', 'WITH', "v.redgeFinishSpeciesId = rs.id")
+                ->addSelect(['rs.name as rightSpeciesName'])
+                ->leftJoin('AppBundle:Species', 'ls', 'WITH', "v.ledgeFinishSpeciesId = ls.id")
+                ->addSelect(['ls.name as leftSpeciesName'])
+                ->where('v.quoteId = '.$quoteId)
+                ->getQuery()
+                ->getResult();
+//                ->getSQL();            
+        } else {
+            $result=[];
+        }
+        return $result;
+    }
+    
+    private function getVeneerDataByQuoteId($quoteId){
+        if(!empty($quoteId)){
+            $query = $this->getDoctrine()->getManager();
+            $result = $query->createQueryBuilder()
+                ->select(['v.quantity','v.width','v.length','v.comments','v.sequenced','v.lineItemNum'])
+                ->from('AppBundle:Veneer', 'v')
+                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
+                ->addSelect(['q.refNum','q.deliveryDate'])
+                ->leftJoin('AppBundle:User', 'u', 'WITH', "q.customerId = u.id and u.userType='customer' and u.roleId=11")
+                ->addSelect(['u.username'])
+                ->leftJoin('AppBundle:Species', 's', 'WITH', "v.speciesId = s.id")
+                ->addSelect(['s.name as SpecieName'])
+                ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "v.patternId = p.id")
+                ->addSelect(['p.name as patternName'])
+                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
+                ->addSelect(['t.name as thicknessName'])
+                ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
+                ->addSelect(['fg.name as faceGradeName'])
+                ->leftJoin('AppBundle:Backer', 'b', 'WITH', "v.backer = b.id")
+                ->addSelect(['b.name as backerName'])
+                ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "v.grainDirectionId = gd.id")
+                ->addSelect(['gd.name as grainDirectionName'])
+                ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+                ->addSelect(['o.orderDate as orderDate','o.estNumber as estNumber'])
+                ->where('v.quoteId = '.$quoteId)
+                ->getQuery()
+                ->getResult();
+        } else {
+            $result = [];
+        }
+        return $result;
+    }
+    
+    private function getDoorDataByQuoteId($quoteId){
+        if(!empty($quoteId)){
+//            $query = $this->getDoctrine()->getManager();
+//            $result = $query->createQueryBuilder()
+//                ->select(['d.qty as quantity','d.width','d.length','d.comment as comments','d.sequence as sequenced',
+//                    'd.finishThickId as pThicknessName','d.panelThickness as panelThicknessName'])
+//                ->from('AppBundle:Doors', 'd')
+//                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'd.quoteId = q.id')
+//                ->addSelect(['q.refNum','q.deliveryDate'])
+//                ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
+//                ->addSelect(['u.company as username'])
+//                ->leftJoin('AppBundle:Skins', 's', 'WITH', "s.doorId = d.id")
+//                ->addSelect(['s.species','grade','pattern'])
+//                ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "s.grain_dir = gd.id")
+//                ->addSelect(['gd.name as grainDirectionName'])
+//                ->leftJoin('AppBundle:Species', 'sp', 'WITH', "s.species = sp.id")
+//                ->addSelect(['s.name as SpecieName'])
+//                ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "s.pattern = p.id")
+//                ->addSelect(['p.name as patternName'])
+//                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "s.thicknessId = t.id")
+//                ->addSelect(['t.name as thicknessName'])
+//                ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
+//                ->addSelect(['fg.name as faceGradeName'])
+//                ->where('d.quoteId = '.$quoteId)
+//                ->getQuery()
+//                ->getResult()
+//            ;
+//            print_r($result);die;
+        }
+    }
+    
+    private function createQuoteLineitemPDF($html,$pdfName, $request) {
+        $fs = new Filesystem();
+        $snappy = new Pdf(  '../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename=$pdfName');
+        $snappy->generateFromHtml($html, $pdfName);
+        $fs->chmod($pdfName, 0777);
+        return 'http://'.$request->getHost().'/'.$request->getBasePath().'/'.$pdfName;
     }
 }
