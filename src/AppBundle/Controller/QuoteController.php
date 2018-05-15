@@ -1493,6 +1493,7 @@ class QuoteController extends Controller
                 $quote->setUpdatedAt($datime);
                 $em->persist($quote);
                 $em->flush();
+                $this->updateQuoteData($qId);
                 if($updateStatusFlag==true){
                     $quoteStatus = $em->getRepository('AppBundle:QuoteStatus')->findOneBy(['quoteId'=>$qId,'isActive'=>1]);
     //                $quoteStatus->setStatusId($this->getQuoteStatusId($status));
@@ -2554,10 +2555,18 @@ class QuoteController extends Controller
         $quote = $em->getRepository(Quotes::class)->findOneById($quoteId);
         $datime = new \DateTime('now');
         if (!empty($quote)) {
-            $quote->setQuoteTot($quoteSubTotal);
-            $quote->setSalesTax($salesTaxAmount);
-            $quote->setShipCharge($shipCharge);
-            $quote->setLumFee($lumFee);
+            if(!empty($quoteSubTotal)){
+                $quote->setSalesTax($salesTaxAmount);
+                $quote->setShipCharge($shipCharge);
+                $quote->setLumFee($lumFee);
+            } else {
+                $quote->setSalesTax(0);
+                $quote->setShipCharge(0);
+                $quote->setLumFee(0);
+                $quote->setExpFee(0);
+                $quote->setDiscount(0);
+            }
+            $quote->setQuoteTot($quoteSubTotal);            
             $quote->setProjectTot($projectTotal);
             $quote->setUpdatedAt($datime);
             $em->persist($quote);
