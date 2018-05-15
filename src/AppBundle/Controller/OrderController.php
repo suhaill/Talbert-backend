@@ -383,20 +383,299 @@ class OrderController extends Controller
      * @Method("POST")
      */
     public function testingAction(Request $request) {
+        $images_destination = $this->container->getParameter('images_destination');
+        $arrApi = array();
+        $statusCode = 200;
         $_DATA = file_get_contents('php://input');
         $_DATA = json_decode($_DATA, true);
-        $orderId = $_DATA['orderId'];
+        $quoteId = $_DATA['orderId'];
+        $orderData = $this->getOrderDetailsById($quoteId);
+        try {
+            $quoteData = $this->getQuoteDataById($quoteId);
+            if (empty($quoteData)) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'This quote does not exists';
+                $statusCode = 422;
+            } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived quote details';
+                $arrApi['data']['id'] = $quoteData->getId();
+                $arrApi['data']['date'] = date("M d, Y",strtotime($quoteData->getEstimateDate()));
+                $arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
+                $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
+                $arrApi['data']['version'] = $quoteData->getVersion();
+                $arrApi['data']['customer'] = $this->getCustomerNameById($quoteData->getCustomerId());
+                $arrApi['data']['company'] = $this->getCustomerCompanyById($quoteData->getCustomerId());
+                $arrApi['data']['userEmail'] = $this->getCustomerEmailById($quoteData->getEstimatorId());
+                $arrApi['data']['customerEmail'] = $this->getCustomerEmailById($quoteData->getCustomerId());
+                $arrApi['data']['customerId'] = $quoteData->getCustomerId();
+                $arrApi['data']['referenceNumber'] = $quoteData->getRefNum();
+                $arrApi['data']['salesman'] = $this->getSalesmanNameById($quoteData->getSalesmanId());
+                $arrApi['data']['salesmanId'] = $quoteData->getSalesmanId();
+                $arrApi['data']['job'] = $quoteData->getJobName();
+                $arrApi['data']['term'] = (string) $quoteData->getTermId();
+                $arrApi['data']['shipMethod'] = $this->getShipMethodNamebyId($quoteData->getShipMethdId());
+                $arrApi['data']['shipMethodId'] = $quoteData->getShipMethdId();
+                $arrApi['data']['billAdd'] = $this->getBillAddById($quoteData->getCustomerId());
+                $arrApi['data']['shipAdd'] = $this->getShippingAddById($quoteData->getShipAddId());
+                $arrApi['data']['shipAddId'] = $quoteData->getShipAddId();
+                $arrApi['data']['leadTime'] = $quoteData->getLeadTime();
+                $arrApi['data']['status'] = $quoteData->getStatus();
+                $arrApi['data']['comment'] = $quoteData->getComment();
+                $arrApi['data']['deliveryDate'] = $quoteData->getDeliveryDate();
+                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot())?str_replace(',','',number_format($quoteData->getQuoteTot(),0)):'00.00';
+                $arrApi['data']['expFee'] = !empty($quoteData->getExpFee())?str_replace(',','',number_format($quoteData->getExpFee(),2)):'00.00';
+                $arrApi['data']['discount'] = !empty($quoteData->getDiscount())?str_replace(',','',number_format($quoteData->getDiscount(),2)):'00.00';
+                $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee())?str_replace(',','',number_format($quoteData->getLumFee(),2)):'00.00';
+                $arrApi['data']['shipCharge'] = !empty($quoteData->getShipCharge())?str_replace(',','',number_format($quoteData->getShipCharge(),2)):'00.00';
+                $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax())?str_replace(',','',number_format($quoteData->getSalesTax(),2)):'00.00';
+                $arrApi['data']['termName'] = $this->getTermName($quoteData->getTermId());
+                if ($quoteData->getQuoteTot() == 0) {
+                    $arrApi['data']['projectTot'] = '00.00';
+                } else {
+                    $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
+                }
+                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
+            }
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
 
-        $snappy = $this->get('knp_snappy.pdf');
-        $filename = 'workOrderPrint.pdf';
+        $html = "<html>
+                <head>
+                    <style>
+                        body{font-family:'Roboto',Helvetica,Arial,sans-serif;font-weight:400;line-height:1.4;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong{font-family:'Libre Franklin',Arial,sans-serif;font-weight:600;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
+                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;margin-bottom:18px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}.itemListTablHldr{min-height:300px;}table.prodItmLst th,table.prodItmLst td{font-size:12px;text-align:center;padding:3px 6px;vertical-align:top;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#000000;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;font-weight:500;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:500;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:500;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:500;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:500;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                    </style>
+                </head>
+                <body>
+                    <div class='invoiceWrap'>
+            
+                        <div class='invoiceCtnr'>
+                            <table class='invoiceHeader'>
+                                <tr>
+                                    <td>
+                                        <div class='invLogo'><img src='".$images_destination."/logo-invoice.png' alt='Talbert: Architectural Panels and Doors'></div>
+                                        <table class='addressHldr'>
+                                            <tr>
+                                                <td class='addCell'>
+                                                    <table class='addCellDscHldr'>
+                                                        <tr>
+                                                            <td class='cellDescLbl'>Sold To</td>
+                                                            <td class='cellDescTxt'>
+                                                                <h3>".$arrApi['data']['company']."</h3>
+                                                                <p>".$arrApi['data']['billAdd']['street']."</p>
+                                                                <p>".$arrApi['data']['billAdd']['city'].",".$arrApi['data']['billAdd']['state']." ".$arrApi['data']['billAdd']['zip']."</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                                <td class='addCell'>
+                                                    <table class='addCellDscHldr'>
+                                                        <tr>
+                                                            <td class='cellDescLbl'>Ship To</td>
+                                                            <td class='cellDescTxt'>
+                                                            <h3>".$arrApi['data']['shipAdd']['nickname']."</h3>
+                                                            <p>".$arrApi['data']['shipAdd']['street']."</p>
+                                                            <p>".$arrApi['data']['shipAdd']['city'].",".$arrApi['data']['shipAdd']['state']." ".$arrApi['data']['shipAdd']['zip']."</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td class='invCapt'>
+                                        <div class='captBTxt'>ORDER</div>
+                                        <div class='subTxt'>O-".$arrApi['data']['controlNumber']."-".$arrApi['data']['version']."</div>
+                                        <p>".$arrApi['data']['date']." &nbsp;|&nbsp; Net 30 days</p>
+                                        <p><em>At Talbert Architectural <br>Your Total Satisfaction <br>is Our Goal!</em></p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+            
+                            <div class='custOdrDtls'>
+                                <table>
+                                    <tr>
+                                        <td>Customer Reference: PO-".$arrApi['data']['referenceNumber']."</td>
+                                        <td>Job Name: ".$arrApi['data']['job']."</td>
+                                        <td>Delivery Date: ".$arrApi['data']['deliveryDate']."</td>
+                                        <td>Ship Via: ".$arrApi['data']['shipMethod']."</td>
+                                        <td>SqFt: O-".$arrApi['data']['controlNumber'].'-'.$arrApi['data']['version']."</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+            
+                            <div class='itemListTablHldr'>
+                                <table class='prodItmLst'>
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Qty</th>
+                                            <th>Grain</th>
+                                            <th>Species</th>
+                                            <th>Grd</th>
+                                            <th>PTRN</th>
+                                            <th>Back</th>
+                                            <th>Dimensions</th>
+                                            <th>Core</th>
+                                            <th class='t-left'>Details</th>
+                                            <th>Unit Price</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>";
 
-        $response = new Response(
-            $snappy->getOutputFromHtml($html), 200, array(
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="'.$filename
-            )
-        );
-        return $response;
+        foreach($arrApi['data']['lineitems'] as $key=>$qData){
+
+            if($qData['type'] == 'plywood'){
+                $index = ($key+1)." P";
+            }
+            else if($qData['type'] == 'veneer'){
+                $index = ($key+1)." V";
+            }
+            else{
+                $index = ($key+1)." D";
+            }
+
+            $html .= "<tr>
+                                            <th>".$index."</th>
+                                            <td>".$qData['quantity']."</td>
+                                            <td>".$qData['grain']."</td>
+                                            <td>".$qData['species']."</td>
+                                            <td>".$qData['grade']."</td>
+                                            <td>".$qData['pattern']."</td>
+                                            <td>".$qData['back']."</td>
+                                            <td>".$qData['width']."-".$qData['widthFraction']." x ".$qData['length']."-".$qData['lengthFraction']." x ".$qData['thickness']."</td>
+                                            <td>".$qData['core']."</td>
+                                            ";
+            $html .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+            $html .= ($qData['milling'] == 1) ? "Miling: ".$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
+            if ($qData['finish'] == 'UV') {
+                $html .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']." %-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+            } elseif ($qData['finish'] == 'Paint') {
+                $html .= "Finish: Paint-".$qData['facPaint']."-".$qData['uvCuredId']."-".$qData['sheenId']." %".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+            }
+            $html .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
+            $html .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
+
+                                    $html .= " <td>$".$qData['unitPrice']."</td>
+                                            <td>$".$qData['totalPrice']."</td>
+                                        </tr>";
+
+        }
+
+
+        $html .= "</tbody>
+                                </table>
+                                <table class='totalPrice'>
+                                    <tr>
+                                        <td>Special Tooling - Description</td>
+                                        <td class='price'>$350.00</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+            
+                            <div class='invoiceFooter'>
+                                <!--<div class='custOdrDtls'>
+                                    <table>
+                                        <tr>
+                                            <td><strong>Special Instructions:</strong> **".$arrApi['data']['comment']."**</td>
+                                        </tr>
+                                    </table>
+                                </div> -->
+                                <table class='invoiceFootBtm'>
+                                    <tr>
+                                        <td class='sideBox note'>
+                                            <div class='name'>Sold By: ".$arrApi['data']['salesman']."</div> 
+                                            <p>Talbert Architectural Panels &amp; Doors, Inc. assumes no liability beyond the replacement of individual items, but not to exceed the purchase price of said item.</p>
+                                            <p>For FSC Edgebanding. The claim for edgebanding is the same as the claim for the panels to which it is affixed.</p>
+                                        </td>                            
+                                        <td>
+                                            <div class='warnTxt'>
+                                                <h3>WARNING</h3>
+                                                <p>Drilling, Sawing, Sanding or machining wood products generate wood dust, a substance known to the State of California to cause cancer.</p>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class='approved'>
+                                                <p>Approved by: ".$orderData->getApprovedBy()." via ".$orderData->getVia()."</p>
+                                                <p>".date("d.m.y",strtotime($orderData->getOrderDate()))." | ".date("h:i:s a",strtotime($orderData->getOrderDate()))."</p>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <img src='".$images_destination."/fsc-order.png' alt=''>
+                                        </td>
+                                        <td class='sideBox'>
+                                            <table class='totalTxt'>
+                                                <tr>
+                                                    <td>Sub Total</td>
+                                                    <td>$".$arrApi['data']['quoteSubTot']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Sale Tax</td>
+                                                    <td>$".$arrApi['data']['salesTax']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Shipping</td>
+                                                    <td>$".$arrApi['data']['shipCharge']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Lumber Fee</td>
+                                                    <td>$".$arrApi['data']['lumFee']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Total</strong></td>
+                                                    <td><strong>$".$arrApi['data']['projectTot']."</strong></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+            
+                        </div>
+                        
+                    </div>
+                </body>
+            </html>";
+
+        return new Response($this->get('knp_snappy.pdf')->getOutputFromHtml($html, array('orientation'=>'Landscape', 'default-header'=>false)), 200, array('Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Work-Order-Print.pdf"'));
+    }
+
+    private function getOrderDetailsById($orderId) {
+        return $this->getDoctrine()->getRepository('AppBundle:Orders')->findOneBy(array('quoteId'=> $orderId));
+    }
+
+    private function getUnitNameById($id) {
+        return ($id == 1) ? 'Running foot' : ($id == 2) ? 'Side' : ($id == 3) ? 'Square Foot' : 'Piece';
+    }
+
+    private function getQuoteDataById($qId,$editFlag='cloneQuote',$estnumber='') {
+        if($editFlag=="cloneQuote"){
+            $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId);
+        } else {
+            $estnumber1= explode('-', $estnumber);
+            $controlVersion = $estnumber1[1];
+            $version = $estnumber1[2];
+            $result = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneBy(['controlNumber'=>$controlVersion,
+                'version'=>$version],
+                ['version'=>'DESC'],1,0);
+        }
+        return $result;
+    }
+
+    private function getTermName($id){
+        $lastQuote = $this->getDoctrine()->getRepository('AppBundle:Terms')->findOneById($id);
+        if (!empty($lastQuote)) {
+            return $lastQuote->getName();
+        } else {
+            return '';
+        }
     }
     
     private function clonePlywoodData($quoteId, $clonedQuoteId, $datime) {
@@ -878,7 +1157,7 @@ class OrderController extends Controller
         $lineItem = array();
         $query = $this->getDoctrine()->getManager();
         $plywoodRecords = $query->createQueryBuilder()
-            ->select(['p.id, p.quantity, p.speciesId, p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo, s.statusName'])
+            ->select(['p.id, p.quantity, p.speciesId, p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, s.statusName'])
             ->from('AppBundle:Plywood', 'p')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -889,7 +1168,7 @@ class OrderController extends Controller
             ->getQuery()
             ->getResult();
         $veneerRecords = $query->createQueryBuilder()
-            ->select(['v.id, v.quantity, v.speciesId, v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, s.statusName'])
+            ->select(['v.id, v.quantity, v.speciesId, v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName'])
             ->from('AppBundle:Veneer', 'v')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -900,7 +1179,7 @@ class OrderController extends Controller
             ->getQuery()
             ->getResult();
         $doorRecords = $query->createQueryBuilder()
-            ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, s.statusName'])
+            ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName'])
             ->from('AppBundle:Doors', 'd')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -941,6 +1220,25 @@ class OrderController extends Controller
                     $lineItem[$i]['widthFraction'] = $this->float2rat($p['widthFraction']);
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($p['lengthFraction']);
                     $lineItem[$i]['grain'] = $this->getGrainPattern($p['grainPatternId']);
+                    $lineItem[$i]['edgeDetail'] = ($p['edgeDetail']) ? 1 : 0;
+                    $lineItem[$i]['topEdge'] = $p['topEdge'];
+                    $lineItem[$i]['bottomEdge'] = $p['bottomEdge'];
+                    $lineItem[$i]['rightEdge'] = $p['rightEdge'];
+                    $lineItem[$i]['leftEdge'] = $p['leftEdge'];
+                    $lineItem[$i]['milling'] = ($p['milling']) ? '1' : 0 ;
+                    $lineItem[$i]['unitMesureCostId'] = $p['unitMesureCostId'];
+                    $lineItem[$i]['finish'] = $p['finish'];
+                    $lineItem[$i]['uvCuredId'] = $this->getUVCuredNameById($p['uvCuredId']);
+                    $lineItem[$i]['sheenId'] = $this->getSheenById($p['sheenId']);
+                    $lineItem[$i]['shameOnId'] = ($p['shameOnId']) ? 'BS' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($p['coreSameOnbe']) ? ',BE' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($p['coreSameOnte']) ? ',TE' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($p['coreSameOnre']) ? ',RE' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($p['coreSameOnle']) ? ',LE' : '';
+                    $lineItem[$i]['facPaint'] = $this->getFacPaintById($p['facPaint']);
+                    $lineItem[$i]['isLabels'] = $p['isLabels'];
+                    $lineItem[$i]['autoNumber'] = $this->getFirstLabel($p['autoNumber']);
+                    $lineItem[$i]['comment'] = $p['comments'];
                     $lineItem[$i]['isGreyedOut'] = $p['statusName'];
                     $lineItem[$i]['greyedOutClass'] = ($p['statusName'] == 'LineItemBackOrder') ? 'greyedOut' : '';
                     $lineItem[$i]['greyedOutEstNo'] = $p['backOrderEstNo'];
@@ -967,6 +1265,25 @@ class OrderController extends Controller
                     $lineItem[$i]['widthFraction'] = $this->float2rat($v['widthFraction']);
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($v['lengthFraction']);
                     $lineItem[$i]['grain'] = $this->getGrainPattern($v['grainPatternId']);
+                    $lineItem[$i]['edgeDetail'] = 0;
+                    $lineItem[$i]['topEdge'] = 1;
+                    $lineItem[$i]['bottomEdge'] = 1;
+                    $lineItem[$i]['rightEdge'] = 1;
+                    $lineItem[$i]['leftEdge'] = 1;
+                    $lineItem[$i]['milling'] = 0;
+                    $lineItem[$i]['unitMesureCostId'] = 0;
+                    $lineItem[$i]['finish'] = 'None';
+                    $lineItem[$i]['uvCuredId'] = 0;
+                    $lineItem[$i]['sheenId'] = 0;
+                    $lineItem[$i]['shameOnId'] = 0;
+                    $lineItem[$i]['coreSameOnbe'] = '';
+                    $lineItem[$i]['coreSameOnte'] = '';
+                    $lineItem[$i]['coreSameOnre'] = '';
+                    $lineItem[$i]['coreSameOnle'] = '';
+                    $lineItem[$i]['facPaint'] = 0;
+                    $lineItem[$i]['isLabels'] = 0;
+                    $lineItem[$i]['autoNumber'] = 0;
+                    $lineItem[$i]['comment'] = $v['comments'];
                     $lineItem[$i]['isGreyedOut'] = $v['statusName'];
                     $lineItem[$i]['greyedOutClass'] = ($v['statusName'] == 'LineItemBackOrder') ? 'greyedOut' : '';
                     $lineItem[$i]['greyedOutEstNo'] = $v['backOrderEstNo'];
@@ -1015,6 +1332,25 @@ class OrderController extends Controller
                     $lineItem[$i]['widthFraction'] = $this->float2rat($d['widthFraction']);
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($d['lengthFraction']);
                     $lineItem[$i]['grain'] = $this->getGrainPattern($d['id'],'door');
+                    $lineItem[$i]['edgeDetail'] = ($d['edgeFinish']) ? '1' : 0;
+                    $lineItem[$i]['topEdge'] = $d['topEdge'];
+                    $lineItem[$i]['bottomEdge'] = $d['bottomEdge'];
+                    $lineItem[$i]['rightEdge'] = $d['rightEdge'];
+                    $lineItem[$i]['leftEdge'] = $d['leftEdge'];
+                    $lineItem[$i]['milling'] = ($d['milling']) ? '1' : 0 ;
+                    $lineItem[$i]['unitMesureCostId'] = $d['unitMesureCostId'];
+                    $lineItem[$i]['finish'] = $d['finish'];
+                    $lineItem[$i]['uvCuredId'] = $this->getUVCuredNameById($d['uvCured']);
+                    $lineItem[$i]['sheenId'] = $this->getSheenById($d['sheen']);
+                    $lineItem[$i]['shameOnId'] = ($d['sameOnBack']) ? 'BS' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($d['sameOnBottom']) ? ',BE' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($d['sameOnTop']) ? ',TE' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($d['sameOnRight']) ? ',RE' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($d['sameOnLeft']) ? ',LE' : '';
+                    $lineItem[$i]['facPaint'] = $this->getFacPaintById($d['facPaint']);
+                    $lineItem[$i]['isLabels'] = $d['isLabel'];
+                    $lineItem[$i]['autoNumber'] = $this->getFirstLabel($d['autoNumber']);
+                    $lineItem[$i]['comment'] = $d['comment'];
                     $lineItem[$i]['isGreyedOut'] = $d['statusName'];
                     $lineItem[$i]['greyedOutClass'] = ($d['statusName'] == 'LineItemBackOrder') ? 'greyedOut' : '';
                     $lineItem[$i]['greyedOutEstNo'] = $d['backOrderEstNo'];
@@ -1023,6 +1359,22 @@ class OrderController extends Controller
             }
             return $lineItem;
         }
+    }
+
+    private function getFirstLabel($labels) {
+        return explode(',', $labels)[0];
+    }
+
+    private function getUVCuredNameById($id) {
+        return ($id == 2) ? 'Pacific Collection' : ($id == 3) ? 'Custom Stain Match' : '';
+    }
+
+    private function getSheenById($id) {
+        return ($id == 1) ? '3' : ($id == 2) ? '5' : ($id == 3) ? '10' : ($id == 4) ? '20' : ($id == 5) ? '30' : ($id == 6) ? '40' : ($id == 7) ? '50' : ($id == 8) ? '60' : ($id == 9) ? '70' : ($id == 10) ? '80' : ($id == 11) ? '90' : ($id == 12) ? '100' : '0';
+    }
+
+    private function getFacPaintById($id) {
+        return ($id == 1) ? 'Prime Only' : ($id == 2) ? 'White / Light Color' : 'Dark Color';
     }
     
     private function getGrainPattern($id,$type=''){
