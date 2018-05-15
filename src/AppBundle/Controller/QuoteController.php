@@ -764,16 +764,6 @@ class QuoteController extends Controller
         return new JsonResponse($arrApi, $statusCode);
     }
 
-    /**
-     * @Route("/api/quote/testing")
-     * @Security("is_granted('ROLE_USER')")
-     * @Method("GET")
-     */
-    public function testingAction(Request $request) {
-        echo 'testing';die;
-    }
-
-
     //Reusable codes
 
     private function excludePriceOfVeneer($id, $estimateNo, $orderId, $quoteOrOrder, $lineitemType, $datime) {

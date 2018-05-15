@@ -19,6 +19,9 @@ use AppBundle\Entity\Quotes;
 use AppBundle\Entity\Profile;
 use AppBundle\Entity\DoorCalculator;
 use AppBundle\Entity\State;
+use Knp\Snappy\Pdf;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class OrderController extends Controller
 {
@@ -373,6 +376,27 @@ class OrderController extends Controller
             }
         }
         return new JsonResponse($arrApi, $statusCode);
+    }
+
+    /**
+     * @Route("/api/order/printWorkOrder")
+     * @Method("POST")
+     */
+    public function testingAction(Request $request) {
+        $_DATA = file_get_contents('php://input');
+        $_DATA = json_decode($_DATA, true);
+        $orderId = $_DATA['orderId'];
+
+        $snappy = $this->get('knp_snappy.pdf');
+        $filename = 'workOrderPrint.pdf';
+
+        $response = new Response(
+            $snappy->getOutputFromHtml($html), 200, array(
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$filename
+            )
+        );
+        return $response;
     }
     
     private function clonePlywoodData($quoteId, $clonedQuoteId, $datime) {
