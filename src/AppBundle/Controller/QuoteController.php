@@ -117,7 +117,7 @@ class QuoteController extends Controller
         } else {
             $sortArray=[$columnName=>$orderBy];
         }
-        $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold')),$sortArray);
+        $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold','Dead')),$sortArray);
         
         if (empty($quotes) ) {
             $arrApi['status'] = 0;

@@ -25,9 +25,8 @@ use AppBundle\Entity\Doors;
 use Knp\Snappy\Pdf;
 use Symfony\Component\Filesystem\Filesystem;
 
+class OrderController extends Controller {
 
-class OrderController extends Controller
-{
     /**
      * @Route("/api/order/getOrders")
      * @Security("is_granted('ROLE_USER')")
@@ -37,14 +36,14 @@ class OrderController extends Controller
     public function getOrdersListAction(Request $request) {
         if ($request->getMethod() == 'GET') {
             $arrApi = array();
-            $orders = $this->getDoctrine()->getRepository('AppBundle:Orders')->findBy(['isActive'=>1], ['id' => 'DESC']);
+            $orders = $this->getDoctrine()->getRepository('AppBundle:Orders')->findBy(['isActive' => 1], ['id' => 'DESC']);
             if (empty($orders)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no order right now';
             } else {
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived the orders list';
-                $i=0;
+                $i = 0;
                 foreach ($orders as $orDat) {
                     $arrApi['data']['orders'][$i]['id'] = $orDat->getId();
                     $arrApi['data']['orders'][$i]['estNumber'] = $orDat->getEstNumber();
@@ -67,7 +66,7 @@ class OrderController extends Controller
     public function searchOrdersAction(Request $request) {
         $arrApi = array();
         $statusCode = 200;
-        try{
+        try {
             $estNo = $request->query->get('est');
             $orderRecords = $this->getRecordsBasedOnEstimateNo($estNo);
             if (empty($orderRecords)) {
@@ -77,7 +76,7 @@ class OrderController extends Controller
             } else {
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived orders list';
-                $i=0;
+                $i = 0;
                 foreach ($orderRecords as $orDat) {
                     $arrApi['data']['orders'][$i]['id'] = $orDat['id'];
                     $arrApi['data']['orders'][$i]['estNumber'] = $orDat['est_number'];
@@ -88,8 +87,7 @@ class OrderController extends Controller
                     $i++;
                 }
             }
-        }
-        catch(Exception $e) {
+        } catch (Exception $e) {
             throw $e->getMessage();
         }
         return new JsonResponse($arrApi, $statusCode);
@@ -97,8 +95,8 @@ class OrderController extends Controller
 
     private function getRecordsBasedOnEstimateNo($estNo) {
         $conn = $this->getDoctrine()->getConnection('default');
-        $SQL="select * from orders WHERE est_number like '$estNo%' order by id desc";
-        $stmt=$conn->prepare($SQL);
+        $SQL = "select * from orders WHERE est_number like '$estNo%' order by id desc";
+        $stmt = $conn->prepare($SQL);
         //$stmt->bindParam(':est',$estNo,PDO::PARAM_STR);
         $stmt->execute();
         return $stmt->fetchAll();
@@ -106,10 +104,10 @@ class OrderController extends Controller
 
     private function formateDate($date) {
         $expDate = explode(' ', $date)[0];
-        $expDate1 = explode('-',$expDate);
-        return $expDate1[1].'/'.$expDate1[2].'/'.$expDate1[0];
+        $expDate1 = explode('-', $expDate);
+        return $expDate1[1] . '/' . $expDate1[2] . '/' . $expDate1[0];
     }
-    
+
     /**
      * @Route("/api/order/getOrderList")
      * @Security("is_granted('ROLE_USER')")
@@ -123,62 +121,62 @@ class OrderController extends Controller
         $data = $jsontoarraygenerator->getJson($request);
         $columnName = trim($data->get('columnName'));
         $orderBy = trim($data->get('orderBy'));
-        $requestColumnName='';
-        if($columnName=='' || $columnName=='customer'){
-            $columnName='u.fname';
-        } else if($columnName=='estimatorId'){
-            $columnName='q.controlNumber';
-        } else if($columnName=='status'){
-            $columnName='s.statusName';
-        } else if($columnName=='estimatedate'){
-            $columnName='q.estimatedate';
-        } else if($columnName=='id'){
-            $columnName='o.id';
+        $requestColumnName = '';
+        if ($columnName == '' || $columnName == 'customer') {
+            $columnName = 'u.fname';
+        } else if ($columnName == 'estimatorId') {
+            $columnName = 'q.controlNumber';
+        } else if ($columnName == 'status') {
+            $columnName = 's.statusName';
+        } else if ($columnName == 'estimatedate') {
+            $columnName = 'q.estimatedate';
+        } else if ($columnName == 'id') {
+            $columnName = 'o.id';
         } else {
-            $columnName='q.estimatedate';
-            $orderBy='DESC';
+            $columnName = 'q.estimatedate';
+            $orderBy = 'DESC';
         }
         $query = $this->getDoctrine()->getManager();
         $quotes = $query->createQueryBuilder()
-                ->select(['o.id as orderId','q.controlNumber','q.version','q.customerId','q.estimatedate','q.id',
+                ->select(['o.id as orderId', 'q.controlNumber', 'q.version', 'q.customerId', 'q.estimatedate', 'q.id',
                     'os.statusId',
                     's.statusName as status',
-                    'u.company as companyname','u.fname','u.lname'
-                    ])
+                    'u.company as companyname', 'u.fname', 'u.lname'
+                ])
                 ->from('AppBundle:Orders', 'o')
                 ->leftJoin('AppBundle:Quotes', 'q', 'WITH', "q.id = o.quoteId")
                 ->innerJoin('AppBundle:OrderStatus', 'os', 'WITH', "o.id = os.orderId")
                 ->leftJoin('AppBundle:Status', 's', 'WITH', "os.statusId=s.id ")
                 ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
                 ->where("o.isActive = 1 and q.status='Approved' and os.isActive=1")
-                ->orderBy($columnName,$orderBy)
+                ->orderBy($columnName, $orderBy)
                 ->getQuery()
                 ->getResult()
-                ;
-        if (empty($quotes) ) {
+        ;
+        if (empty($quotes)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'There is no order.';
             $statusCode = 422;
         } else {
             $arrApi['status'] = 1;
             $arrApi['message'] = 'Successfully retreived the order list.';
-            $quoteList=[];
-            for($i=0;$i<count($quotes);$i++) {
-                $quoteList[$i]=[
-                    'id'=>$quotes[$i]['id'],
-                    'estimateNumber'=>'O-'.$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
-                    'customername'=>$quotes[$i]['fname'],
-                    'companyname'=>$quotes[$i]['companyname'],
-                    'orderId'=>$quotes[$i]['orderId'],
-                    'status'=>$quotes[$i]['status'],
-                    'estDate'=>$this->getEstimateDateFormate($quotes[$i]['estimatedate']),
+            $quoteList = [];
+            for ($i = 0; $i < count($quotes); $i++) {
+                $quoteList[$i] = [
+                    'id' => $quotes[$i]['id'],
+                    'estimateNumber' => 'O-' . $quotes[$i]['controlNumber'] . '-' . $quotes[$i]['version'],
+                    'customername' => $quotes[$i]['fname'],
+                    'companyname' => $quotes[$i]['companyname'],
+                    'orderId' => $quotes[$i]['orderId'],
+                    'status' => $quotes[$i]['status'],
+                    'estDate' => $this->getEstimateDateFormate($quotes[$i]['estimatedate']),
                 ];
             }
             $arrApi['data']['orders'] = $quoteList;
         }
         return new JsonResponse($arrApi, $statusCode);
     }
-    
+
     /**
      * @Route("/api/order/getOrderDetails")
      * @Security("is_granted('ROLE_USER')")
@@ -194,13 +192,13 @@ class OrderController extends Controller
 //                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=>['Approved']),array('id'=>'desc'));
                 $query = $this->getDoctrine()->getManager();
                 $quotes = $query->createQueryBuilder()
-                    ->select(['q.id'])
-                    ->from('AppBundle:Quotes', 'q')
-                    ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
-                    ->where("o.isActive = 1 and q.status='Approved'")
-                    ->orderBy('o.id','desc')
-                    ->getQuery()
-                    ->getResult();
+                        ->select(['q.id'])
+                        ->from('AppBundle:Quotes', 'q')
+                        ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+                        ->where("o.isActive = 1 and q.status='Approved'")
+                        ->orderBy('o.id', 'desc')
+                        ->getQuery()
+                        ->getResult();
                 if (!empty($quotes)) {
                     $quoteId = $quotes[0]['id'];
                 }
@@ -238,22 +236,21 @@ class OrderController extends Controller
                 $arrApi['data']['status'] = $quoteData->getStatus();
                 $arrApi['data']['comment'] = $quoteData->getComment();
                 $arrApi['data']['deliveryDate'] = $quoteData->getDeliveryDate();
-                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot())?str_replace(',','',number_format($quoteData->getQuoteTot(),0)):'00.00';
-                $arrApi['data']['expFee'] = !empty($quoteData->getExpFee())?str_replace(',','',number_format($quoteData->getExpFee(),2)):'00.00';
-                $arrApi['data']['discount'] = !empty($quoteData->getDiscount())?str_replace(',','',number_format($quoteData->getDiscount(),2)):'00.00';
-                $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee())?str_replace(',','',number_format($quoteData->getLumFee(),2)):'00.00';
-                $arrApi['data']['shipCharge'] = !empty($quoteData->getShipCharge())?str_replace(',','',number_format($quoteData->getShipCharge(),2)):'00.00';
-                $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax())?str_replace(',','',number_format($quoteData->getSalesTax(),2)):'00.00';
-                $arrApi['data']['projectTot'] = ($quoteData->getProjectTot() != $quoteData->getShipCharge()) ? !empty($quoteData->getProjectTot())?str_replace(',','',number_format($quoteData->getProjectTot(),2)):'00.00' : 0;
+                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot()) ? str_replace(',', '', number_format($quoteData->getQuoteTot(), 0)) : '00.00';
+                $arrApi['data']['expFee'] = !empty($quoteData->getExpFee()) ? str_replace(',', '', number_format($quoteData->getExpFee(), 2)) : '00.00';
+                $arrApi['data']['discount'] = !empty($quoteData->getDiscount()) ? str_replace(',', '', number_format($quoteData->getDiscount(), 2)) : '00.00';
+                $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee()) ? str_replace(',', '', number_format($quoteData->getLumFee(), 2)) : '00.00';
+                $arrApi['data']['shipCharge'] = !empty($quoteData->getShipCharge()) ? str_replace(',', '', number_format($quoteData->getShipCharge(), 2)) : '00.00';
+                $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax()) ? str_replace(',', '', number_format($quoteData->getSalesTax(), 2)) : '00.00';
+                $arrApi['data']['projectTot'] = ($quoteData->getProjectTot() != $quoteData->getShipCharge()) ? !empty($quoteData->getProjectTot()) ? str_replace(',', '', number_format($quoteData->getProjectTot(), 2)) : '00.00' : 0;
                 $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
             }
-        }
-        catch(Exception $e) {
+        } catch (Exception $e) {
             throw $e->getMessage();
         }
         return new JsonResponse($arrApi, $statusCode);
     }
-    
+
     /**
      * @Route("/api/order/cloneOrder")
      * @Security("is_granted('ROLE_USER')")
@@ -279,13 +276,12 @@ class OrderController extends Controller
                 $this->cloneVeneerData($quoteId, $clonedQuoteId, $datime);
                 $this->cloneDoorData($quoteId, $clonedQuoteId, $datime);
             }
-        }
-        catch(Exception $e) {
+        } catch (Exception $e) {
             throw $e->getMessage();
         }
         return new JsonResponse($arrApi, $statusCode);
     }
-    
+
     /**
      * @Route("/api/order/getEmailOrderData")
      * @Security("is_granted('ROLE_USER')")
@@ -308,23 +304,22 @@ class OrderController extends Controller
                 $custName = $this->getCustomerNameByQuote($qId);
                 $userName = $this->getCustomerNameById($currUserId);
                 $projName = 'Talbert Order Project';
-                $messageTemplate = $this->replaceShortcodeFromMessage($custName,$userName,$projName,$this->getMessageTemplateforEmailQuote());
+                $messageTemplate = $this->replaceShortcodeFromMessage($custName, $userName, $projName, $this->getMessageTemplateforEmailQuote());
                 if (!empty($messageTemplate)) {
                     $arrApi['status'] = 1;
                     $arrApi['message'] = 'Successfully reterived email order data.';
                     $arrApi['data']['id'] = $qId;
                     $arrApi['data']['template'] = $messageTemplate;
-                    $attachmentData = $this->getLineitemAttachmentsList($request,$qId);
+                    $attachmentData = $this->getLineitemAttachmentsList($request, $qId);
                     $arrApi['data']['attachments'] = $attachmentData;
                 }
-            }
-            catch(Exception $e) {
+            } catch (Exception $e) {
                 throw $e->getMessage();
             }
         }
         return new JsonResponse($arrApi, $statusCode);
     }
-    
+
     /**
      * @Route("/api/quote/emailOrder")
      * @Security("is_granted('ROLE_USER')")
@@ -350,17 +345,17 @@ class OrderController extends Controller
             $arrApi['message'] = 'Parameter missing.';
             $statusCode = 422;
         } else {
-            $pdfName = 'uploads/order_screenshots/OrderPDF-'.$qId.'-'.time().'.pdf';
+            $pdfName = 'uploads/order_screenshots/OrderPDF-' . $qId . '-' . time() . '.pdf';
             $quotePdfUrl = $this->createOrderLineitemPDF($html, $pdfName, $request);
             $newMessage = $this->createMessageToBeSent($msg, $cmt);
             $urls = $this->getAttachmentUrls($chkVal, $request);
             $urls[] = $quotePdfUrl;
             $message = \Swift_Message::newInstance()
-                ->setFrom($currUserEmail)
-                ->setTo($custEmail)
-                ->setSubject('Order Email')
-                ->setBody($newMessage, 'text/plain');
-            for ($i=0;$i<count($urls);$i++) {
+                    ->setFrom($currUserEmail)
+                    ->setTo($custEmail)
+                    ->setSubject('Order Email')
+                    ->setBody($newMessage, 'text/plain');
+            for ($i = 0; $i < count($urls); $i++) {
                 $message->attach(\Swift_Attachment::fromPath($urls[$i]));
             }
             try {
@@ -373,19 +368,18 @@ class OrderController extends Controller
                     $fs = new Filesystem();
                     $fs->remove($pdfName);
                 }
-            }
-            catch(Exception $e) {
+            } catch (Exception $e) {
                 throw $e->getMessage();
             }
         }
         return new JsonResponse($arrApi, $statusCode);
     }
-    
+
     private function clonePlywoodData($quoteId, $clonedQuoteId, $datime) {
-        $ply = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId'=>$quoteId));
+        $ply = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $quoteId));
         if (!empty($ply)) {
             $em = $this->getDoctrine()->getManager();
-            for ($i=0; $i< count($ply); $i++) {
+            for ($i = 0; $i < count($ply); $i++) {
                 $plywd = new Plywood();
                 $plywd->setQuantity($ply[$i]->getQuantity());
                 $plywd->setSpeciesId($ply[$i]->getSpeciesId());
@@ -481,14 +475,14 @@ class OrderController extends Controller
             }
         }
     }
-    
+
     private function cloneOrderData($qData, $datime) {
         $em = $this->getDoctrine()->getManager();
         $quote = new Quotes();
         $quote->setRefid($qData->getId());
         $quote->setEstimatedate($qData->getEstimatedate());
         $quote->setEstimatorId($qData->getEstimatorId());
-        $quote->setControlNumber($this->getLastControlNumber()+1);
+        $quote->setControlNumber($this->getLastControlNumber() + 1);
         $quote->setVersion($qData->getVersion());
         $quote->setCustomerId($qData->getCustomerId());
         $quote->setRefNum($qData->getRefNum());
@@ -513,12 +507,12 @@ class OrderController extends Controller
         $em->flush();
         return $quote->getId();
     }
-    
+
     private function cloneVeneerData($quoteId, $clonedQuoteId, $datime) {
-        $veneeerData = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId'=>$quoteId));
+        $veneeerData = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $quoteId));
         if (!empty($veneeerData)) {
             $em = $this->getDoctrine()->getManager();
-            for ($i=0; $i< count($veneeerData); $i++) {
+            for ($i = 0; $i < count($veneeerData); $i++) {
                 $veneer = new Veneer();
                 $veneer->setQuantity($veneeerData[$i]->getQuantity());
                 $veneer->setSpeciesId($veneeerData[$i]->getSpeciesId());
@@ -574,7 +568,7 @@ class OrderController extends Controller
         $doorData = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $quoteId));
         if (!empty($doorData)) {
             $em = $this->getDoctrine()->getManager();
-            for ($i=0; $i< count($doorData); $i++) {
+            for ($i = 0; $i < count($doorData); $i++) {
                 $door = new Doors();
                 $door->setQuoteId($clonedQuoteId);
                 $door->setQty($doorData[$i]->getQty());
@@ -657,80 +651,79 @@ class OrderController extends Controller
             }
         }
     }
-    
+
     private function getCustomerNameByQuote($quoteId) {
         $quoteRecord = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($quoteId);
         $custId = $quoteRecord->getCustomerId();
         return $this->getCustomerNameById($custId);
-
     }
-    
+
     private function getCustomerNameById($customer_id) {
         if (!empty($customer_id)) {
             $profileObj = $this->getDoctrine()
-                ->getRepository('AppBundle:Profile')
-                ->findOneBy(array('userId' => $customer_id));
-            $customerName =  $profileObj->getFname();
+                    ->getRepository('AppBundle:Profile')
+                    ->findOneBy(array('userId' => $customer_id));
+            $customerName = $profileObj->getFname();
             $custArr = explode(' ', $customerName);
             if (!empty($custArr)) {
                 return $custArr[0];
             }
         }
     }
-    
-    private function replaceShortcodeFromMessage($custName,$userName,$projName,$message) {
-        $shortCodes = array('{first_name_customer}','{project_name}','{user_first_name}');
-        $values  = array($custName, $projName, $userName);
+
+    private function replaceShortcodeFromMessage($custName, $userName, $projName, $message) {
+        $shortCodes = array('{first_name_customer}', '{project_name}', '{user_first_name}');
+        $values = array($custName, $projName, $userName);
         return str_replace($shortCodes, $values, $message);
     }
-    
+
     private function getPlywoodIds($ply) {
         $ids = array();
-        for ($i=0;$i<count($ply);$i++) {
+        for ($i = 0; $i < count($ply); $i++) {
             $ids[] = $ply[$i]->getId();
         }
         return $ids;
     }
-    
+
     private function getVeneerIds($ven) {
         $ids = array();
-        for ($i=0;$i<count($ven);$i++) {
+        for ($i = 0; $i < count($ven); $i++) {
             $ids[] = $ven[$i]->getId();
         }
         return $ids;
     }
-    
+
     private function wordLimit($text) {
-         if (!empty($text)) {
-             if (strlen($text) > 20) {
-               $txt = substr($text, 0,20).'...';
-             } else {
-                 $txt = $text;
-             }
-             return $txt;
-         }
+        if (!empty($text)) {
+            if (strlen($text) > 20) {
+                $txt = substr($text, 0, 20) . '...';
+            } else {
+                $txt = $text;
+            }
+            return $txt;
+        }
     }
-    
+
     private function getLineitemAttachmentsList($request, $qId) {
         $attachmentArr = array();
-        $ply = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId'=>$qId));
-        $ven = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId'=>$qId));
+        $ply = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $qId));
+        $ven = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $qId));
         if (!empty($ply)) {
             $plyIds = $this->getPlywoodIds($ply);
-            $plyFiles = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('attachableid'=>$plyIds, 'attachabletype' => 'plywood'));
+            $plyFiles = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('attachableid' => $plyIds, 'attachabletype' => 'plywood'));
         }
         if (!empty($ven)) {
             $venIds = $this->getVeneerIds($ven);
-            $venFiles = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('attachableid'=>$venIds, 'attachabletype' => 'veneer'));
+            $venFiles = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('attachableid' => $venIds, 'attachabletype' => 'veneer'));
         }
-        $i=0;
+        $i = 0;
         if (!empty($plyFiles) || !empty($venFiles)) {
             if (!empty($plyFiles)) {
                 foreach ($plyFiles as $p) {
                     $attachmentArr[$i]['id'] = $p->getId();
                     $attachmentArr[$i]['name'] = $this->wordLimit($p->getOriginalName());
                     $attachmentArr[$i]['origName'] = $p->getOriginalName();
-                    $attachmentArr[$i]['url'] = $request->getHost().'/'.$request->getBasePath().'/uploads/'.$p->getFileName();
+                    $attachmentArr[$i]['url'] = $request->getHost() . '/' . $request->getBasePath() . '/uploads/' . $p->getFileName();
                     $i++;
                 }
             }
@@ -739,47 +732,47 @@ class OrderController extends Controller
                     $attachmentArr[$i]['id'] = $v->getId();
                     $attachmentArr[$i]['name'] = $this->wordLimit($v->getOriginalName());
                     $attachmentArr[$i]['origName'] = $v->getOriginalName();
-                    $attachmentArr[$i]['url'] = $request->getHost().'/'.$request->getBasePath().'/uploads/'.$v->getFileName();
+                    $attachmentArr[$i]['url'] = $request->getHost() . '/' . $request->getBasePath() . '/uploads/' . $v->getFileName();
                     $i++;
                 }
             }
             return $attachmentArr;
         }
     }
-    
-    private function createOrderLineitemPDF($html,$pdfName, $request) {
+
+    private function createOrderLineitemPDF($html, $pdfName, $request) {
         $fs = new Filesystem();
-        $snappy = new Pdf(  '../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
+        $snappy = new Pdf('../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename=$pdfName');
         $snappy->generateFromHtml($html, $pdfName);
         $fs->chmod($pdfName, 0777);
-        return 'http://'.$request->getHost().'/'.$request->getBasePath().'/'.$pdfName;
+        return 'http://' . $request->getHost() . '/' . $request->getBasePath() . '/' . $pdfName;
     }
-    
+
     private function createMessageToBeSent($msg, $cmt) {
-        $nStr = "Please call me with any questions.\r\n\r\n".$cmt."\r\n\r\n";
-        return str_replace("Please call me with any questions.",$nStr, $msg);
+        $nStr = "Please call me with any questions.\r\n\r\n" . $cmt . "\r\n\r\n";
+        return str_replace("Please call me with any questions.", $nStr, $msg);
     }
-    
+
     private function getAttachmentUrls($idArr, $request) {
         $urlArr = array();
-        $attachments = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('id'=>$idArr));
+        $attachments = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('id' => $idArr));
         if (!empty($attachments)) {
             //print_r($attachments);die;
-            $i=0;
+            $i = 0;
             foreach ($attachments as $a) {
-                $urlArr[$i] = 'http://'.$request->getHost().'/'.$request->getBasePath().'/uploads/'.$a->getFileName();
+                $urlArr[$i] = 'http://' . $request->getHost() . '/' . $request->getBasePath() . '/uploads/' . $a->getFileName();
                 $i++;
             }
         }
         return $urlArr;
     }
-    
+
     private function strignfyCHKArr($chkVal) {
         return implode(',', $chkVal);
     }
-    
+
     private function saveSentEmailDetails($qId, $currUserId, $cmt, $chkVal, $datime) {
         $custId = $this->getCustomerIdByQuoteId($qId);
         $chkBxVal = $this->strignfyCHKArr($chkVal);
@@ -796,23 +789,23 @@ class OrderController extends Controller
         $em->flush();
         return;
     }
-    
+
     private function getEstimateDateFormate($date) {
-        $dateArr =  explode('-', explode('T',$date)[0]);
-        return $d = $dateArr[1].'/'.$dateArr[2].'/'.$dateArr[0];
+        $dateArr = explode('-', explode('T', $date)[0]);
+        return $d = $dateArr[1] . '/' . $dateArr[2] . '/' . $dateArr[0];
     }
-    
+
     private function getOrderDataById($qId) {
-        return $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId,['estimatedate'=>'DESC']);
+        return $this->getDoctrine()->getRepository('AppBundle:Quotes')->findOneById($qId, ['estimatedate' => 'DESC']);
     }
-    
+
     private function getSpeciesNameById($species_id) {
         $productRecord = $this->getDoctrine()->getRepository('AppBundle:Species')->findOneById($species_id);
         if (!empty($productRecord)) {
             return $productRecord->getName();
         }
     }
-    
+
     private function getPatternNameById($pattern_id) {
         $patternRecord = $this->getDoctrine()->getRepository('AppBundle:Pattern')->findOneById($pattern_id);
         if (!empty($patternRecord)) {
@@ -855,57 +848,56 @@ class OrderController extends Controller
         }
     }
 
-    
     private function getVeneerslistbyQuoteId($qId) {
         $lineItem = array();
         $query = $this->getDoctrine()->getManager();
         $plywoodRecords = $query->createQueryBuilder()
-            ->select(['p.id, p.quantity, p.speciesId, p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType,
+                ->select(['p.id, p.quantity, p.speciesId, p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType,
                 p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction,
                 p.lengthFraction,p.grainPatternId,p.backOrderEstNo, s.statusName'])
-            ->from('AppBundle:Plywood', 'p')
-            ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
-            ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId and lis.statusId=1")
-            ->orderBy('p.id','ASC')
-            ->setParameter('quoteId', $qId)
-            ->setParameter('lineItemType', 'Plywood')
-            ->getQuery()
-            ->getResult();
+                ->from('AppBundle:Plywood', 'p')
+                ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
+                ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
+                ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId and lis.statusId=1")
+                ->orderBy('p.id', 'ASC')
+                ->setParameter('quoteId', $qId)
+                ->setParameter('lineItemType', 'Plywood')
+                ->getQuery()
+                ->getResult();
         $veneerRecords = $query->createQueryBuilder()
-            ->select(['v.id, v.quantity, v.speciesId, v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, s.statusName'])
-            ->from('AppBundle:Veneer', 'v')
-            ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
-            ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND v.quoteId = :quoteId and lis.statusId=1")
-            ->orderBy('v.id','ASC')
-            ->setParameter('quoteId', $qId)
-            ->setParameter('lineItemType', 'Veneer')
-            ->getQuery()
-            ->getResult();
+                ->select(['v.id, v.quantity, v.speciesId, v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, s.statusName'])
+                ->from('AppBundle:Veneer', 'v')
+                ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
+                ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
+                ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND v.quoteId = :quoteId and lis.statusId=1")
+                ->orderBy('v.id', 'ASC')
+                ->setParameter('quoteId', $qId)
+                ->setParameter('lineItemType', 'Veneer')
+                ->getQuery()
+                ->getResult();
         $doorRecords = $query->createQueryBuilder()
-            ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, s.statusName'])
-            ->from('AppBundle:Doors', 'd')
-            ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
-            ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND d.quoteId = :quoteId and lis.statusId=1")
-            ->orderBy('d.id','ASC')
-            ->setParameter('quoteId', $qId)
-            ->setParameter('lineItemType', 'Door')
-            ->getQuery()
-            ->getResult();
-        $i=0;
+                ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, s.statusName'])
+                ->from('AppBundle:Doors', 'd')
+                ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
+                ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
+                ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND d.quoteId = :quoteId and lis.statusId=1")
+                ->orderBy('d.id', 'ASC')
+                ->setParameter('quoteId', $qId)
+                ->setParameter('lineItemType', 'Door')
+                ->getQuery()
+                ->getResult();
+        $i = 0;
         if (!empty($plywoodRecords) || !empty($veneerRecords) || !empty($doorRecords)) {
             if (!empty($plywoodRecords)) {
                 foreach ($plywoodRecords as $p) {
-                    if($p['finishThickType'] == 'inch'){
-                        if($p['finishThickId']>0){
-                            $thickness=$p['finishThickId'].($p['finThickFraction']!=0?' '.$this->float2rat($p['finThickFraction']):'').'"';
+                    if ($p['finishThickType'] == 'inch') {
+                        if ($p['finishThickId'] > 0) {
+                            $thickness = $p['finishThickId'] . ($p['finThickFraction'] != 0 ? ' ' . $this->float2rat($p['finThickFraction']) : '') . '"';
                         } else {
-                            $thickness=$this->float2rat($p['finThickFraction']).'"';
+                            $thickness = $this->float2rat($p['finThickFraction']) . '"';
                         }
                     } else {
-                        $thickness=$p['finishThickId'].' '.$p['finishThickType'];
+                        $thickness = $p['finishThickId'] . ' ' . $p['finishThickType'];
                     }
                     $lineItem[$i]['id'] = $p['id'];
                     $lineItem[$i]['type'] = 'plywood';
@@ -961,21 +953,21 @@ class OrderController extends Controller
                 foreach ($doorRecords as $d) {
                     $doorCosts = $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->
                             findOneBy(['doorId' => $d['id']]);
-                    if(!empty($doorCosts)){
-                        $totalcostPerPiece = !empty($doorCosts->getSellingPrice())?$doorCosts->getSellingPrice():0;
-                        $totalCost = !empty($doorCosts->getTotalCost())?$doorCosts->getTotalCost():0;
+                    if (!empty($doorCosts)) {
+                        $totalcostPerPiece = !empty($doorCosts->getSellingPrice()) ? $doorCosts->getSellingPrice() : 0;
+                        $totalCost = !empty($doorCosts->getTotalCost()) ? $doorCosts->getTotalCost() : 0;
                     } else {
-                        $totalcostPerPiece=0;
-                        $totalCost=0;
+                        $totalcostPerPiece = 0;
+                        $totalCost = 0;
                     }
-                    if($d['finishThickType'] == 'inch'){
-                        if($d['finishThickId']>0){
-                            $thickness=$d['finishThickId'].($d['finThickFraction']!=0?' '.$this->float2rat($d['finThickFraction']):'').'"';
+                    if ($d['finishThickType'] == 'inch') {
+                        if ($d['finishThickId'] > 0) {
+                            $thickness = $d['finishThickId'] . ($d['finThickFraction'] != 0 ? ' ' . $this->float2rat($d['finThickFraction']) : '') . '"';
                         } else {
-                            $thickness=$this->float2rat($d['finThickFraction']).'"';
+                            $thickness = $this->float2rat($d['finThickFraction']) . '"';
                         }
                     } else {
-                        $thickness=$d['finishThickId'].' '.$d['finishThickType'];
+                        $thickness = $d['finishThickId'] . ' ' . $d['finishThickType'];
                     }
                     $lineItem[$i]['id'] = $d['id'];
                     $lineItem[$i]['type'] = 'door';
@@ -988,17 +980,17 @@ class OrderController extends Controller
                     }
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d['id']));
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($this->getGradeIdByDoorId($d['id'])))[0];
-                    $lineItem[$i]['back'] = 'NA';//$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
-                    $lineItem[$i]['thickness']=$thickness;
+                    $lineItem[$i]['back'] = 'NA'; //$this->getBackNameById($this->getBackerIdByDoorId($d->getId()));
+                    $lineItem[$i]['thickness'] = $thickness;
                     $lineItem[$i]['width'] = $d['width'];
                     $lineItem[$i]['length'] = $d['length'];
-                    $lineItem[$i]['core'] = 'NA';//$this->getCoreNameById($d->getCoreTypeId());
+                    $lineItem[$i]['core'] = 'NA'; //$this->getCoreNameById($d->getCoreTypeId());
                     $lineItem[$i]['edge'] = 'NA';
                     $lineItem[$i]['unitPrice'] = $totalcostPerPiece;
                     $lineItem[$i]['totalPrice'] = $totalCost;
                     $lineItem[$i]['widthFraction'] = $this->float2rat($d['widthFraction']);
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($d['lengthFraction']);
-                    $lineItem[$i]['grain'] = $this->getGrainPattern($d['id'],'door');
+                    $lineItem[$i]['grain'] = $this->getGrainPattern($d['id'], 'door');
                     $lineItem[$i]['isGreyedOut'] = $d['statusName'];
                     $lineItem[$i]['greyedOutClass'] = ($d['statusName'] == 'LineItemBackOrder') ? 'greyedOut' : '';
                     $lineItem[$i]['greyedOutEstNo'] = $d['backOrderEstNo'];
@@ -1008,55 +1000,55 @@ class OrderController extends Controller
             return $lineItem;
         }
     }
-    
-    private function getGrainPattern($id,$type=''){
-        if($type=='door'){
-            $grainId= $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(['id'=>$id]);
-            if(!empty($grainId)){
-                $id=$grainId->getGrain();
+
+    private function getGrainPattern($id, $type = '') {
+        if ($type == 'door') {
+            $grainId = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(['id' => $id]);
+            if (!empty($grainId)) {
+                $id = $grainId->getGrain();
             } else {
-                $id=0;
+                $id = 0;
             }
         }
-        $data= $this->getDoctrine()->getRepository('AppBundle:GrainDirection')->findOneBy(['id'=>$id]);
-        if(!empty($data)){
+        $data = $this->getDoctrine()->getRepository('AppBundle:GrainDirection')->findOneBy(['id' => $id]);
+        if (!empty($data)) {
             return $data->getName();
         } else {
             return '';
         }
     }
-    
+
     private function getCustomerEmailById($customer_id) {
         if (!empty($customer_id)) {
             $profileObj = $this->getDoctrine()
-                ->getRepository('AppBundle:Profile')
-                ->findOneBy(array('userId' => $customer_id));
-            $customerName =  $profileObj->getEmail();
+                    ->getRepository('AppBundle:Profile')
+                    ->findOneBy(array('userId' => $customer_id));
+            $customerName = $profileObj->getEmail();
             if (!empty($customerName)) {
                 return $customerName;
             }
         }
     }
-    
+
     private function getSalesmanNameById($salesman_id) {
         if (!empty($salesman_id)) {
             $profileObj = $this->getDoctrine()
-                ->getRepository('AppBundle:Profile')
-                ->findOneBy(array('userId' => $salesman_id));
-            $customerName =  $profileObj->getFname();
+                    ->getRepository('AppBundle:Profile')
+                    ->findOneBy(array('userId' => $salesman_id));
+            $customerName = $profileObj->getFname();
             if (!empty($customerName)) {
                 return $customerName;
             }
         }
     }
-    
+
     private function getShipMethodNamebyId($hipmethod_id) {
         $shippmethodRecord = $this->getDoctrine()->getRepository('AppBundle:ShippingMethods')->findOneById($hipmethod_id);
         if (!empty($shippmethodRecord)) {
             return $shippmethodRecord->getName();
         }
     }
-    
+
     private function getBillAddById($cust_id) {
         $addArr = array();
         $addData = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findOneBy(array('userId' => $cust_id));
@@ -1088,12 +1080,12 @@ class OrderController extends Controller
             return $stateRecord->getStateName();
         }
     }
-    
+
     private function cloneAttachments($doorId, $newdoorId, $type, $datime) {
         $files = $this->getDoctrine()->getRepository('AppBundle:Files')->findBy(array('attachabletype' => $type, 'attachableid' => $doorId));
         if (!empty($files)) {
             $em = $this->getDoctrine()->getManager();
-            for ($i=0; $i< count($files); $i++) {
+            for ($i = 0; $i < count($files); $i++) {
                 $filesObj = new Files();
                 $filesObj->setFileName($files[$i]->getFileName());
                 $filesObj->setOriginalName($files[$i]->getOriginalName());
@@ -1106,12 +1098,12 @@ class OrderController extends Controller
             }
         }
     }
-    
+
     private function cloneSkinData($clonedQuoteId, $oldDoorId, $newDoorId, $datime) {
         $skinData = $this->getDoctrine()->getRepository('AppBundle:Skins')->findBy(array('doorId' => $oldDoorId));
         if (!empty($skinData)) {
             $em = $this->getDoctrine()->getManager();
-            for ($i=0; $i< count($skinData); $i++) {
+            for ($i = 0; $i < count($skinData); $i++) {
                 $skin = new Skins();
                 $skin->setQuoteId($clonedQuoteId);
                 $skin->setDoorId($newDoorId);
@@ -1143,15 +1135,14 @@ class OrderController extends Controller
             }
         }
     }
-    
-    
+
     private function getCustomerIdByQuoteId($qId) {
         $quoteRecord = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findById($qId);
         if (!empty($quoteRecord)) {
             return $quoteRecord[0]->getCustomerId();
         }
     }
-    
+
     private function updateQuoteData($quoteId) {
         $salesTaxRate = 0;
         $salesTaxAmount = 0;
@@ -1169,7 +1160,7 @@ class OrderController extends Controller
         $projectTotal = ($quoteSubTotal + $expFee - $discount + $salesTaxAmount + $shipCharge + $lumFee);
         $this->saveQuoteCalculatedData($quoteId, $quoteSubTotal, $salesTaxAmount, $shipCharge, $lumFee, $projectTotal);
     }
-    
+
     private function saveQuoteCalculatedData($quoteId, $quoteSubTotal, $salesTaxAmount, $shipCharge, $lumFee, $projectTotal) {
         $em = $this->getDoctrine()->getManager();
         $quote = $em->getRepository(Quotes::class)->findOneById($quoteId);
@@ -1185,12 +1176,12 @@ class OrderController extends Controller
             $em->flush();
         }
     }
-    
+
     private function getVeneerLumberFeeByQuoteId($quoteId) {
         $lumFee = 0;
-        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $quoteId, 'isActive' => 1));
         if (!empty($veneerRecords)) {
-            $i=0;
+            $i = 0;
             foreach ($veneerRecords as $v) {
                 $lumFee += ($v->getTotalCost() * $v->getLumberFee()) / 100;
                 $i++;
@@ -1198,14 +1189,14 @@ class OrderController extends Controller
         } else {
             $lumFee = 0;
         }
-        return  $lumFee;
+        return $lumFee;
     }
-    
+
     private function getPlywoodLumberFeeByQuoteId($quoteId) {
         $lumFee = 0;
-        $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+        $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $quoteId, 'isActive' => 1));
         if (!empty($plywoodRecords)) {
-            $i=0;
+            $i = 0;
             foreach ($plywoodRecords as $p) {
                 $lumFee += ($p->getTotalCost() * $p->getLumberFee()) / 100;
                 $i++;
@@ -1215,7 +1206,7 @@ class OrderController extends Controller
         }
         return $lumFee;
     }
-    
+
     private function getShippingChargeByAddId($shipAddId) {
         $shipCharge = 0;
         $add = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findById($shipAddId);
@@ -1224,7 +1215,7 @@ class OrderController extends Controller
         }
         return $shipCharge;
     }
-    
+
     private function getSalesTaxRateByAddId($shipAddId) {
         $salesTaxRate = 0;
         $add = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findById($shipAddId);
@@ -1233,12 +1224,12 @@ class OrderController extends Controller
         }
         return $salesTaxRate;
     }
-    
+
     private function getPlywoodSubTotalByQuoteId($quoteId) {
         $subtotal = '';
-        $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+        $plywoodRecords = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $quoteId, 'isActive' => 1));
         if (!empty($plywoodRecords)) {
-            $i=0;
+            $i = 0;
             foreach ($plywoodRecords as $p) {
                 $subtotal += $p->getTotalCost();
                 $i++;
@@ -1248,12 +1239,12 @@ class OrderController extends Controller
         }
         return $subtotal;
     }
-    
+
     private function getVeneerSubTotalByQuoteId($quoteId) {
         $subtotal = '';
-        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
+        $veneerRecords = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $quoteId, 'isActive' => 1));
         if (!empty($veneerRecords)) {
-            $i=0;
+            $i = 0;
             foreach ($veneerRecords as $v) {
                 $subtotal += $v->getTotalCost();
                 $i++;
@@ -1263,14 +1254,14 @@ class OrderController extends Controller
         }
         return $subtotal;
     }
-    
-    private function __arraySortByColumn($array, $index, $order, $natsort=FALSE, $case_sensitive=FALSE) {
+
+    private function __arraySortByColumn($array, $index, $order, $natsort = FALSE, $case_sensitive = FALSE) {
         if (is_array($array) && count($array) > 0) {
             foreach (array_keys($array) as $key) {
                 $temp[$key] = $array[$key][$index];
             }
-            
-            if (!$natsort) {                
+
+            if (!$natsort) {
                 if ($order == 'ASC') {
                     asort($temp);
                 } else {
@@ -1305,21 +1296,21 @@ class OrderController extends Controller
 //        }        
 //        return $arr;
     }
-    
+
     private function getCompanyById($userid) {
         $profileObj = $this->getDoctrine()
-            ->getRepository('AppBundle:Profile')
-            ->findOneBy(array('userId' => $userid));
+                ->getRepository('AppBundle:Profile')
+                ->findOneBy(array('userId' => $userid));
         return $profileObj->getCompany();
     }
-    
+
     private function getSpeciesIdByDoorId($doorId) {
         $skinRecord = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId' => $doorId));
         if (!empty($skinRecord)) {
             return $skinRecord->getSpecies();
         }
     }
-    
+
     private function getPatternIdByDoorId($doorId) {
         $skinRecord = $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(array('doorId' => $doorId));
         if (!empty($skinRecord)) {
@@ -1338,31 +1329,27 @@ class OrderController extends Controller
         $com = '';
         if (!empty($customer_id)) {
             $profileObj = $this->getDoctrine()
-                ->getRepository('AppBundle:Profile')
-                ->findOneBy(array('userId' => $customer_id));
+                    ->getRepository('AppBundle:Profile')
+                    ->findOneBy(array('userId' => $customer_id));
             if (!empty($profileObj->getCompany())) {
                 $com = $profileObj->getCompany();
             }
         }
         return $com;
     }
-    
-    private function float2rat($num = 0.0, $err = 0.001)
-    {
-        if ($err <= 0.0 || $err >= 1.0)
-        {
+
+    private function float2rat($num = 0.0, $err = 0.001) {
+        if ($err <= 0.0 || $err >= 1.0) {
             $err = 0.001;
         }
 
         $sign = ($num > 0) ? 1 : (($num < 0) ? - 1 : 0);
 
-        if ($sign === - 1)
-        {
+        if ($sign === - 1) {
             $num = abs($num);
         }
 
-        if ($sign !== 0)
-        {
+        if ($sign !== 0) {
             // $err is the maximum relative $err; convert to absolute
             $err *= $num;
         }
@@ -1370,13 +1357,11 @@ class OrderController extends Controller
         $n = (int) floor($num);
         $num -= $n;
 
-        if ($num < $err)
-        {
+        if ($num < $err) {
             return (string) ($sign * $n);
         }
 
-        if (1 - $err < $num)
-        {
+        if (1 - $err < $num) {
             return (string) ($sign * ($n + 1));
         }
 
@@ -1388,26 +1373,20 @@ class OrderController extends Controller
         $upper_n = 1;
         $upper_d = 1;
 
-        while (true)
-        {
+        while (true) {
             // The middle fraction is ($lower_n + $upper_n) / (lower_d + $upper_d)
             $middle_n = $lower_n + $upper_n;
             $middle_d = $lower_d + $upper_d;
 
-            if ($middle_d * ($num + $err) < $middle_n)
-            {
+            if ($middle_d * ($num + $err) < $middle_n) {
                 // real + $err < middle : middle is our new upper
                 $upper_n = $middle_n;
                 $upper_d = $middle_d;
-            }
-            elseif ($middle_n < ($num - $err) * $middle_d)
-            {
+            } elseif ($middle_n < ($num - $err) * $middle_d) {
                 // middle < real - $err : middle is our new lower
                 $lower_n = $middle_n;
                 $lower_d = $middle_d;
-            }
-            else
-            {
+            } else {
                 // Middle is our best fraction
                 return (string) (($n * $middle_d + $middle_n) * $sign) . '/' . (string) $middle_d;
             }
@@ -1419,7 +1398,7 @@ class OrderController extends Controller
     private function convertMmToInches($mm) {
         return $mm * 0.0393701;
     }
-    
+
     /**
      * @Route("/api/order/searchOrder")
      * @Security("is_granted('ROLE_USER')")
@@ -1447,119 +1426,117 @@ class OrderController extends Controller
         } else {
             try {
                 $searchType = $this->checkIfSearchValIsEstOrCompany($searchVal);
-                $condition="o.isActive = :active and q.status= :status and os.statusId!='' and os.isActive=1 ";
+                $condition = "o.isActive = :active and q.status= :status and os.statusId!='' and os.isActive=1 ";
                 $concat = ' and ';
                 if ($searchType == 'estNo') {
-                    $estimate = explode('-',$searchVal);
-                    $condition.=$concat."q.controlNumber= :searchVal ";
+                    $estimate = explode('-', $searchVal);
+                    $condition .= $concat . "q.controlNumber= :searchVal ";
                     $keyword = $estimate[1];
 //                    $concat = " AND ";
-                } else if ($searchType == 'company'){
-                    if($type=='status'){
-                        if($searchVal!='all'){
-                            $keyword=$searchVal;                  
-                            $condition.=$concat."os.statusId = :searchVal ";
+                } else if ($searchType == 'company') {
+                    if ($type == 'status') {
+                        if ($searchVal != 'all') {
+                            $keyword = $searchVal;
+                            $condition .= $concat . "os.statusId = :searchVal ";
 //                            $concat = " AND ";
-                        }                        
+                        }
                     } else {
-                        $keyword='%'.$searchVal.'%';                  
-                        $condition.=$concat."u.company Like :searchVal ";
+                        $keyword = '%' . $searchVal . '%';
+                        $condition .= $concat . "u.company Like :searchVal ";
 //                        $concat = " AND ";
-                    }                    
+                    }
                 }
-                if(!empty($startDate) && !empty($endDate)){
-                    $condition = $condition.$concat." q.estimatedate >= :from AND q.estimatedate <= :to ";
-                } else if(!empty($startDate) && empty($endDate) || ($startDate == $endDate && !empty($endDate) && !empty($startDate))){
-                    $condition = $condition.$concat." q.estimatedate >= :from ";
-                } else if(empty($startDate) && !empty($endDate)){
-                    $condition = $condition.$concat." q.estimatedate <= :to ";
+                if (!empty($startDate) && !empty($endDate)) {
+                    $condition = $condition . $concat . " q.estimatedate >= :from AND q.estimatedate <= :to ";
+                } else if (!empty($startDate) && empty($endDate) || ($startDate == $endDate && !empty($endDate) && !empty($startDate))) {
+                    $condition = $condition . $concat . " q.estimatedate >= :from ";
+                } else if (empty($startDate) && !empty($endDate)) {
+                    $condition = $condition . $concat . " q.estimatedate <= :to ";
                 }
                 $query = $this->getDoctrine()->getManager();
-                $query1=$query->createQueryBuilder()
-                ->select(['o.id as orderId','q.controlNumber','q.version','q.customerId','q.estimatedate','q.id',
-                        'os.statusId',
-                        's.statusName as status',
-                        'u.company as companyname','u.fname','u.lname'
+                $query1 = $query->createQueryBuilder()
+                        ->select(['o.id as orderId', 'q.controlNumber', 'q.version', 'q.customerId', 'q.estimatedate', 'q.id',
+                            'os.statusId',
+                            's.statusName as status',
+                            'u.company as companyname', 'u.fname', 'u.lname'
                         ])
-                    ->from('AppBundle:Orders', 'o')
-                    ->leftJoin('AppBundle:Quotes', 'q', 'WITH', "q.id = o.quoteId")
-                    ->innerJoin('AppBundle:OrderStatus', 'os', 'WITH', "o.id = os.orderId")
-                    ->leftJoin('AppBundle:Status', 's', 'WITH', "os.statusId=s.id ")
-                    ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
-                    ->where($condition)
-                    ->setParameter('active', 1)
-                    ->setParameter('status', 'Approved');
-                if($searchVal!='all'){
+                        ->from('AppBundle:Orders', 'o')
+                        ->leftJoin('AppBundle:Quotes', 'q', 'WITH', "q.id = o.quoteId")
+                        ->innerJoin('AppBundle:OrderStatus', 'os', 'WITH', "o.id = os.orderId")
+                        ->leftJoin('AppBundle:Status', 's', 'WITH', "os.statusId=s.id ")
+                        ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
+                        ->where($condition)
+                        ->setParameter('active', 1)
+                        ->setParameter('status', 'Approved');
+                if ($searchVal != 'all') {
                     $query1->setParameter('searchVal', $keyword);
                 }
-                if(!empty($startDate) && !empty($endDate)){
-                    $query1->setParameter('from', date('Y-m-d',strtotime($startDate)))
-                    ->setParameter('to', date('Y-m-d',strtotime($endDate)));
-                } else if(!empty($startDate) && empty($endDate) || ($startDate == $endDate && !empty($endDate) && !empty($startDate))){
-                    $query1->setParameter('from', date('Y-m-d',strtotime($startDate)));
-                } else if(empty($startDate) && !empty($endDate)){
-                    $query1->setParameter('to', date('Y-m-d',strtotime($endDate)));
+                if (!empty($startDate) && !empty($endDate)) {
+                    $query1->setParameter('from', date('Y-m-d', strtotime($startDate)))
+                            ->setParameter('to', date('Y-m-d', strtotime($endDate)));
+                } else if (!empty($startDate) && empty($endDate) || ($startDate == $endDate && !empty($endDate) && !empty($startDate))) {
+                    $query1->setParameter('from', date('Y-m-d', strtotime($startDate)));
+                } else if (empty($startDate) && !empty($endDate)) {
+                    $query1->setParameter('to', date('Y-m-d', strtotime($endDate)));
                 }
-                $quotes=$query1->orderBy('q.estimatedate','DESC')->getQuery()->getResult();
+                $quotes = $query1->orderBy('q.estimatedate', 'DESC')->getQuery()->getResult();
 //                $quotes=$query1->getQuery()->getSQL();print_r($quotes);die;
-                if (empty($quotes) ) {
+                if (empty($quotes)) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'There is no order.';
                     $statusCode = 422;
                 } else {
                     $arrApi['status'] = 1;
                     $arrApi['message'] = 'Successfully retreived the order list.';
-                    $quoteList=[];
-                    for($i=0;$i<count($quotes);$i++) {
-                        $quoteList[$i]=[
-                            'id'=>$quotes[$i]['id'],
-                            'estimateNumber'=>'O-'.$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
-                            'customername'=>$quotes[$i]['fname'],
-                            'companyname'=>$quotes[$i]['companyname'],
-                            'orderId'=>$quotes[$i]['orderId'],
-                            'status'=>$quotes[$i]['status'],
-                            'estDate'=>$this->getEstimateDateFormate($quotes[$i]['estimatedate']),
+                    $quoteList = [];
+                    for ($i = 0; $i < count($quotes); $i++) {
+                        $quoteList[$i] = [
+                            'id' => $quotes[$i]['id'],
+                            'estimateNumber' => 'O-' . $quotes[$i]['controlNumber'] . '-' . $quotes[$i]['version'],
+                            'customername' => $quotes[$i]['fname'],
+                            'companyname' => $quotes[$i]['companyname'],
+                            'orderId' => $quotes[$i]['orderId'],
+                            'status' => $quotes[$i]['status'],
+                            'estDate' => $this->getEstimateDateFormate($quotes[$i]['estimatedate']),
                         ];
                     }
                     $arrApi['data']['orders'] = $quoteList;
                 }
-                return new JsonResponse($arrApi, $statusCode);                
-            }
-            catch(Exception $e) {
+                return new JsonResponse($arrApi, $statusCode);
+            } catch (Exception $e) {
                 throw $e->getMessage();
             }
         }
         return new JsonResponse($arrApi, $statusCode);
     }
-    
+
     private function checkIfSearchValIsEstOrCompany($searchVal) {
         $type = '';
-        if (preg_match_all ("/(.)(-)(\\d+)/", $searchVal, $matches))
-        {
+        if (preg_match_all("/(.)(-)(\\d+)/", $searchVal, $matches)) {
             $type = 'estNo';
         } else {
             $type = 'company';
         }
         return $type;
     }
-    
+
     /**
      * @Route("/api/status/orderStatusList")
      * @Security("is_granted('ROLE_USER')")
      * @Method("GET")
      * params: None
      */
-    public function getOrderStatusListAction(Request $request){
+    public function getOrderStatusListAction(Request $request) {
         $arrApi = [];
         $statusCode = 200;
-        $status= $this->getStatusList('Order');
-        if(!empty($status)){
+        $status = $this->getStatusList('Order');
+        if (!empty($status)) {
             $arrApi['status'] = 1;
             $arrApi['message'] = 'Successfully retreived order status list!';
             foreach ($status as $v) {
-                $arrApi['data'][]=[
-                    'id'=>$v->getId(),
-                    'statusName'=>$v->getStatusName()
+                $arrApi['data'][] = [
+                    'id' => $v->getId(),
+                    'statusName' => $v->getStatusName()
                 ];
             }
         } else {
@@ -1569,30 +1546,28 @@ class OrderController extends Controller
         }
         return new JsonResponse($arrApi, $statusCode);
     }
-    
+
     /**
      * @Route("/api/status/quoteStatusList")
      * @Security("is_granted('ROLE_USER')")
      * @Method("GET")
      * params: None
      */
-    
-    public function getQuoteStatusListAction(Request $request){
+    public function getQuoteStatusListAction(Request $request) {
         $arrApi = [];
         $statusCode = 200;
-        $status= $this->getStatusList('Quote');
-        
-        if(!empty($status)){
+        $status = $this->getStatusList('Quote');
+
+        if (!empty($status)) {
             $arrApi['status'] = 1;
             $arrApi['message'] = 'Successfully retreived quote status list!';
             foreach ($status as $v) {
-                if($v->getId()!=9){
-                    $arrApi['data'][]=[
-                        'id'=>$v->getId(),
-                        'statusName'=>$v->getStatusName()
+                if ($v->getId() != 9) {
+                    $arrApi['data'][] = [
+                        'id' => $v->getId(),
+                        'statusName' => $v->getStatusName()
                     ];
                 }
-                
             }
         } else {
             $arrApi['status'] = 0;
@@ -1601,53 +1576,217 @@ class OrderController extends Controller
         }
         return new JsonResponse($arrApi, $statusCode);
     }
-    
-    private function getStatusList($type){
-        $status = $this->getDoctrine()->getRepository('AppBundle:Status')->findBy(['type'=>$type,'isActive'=>1],
-                ['statusName'=>'ASC']);
+
+    private function getStatusList($type) {
+        $status = $this->getDoctrine()->getRepository('AppBundle:Status')->findBy(['type' => $type, 'isActive' => 1], ['statusName' => 'ASC']);
         return $status;
     }
-    
+
     /**
      * @Route("/api/order/printOrderTicket")
-     * @Security("is_granted('ROLE_USER')")
      * @Method("POST")
      * params: None
      */
-    public function printOrderTicketAction(Request $request){
+    public function printOrderTicketAction(Request $request) {
+
         $arrApi = [];
         $statusCode = 200;
         $jsontoarraygenerator = new JsonToArrayGenerator();
         $data = $jsontoarraygenerator->getJson($request);
-        $quoteId=!empty($data->get('quote_id'))?trim($data->get('quote_id')):'';
-        $plywoodData= $this->getPlywoodDataByQuoteId($quoteId);
-        $veneerData= $this->getVeneerDataByQuoteId($quoteId);
+        $quoteId = !empty($data->get('quote_id')) ? trim($data->get('quote_id')) : '';
+        $plywoodData = $this->getPlywoodDataByQuoteId($quoteId);
+        $veneerData = $this->getVeneerDataByQuoteId($quoteId);
 //        $doorData= $this->getDoorDataByQuoteId($quoteId);
-//        print_r($plywoodData);die;
+        $arr = array_merge($veneerData, $plywoodData);
+        $final = $this->arraySortByColumn($arr, 'lineItemNum');
+//        print_r($final);die;
+        $images_destination = $this->container->getParameter('images_destination');
+//        $veneerHtml = '';
+//        $plywoodHtml='';
+        $lineItemHTML = '';
+        if (!empty($final)) {
+            foreach ($final as $v) {
+                if (!empty($v['type']) && $v['type'] == 'Plywood') {
+                    $lineItemHTML .= $this->getOrderTicketPlywoodHTML($v, $images_destination);
+                }
+                if (!empty($v['type']) && $v['type'] == 'Veneer') {
+                    $lineItemHTML .= $this->getOrderTicketVeneerHTML($v, $images_destination);
+                }
+            }
+        }
+        $html = $this->getOrderTicketHTML($lineItemHTML);
+        
+        return new Response($this->get('knp_snappy.pdf')->getOutputFromHtml($html, ['orientation' => 'Landscape', 'default-header' => false]), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Test.pdf"']);
+    }
+
+    private function getPlywoodDataByQuoteId($quoteId) {
+        if (!empty($quoteId)) {
+            $query = $this->getDoctrine()->getManager();
+            $result = $query->createQueryBuilder()
+                    ->select(['v.quantity', 'v.plywoodWidth as width', 'v.plywoodLength as length', 'v.comments', 'v.speciesId', 'v.topEdge', 'v.bottomEdge',
+                        'v.rightEdge', 'v.leftEdge', "v.finishThickId as pThicknessName", 'v.finishThickType', "'Plywood' as type",
+                        "v.finThickFraction", "v.thickness as panelThicknessName", 'v.lineItemNum', 'v.isSequenced'])
+                    ->from('AppBundle:Plywood', 'v')
+                    ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
+                    ->addSelect(['q.refNum', 'q.deliveryDate'])
+                    ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
+                    ->addSelect(['u.company as username'])
+                    ->leftJoin('AppBundle:Species', 's', 'WITH', "v.speciesId = s.id")
+                    ->addSelect(['s.name as SpecieName'])
+                    ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "v.patternId = p.id")
+                    ->addSelect(['p.name as patternName'])
+                    ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
+                    ->addSelect(['t.name as thicknessName'])
+                    ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
+                    ->addSelect(['fg.name as faceGradeName'])
+                    ->leftJoin('AppBundle:Backer', 'b', 'WITH', "v.backerId = b.id")
+                    ->addSelect(['b.name as backerName'])
+                    ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "v.grainDirectionId = gd.id")
+                    ->addSelect(['gd.name as grainDirectionName'])
+                    ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+                    ->addSelect(['o.orderDate as orderDate', 'o.estNumber as estNumber'])
+                    ->leftJoin('AppBundle:EdgeFinish', 'tef', 'WITH', "v.topEdge = tef.id")
+                    ->addSelect(['tef.name as topEdgeName'])
+                    ->leftJoin('AppBundle:EdgeFinish', 'bef', 'WITH', "v.bottomEdge = bef.id")
+                    ->addSelect(['bef.name as bottomEdgeName'])
+                    ->leftJoin('AppBundle:EdgeFinish', 'ref', 'WITH', "v.rightEdge = ref.id")
+                    ->addSelect(['ref.name as rightEdgeName'])
+                    ->leftJoin('AppBundle:EdgeFinish', 'lef', 'WITH', "v.leftEdge = lef.id")
+                    ->addSelect(['lef.name as leftEdgeName'])
+                    ->leftJoin('AppBundle:SizeEdgeMaterial', 'tem', 'WITH', "v.edgeMaterialId = tem.id")
+                    ->addSelect(['tem.name as topEdgeMaterialName'])
+                    ->leftJoin('AppBundle:SizeEdgeMaterial', 'bem', 'WITH', "v.bedgeMaterialId = bem.id")
+                    ->addSelect(['bem.name as bottomEdgeMaterialName'])
+                    ->leftJoin('AppBundle:SizeEdgeMaterial', 'rem', 'WITH', "v.redgeMaterialId = rem.id")
+                    ->addSelect(['rem.name as rightEdgeMaterialName'])
+                    ->leftJoin('AppBundle:SizeEdgeMaterial', 'lem', 'WITH', "v.ledgeMaterialId = lem.id")
+                    ->addSelect(['lem.name as leftEdgeMaterialName'])
+                    ->leftJoin('AppBundle:Species', 'ts', 'WITH', "v.edgeFinishSpeciesId = ts.id")
+                    ->addSelect(['ts.name as topSpeciesName'])
+                    ->leftJoin('AppBundle:Species', 'bs', 'WITH', "v.bedgeFinishSpeciesId = bs.id")
+                    ->addSelect(['bs.name as bottomSpeciesName'])
+                    ->leftJoin('AppBundle:Species', 'rs', 'WITH', "v.redgeFinishSpeciesId = rs.id")
+                    ->addSelect(['rs.name as rightSpeciesName'])
+                    ->leftJoin('AppBundle:Species', 'ls', 'WITH', "v.ledgeFinishSpeciesId = ls.id")
+                    ->addSelect(['ls.name as leftSpeciesName'])
+                    ->where('v.quoteId = ' . $quoteId)
+                    ->getQuery()
+                    ->getResult();
+//                ->getSQL();            
+        } else {
+            $result = [];
+        }
+        return $result;
+    }
+
+    private function getVeneerDataByQuoteId($quoteId) {
+        if (!empty($quoteId)) {
+            $query = $this->getDoctrine()->getManager();
+            $result = $query->createQueryBuilder()
+                    ->select(['v.quantity', 'v.width', 'v.length', 'v.comments', 'v.sequenced', 'v.lineItemNum', "'Veneer' as type"])
+                    ->from('AppBundle:Veneer', 'v')
+                    ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
+                    ->addSelect(['q.refNum', 'q.deliveryDate'])
+                    ->leftJoin('AppBundle:User', 'u', 'WITH', "q.customerId = u.id and u.userType='customer' and u.roleId=11")
+                    ->addSelect(['u.username'])
+                    ->leftJoin('AppBundle:Species', 's', 'WITH', "v.speciesId = s.id")
+                    ->addSelect(['s.name as SpecieName'])
+                    ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "v.patternId = p.id")
+                    ->addSelect(['p.name as patternName'])
+                    ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
+                    ->addSelect(['t.name as thicknessName'])
+                    ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
+                    ->addSelect(['fg.name as faceGradeName'])
+                    ->leftJoin('AppBundle:Backer', 'b', 'WITH', "v.backer = b.id")
+                    ->addSelect(['b.name as backerName'])
+                    ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "v.grainDirectionId = gd.id")
+                    ->addSelect(['gd.name as grainDirectionName'])
+                    ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+                    ->addSelect(['o.orderDate as orderDate', 'o.estNumber as estNumber'])
+                    ->where('v.quoteId = ' . $quoteId)
+                    ->getQuery()
+                    ->getResult();
+        } else {
+            $result = [];
+        }
+        return $result;
+    }
+
+    private function getDoorDataByQuoteId($quoteId) {
+        if (!empty($quoteId)) {
+//            $query = $this->getDoctrine()->getManager();
+//            $result = $query->createQueryBuilder()
+//                ->select(['d.qty as quantity','d.width','d.length','d.comment as comments','d.sequence as sequenced',
+//                    'd.finishThickId as pThicknessName','d.panelThickness as panelThicknessName'])
+//                ->from('AppBundle:Doors', 'd')
+//                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'd.quoteId = q.id')
+//                ->addSelect(['q.refNum','q.deliveryDate'])
+//                ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
+//                ->addSelect(['u.company as username'])
+//                ->leftJoin('AppBundle:Skins', 's', 'WITH', "s.doorId = d.id")
+//                ->addSelect(['s.species','grade','pattern'])
+//                ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "s.grain_dir = gd.id")
+//                ->addSelect(['gd.name as grainDirectionName'])
+//                ->leftJoin('AppBundle:Species', 'sp', 'WITH', "s.species = sp.id")
+//                ->addSelect(['s.name as SpecieName'])
+//                ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "s.pattern = p.id")
+//                ->addSelect(['p.name as patternName'])
+//                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "s.thicknessId = t.id")
+//                ->addSelect(['t.name as thicknessName'])
+//                ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
+//                ->addSelect(['fg.name as faceGradeName'])
+//                ->where('d.quoteId = '.$quoteId)
+//                ->getQuery()
+//                ->getResult()
+//            ;
+//            print_r($result);die;
+        }
+    }
+
+    private function createQuoteLineitemPDF($html, $pdfName, $request) {
+        $fs = new Filesystem();
+        $snappy = new Pdf('../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename=' . $pdfName);
+        $snappy->generateFromHtml($html, $pdfName);
+        $fs->chmod($pdfName, 0777);
+        return true;
+    }
+
+    private function arraySortByColumn(&$arr, $col, $dir = SORT_ASC) {
+        if (!empty($arr)) {
+            $sort_col = array();
+            foreach ($arr as $key => $row) {
+                $sort_col[$key] = $row[$col];
+            }
+            array_multisort($sort_col, $dir, $arr);
+        }
+        return $arr;
+    }
+
+    private function getOrderTicketVeneerHTML($v, $images_destination) {
         $veneerHtml = '';
-        if(!empty($veneerData)){
-            foreach ($veneerData as $v) {
-                $veneerHtml.='<div style="page-break-after:always" *ngFor="let v of data">
+        $veneerHtml .= '<div style="page-break-after:always" *ngFor="let v of data">
             <div class="ticketWrap">
                 <div class="ticketScreen veneer">
                     <table class="ticketHead">
                         <tr>
-                            <td class="lftLogo"><img src="assets/img/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                            <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
                             <td class="dep" >Veneer Department</td>
                         </tr>
                     </table>
                     <table class="ticketDesc">
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc"><label class="custName">'.$v['username'].'</label></td>
+                            <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc">'.$v['refNum'].'</td>
+                            <td class="cellDesc">' . $v['refNum'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc">'.$v['estNumber'].'</td>
+                            <td class="cellDesc">' . $v['estNumber'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
@@ -1657,35 +1796,35 @@ class OrderController extends Controller
                     <table class="ticketDesc">
                         <tr>
                             <td class="cellLabel"><label>Quantity</label></td>
-                            <td class="cellDesc">'.$v['quantity'].' Pieces</td>
+                            <td class="cellDesc">' . $v['quantity'] . ' Pieces</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Species</label></td>
-                            <td class="cellDesc">'.$v['SpecieName'].' - '.$v['patternName'].'</td>
+                            <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Size</label></td>
-                            <td class="cellDesc">'.$v['width'].' - '.$v['length'].'"</td>
+                            <td class="cellDesc">' . $v['width'] . ' - ' . $v['length'] . '"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Thickness</label></td>
-                            <td class="cellDesc">'.$v['thicknessName'].'</td>
+                            <td class="cellDesc">' . $v['thicknessName'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Grade</label></td>
-                            <td class="cellDesc">'.$v['faceGradeName'].'</td>
+                            <td class="cellDesc">' . $v['faceGradeName'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Back</label></td>
-                            <td class="cellDesc">'.$v['backerName'].'</td>
+                            <td class="cellDesc">' . $v['backerName'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Grain Direction</label></td>
-                            <td class="cellDesc">'.$v['grainDirectionName'].'</td>
+                            <td class="cellDesc">' . $v['grainDirectionName'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Sequenced</label></td>
-                            <td class="cellDesc">'.$v['sequenced'].'</td>
+                            <td class="cellDesc">' . $v['sequenced'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Labels</label></td>
@@ -1693,24 +1832,24 @@ class OrderController extends Controller
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Notes:</label></td>
-                            <td class="cellDesc"><span class="noteTxt">'.$v['comments'].'</span></td>
+                            <td class="cellDesc"><span class="noteTxt">' . $v['comments'] . '</span></td>
                         </tr>
                     </table>
 
                     <table class="ticketFoot">
                         <tr>
                             <td class="cellLabel"><label>Due</label></td>
-                            <td class="cellDesc"><label class="custName">'.date('Y-m-d',strtotime($v['deliveryDate'])).'</label></td>
+                            <td class="cellDesc"><label class="custName">' . date('l', strtotime($v['deliveryDate'])) . ' | ' . date('M d', strtotime($v['deliveryDate'])) . '</label></td>
                         </tr>
                         <tr>
-                            <td class="lftFoot"><!--<img src="assets/img/ticket-images/veneer-lft-img.png" alt="">--></td>
+                            <td class="lftFoot"><!--<img src="' . $images_destination . '/ticket-images/veneer-lft-img.png" alt="">--></td>
                             <td class="dep footIN">
                                 <table>
                                     <tr>
-                                        <td class="itBx"><span class="itTxt">Item '.$v['lineItemNum'].'</span></td>
+                                        <td class="itBx"><span class="itTxt">Item ' . $v['lineItemNum'] . '</span></td>
                                         <td class="footImg">
-                                            <img src="assets/img/ticket-images/foot-img-1.png" alt="">
-                                            <!-- <img src="assets/img/ticket-images/foot-img-2.png" alt=""> -->
+                                            <img src="' . $images_destination . '/ticket-images/foot-img-1.png" alt="">
+                                            <!-- <img src="' . $images_destination . '/ticket-images/foot-img-2.png" alt=""> -->
                                         </td>
                                     </tr>
                                 </table>
@@ -1724,22 +1863,22 @@ class OrderController extends Controller
                 <div class="ticketScreen sanding">
                     <table class="ticketHead">
                         <tr>
-                            <td class="lftLogo"><img src="assets/img/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                            <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
                             <td class="dep">Sanding Department</td>
                         </tr>
                     </table>
                     <table class="ticketDesc">
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc"><label class="custName">'.$v['username'].'</label></td>
+                            <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc">'.$v['refNum'].'</td>
+                            <td class="cellDesc">' . $v['refNum'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc">'.$v['estNumber'].'</td>
+                            <td class="cellDesc">' . $v['estNumber'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
@@ -1749,23 +1888,23 @@ class OrderController extends Controller
                     <table class="ticketDesc">
                         <tr>
                             <td class="cellLabel"><label>Quantity</label></td>
-                            <td class="cellDesc">'.$v['quantity'].' Pieces</td>
+                            <td class="cellDesc">' . $v['quantity'] . ' Pieces</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Species/Face</label></td>
-                            <td class="cellDesc">'.$v['SpecieName'].' - '.$v['patternName'].'</td>
+                            <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Finished Size</label></td>
-                            <td class="cellDesc">'.$v['width'].'" x '.$v['length'].'"</td>
+                            <td class="cellDesc">' . $v['width'] . '" x ' . $v['length'] . '"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Finished Thickness</label></td>
-                            <td class="cellDesc">'.$v['thicknessName'].'"</td>
+                            <td class="cellDesc">' . $v['thicknessName'] . '"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Notes:</label></td>
-                            <td class="cellDesc"><span class="noteTxt">'.$v['comments'].'</span></td>
+                            <td class="cellDesc"><span class="noteTxt">' . $v['comments'] . '</span></td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Labels</label></td>
@@ -1776,17 +1915,17 @@ class OrderController extends Controller
                     <table class="ticketFoot">
                         <tr>
                             <td class="cellLabel"><label>Due</label></td>
-                            <td class="cellDesc"><label class="custName">'.date('Y-m-d',strtotime($v['deliveryDate'])).'</label></td>
+                            <td class="cellDesc"><label class="custName">' . date('l', strtotime($v['deliveryDate'])) . ' | ' . date('M d', strtotime($v['deliveryDate'])) . '</label></td>
                         </tr>
                         <tr>
                             <td class="lftFoot">&nbsp;</td>
                             <td class="dep footIN">
                                 <table>
                                     <tr>
-                                        <td class="itBx"><span class="itTxt">Item '.$v['lineItemNum'].'</span></td>
+                                        <td class="itBx"><span class="itTxt">Item ' . $v['lineItemNum'] . '</span></td>
                                         <td class="footImg">
-                                            <img src="assets/img/ticket-images/foot-img-1.png" alt="">
-                                            <!-- <img src="assets/img/ticket-images/foot-img-2.png" alt=""> -->
+                                            <img src="' . $images_destination . '/ticket-images/foot-img-1.png" alt="">
+                                            <!-- <img src="' . $images_destination . '/ticket-images/foot-img-2.png" alt=""> -->
                                         </td>
                                     </tr>
                                 </table>
@@ -1796,69 +1935,67 @@ class OrderController extends Controller
                 </div>
             </div><br/>
         </div>';
-            }            
+        return $veneerHtml;
+    }
+
+    private function getOrderTicketPlywoodHTML($v, $images_destination) {
+        $topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $bottomEdgeName = !empty($v['bottomEdgeName']) ? $v['bottomEdgeName'] : 'N/A';
+        $rightEdgeName = !empty($v['rightEdgeName']) ? $v['rightEdgeName'] : 'N/A';
+        $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
+        $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
+        $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
+        $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
+        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
+        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
+        $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
+        $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
+
+
+        $edge = '';
+        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
+                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
+                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
+                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
+            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
+                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
+            }
+            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
+                $edge .= 'TE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
+            }
+            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
+                $edge .= 'TE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
+            }
+            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
+                $edge .= 'TE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+            }
+        } else {
+            $edge = 'No';
         }
-        
-        $plywoodHtml='';
-        if(!empty($plywoodData)){
-            foreach ($plywoodData as $v) {
-                $topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
-                $bottomEdgeName = !empty($v['bottomEdgeName']) ? $v['bottomEdgeName'] : 'N/A';
-                $rightEdgeName = !empty($v['rightEdgeName']) ? $v['rightEdgeName'] : 'N/A';
-                $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
-                $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
-                $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
-                $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
-                $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
-                $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
-                $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
-                $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
-                $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
-                
-                
-                $edge = '';
-                if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') || 
-                    ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') || 
-                    ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') || 
-                    ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None'))
-                {
-                    if($topEdgeName !== 'N/A' && $topEdgeName !== 'None'){
-                        $edge.='TE: '.$topEdgeName.' &nbsp; |  &nbsp;'.$topEdgeMaterialName.' &nbsp; |  &nbsp;'.$topSpeciesName.' <br>';
-                    }
-                    if($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None'){
-                        $edge.='TE: '.$bottomEdgeName.' &nbsp; |  &nbsp;'.$bottomEdgeMaterialName.' &nbsp; |  &nbsp;'.$bottomSpeciesName.' <br>';
-                    }
-                    if($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None'){
-                        $edge.='TE: '.$rightEdgeName.' &nbsp; |  &nbsp;'.$rightEdgeMaterialName.' &nbsp; |  &nbsp;'.$rightSpeciesName.' <br>';
-                    }
-                    if($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None'){
-                        $edge.='TE: '.$leftEdgeName.' &nbsp; |  &nbsp;'.$leftEdgeMaterialName.' &nbsp; |  &nbsp;'.$leftSpeciesName.' <br>';
-                    }
-                } else {
-                    $edge = 'No';
-                }
-                $plywoodHtml.='
+        $plywoodHtml = '';
+        $plywoodHtml .= '
                     <div style="page-break-after:always" *ngFor="let v of data">
             <div class="ticketWrap">
                 <div class="ticketScreen veneer">
                     <table class="ticketHead">
                         <tr>
-                            <td class="lftLogo"><img src="assets/img/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                            <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
                             <td class="dep" >Veneer Department</td>
                         </tr>
                     </table>
                     <table class="ticketDesc">
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc"><label class="custName">'.$v['username'].'</label></td>
+                            <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc">'.$v['refNum'].'</td>
+                            <td class="cellDesc">' . $v['refNum'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc">'.$v['estNumber'].'</td>
+                            <td class="cellDesc">' . $v['estNumber'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
@@ -1868,72 +2005,72 @@ class OrderController extends Controller
                     <table class="ticketDesc">
                         <tr>
                             <td class="cellLabel"><label>Quantity</label></td>
-                            <td class="cellDesc">'.$v['quantity'].' Pieces</td>
+                            <td class="cellDesc">' . $v['quantity'] . ' Pieces</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Species</label></td>
-                            <td class="cellDesc">'.$v['SpecieName'].' - '.$v['patternName'].'</td>
+                            <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Size</label></td>
-                            <td class="cellDesc">'.($v['width']+1).'" x '.$v['length'].'"</td>
+                            <td class="cellDesc">' . ($v['width'] + 1) . '" x ' . $v['length'] . '"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Thickness</label></td>
-                            <td class="cellDesc">'.$v['thicknessName'].'</td>
+                            <td class="cellDesc">' . $v['thicknessName'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Grade</label></td>
-                            <td class="cellDesc">'.$v['faceGradeName'].'</td>
+                            <td class="cellDesc">' . $v['faceGradeName'] . '</td>
                         </tr>
                        ';
-                if(!empty($v['backerName'])){
-                    $plywoodHtml.='<tr>
+        if (!empty($v['backerName'])) {
+            $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label></label></td>
-                                <td class="cellDesc">'.$v['backerName'].'</td>
+                                <td class="cellDesc">' . $v['backerName'] . '</td>
                             </tr>';
-                }
-                $plywoodHtml.='<tr>
+        }
+        $plywoodHtml .= '<tr>
                             <td class="cellLabel"><label>Grain Direction</label></td>
-                            <td class="cellDesc">'.$v['grainDirectionName'].'</td>
+                            <td class="cellDesc">' . $v['grainDirectionName'] . '</td>
                         </tr>';
-                if(!empty($v['isSequenced']) && $v['isSequenced']==1){
-                    $plywoodHtml.='<tr>
+        if (!empty($v['isSequenced']) && $v['isSequenced'] == 1) {
+            $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label>Sequenced</label></td>
-                                <td class="cellDesc">'.($v['isSequenced']==1?'Yes':'').'</td>
+                                <td class="cellDesc">' . ($v['isSequenced'] == 1 ? 'Yes' : '') . '</td>
                             </tr>';
-                }
-                if(!empty($v['comments'])){
-                    $plywoodHtml.='<tr>
+        }
+        if (!empty($v['comments'])) {
+            $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label>Notes:</label></td>
-                                <td class="cellDesc">'.($v['comments']).'</td>
+                                <td class="cellDesc">' . ($v['comments']) . '</td>
                             </tr>';
-                }
-                if(!empty($v['backerName'])){
-                    $plywoodHtml.='<tr>
+        }
+        if (!empty($v['backerName'])) {
+            $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label></label></td>
-                                <td class="cellDesc">'.($v['backerName']).'</td>
+                                <td class="cellDesc">' . ($v['backerName']) . '</td>
                             </tr>';
-                }
-                if(empty($v['isSequenced']) && $v['isSequenced']==0){
-                    $plywoodHtml.='<tr>
-                                <td class="cellLabel"><label></label></td>
-                                <td class="cellDesc"></td>
-                            </tr>';
-                }
-                if(empty($v['comments'])){
-                    $plywoodHtml.='<tr>
+        }
+        if (empty($v['isSequenced']) && $v['isSequenced'] == 0) {
+            $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label></label></td>
                                 <td class="cellDesc"></td>
                             </tr>';
-                }
-                if(empty($v['backerName'])){
-                    $plywoodHtml.='<tr>
+        }
+        if (empty($v['comments'])) {
+            $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label></label></td>
                                 <td class="cellDesc"></td>
                             </tr>';
-                }
-                $plywoodHtml.='<tr>
+        }
+        if (empty($v['backerName'])) {
+            $plywoodHtml .= '<tr>
+                                <td class="cellLabel"><label></label></td>
+                                <td class="cellDesc"></td>
+                            </tr>';
+        }
+        $plywoodHtml .= '<tr>
                             <td class="cellLabel"><label></label></td>
                             <td class="cellDesc"></td>
                         </tr></table>
@@ -1941,17 +2078,17 @@ class OrderController extends Controller
                     <table class="ticketFoot">
                         <tr>
                             <td class="cellLabel"><label>Due</label></td>
-                            <td class="cellDesc"><label class="custName">'.date('Y-m-d',strtotime($v['deliveryDate'])).'</label></td>
+                            <td class="cellDesc"><label class="custName">' . date('l', strtotime($v['deliveryDate'])) . ' | ' . date('M d', strtotime($v['deliveryDate'])) . '</label></td>
                         </tr>
                         <tr>
-                            <td class="lftFoot"><!--<img src="assets/img/ticket-images/veneer-lft-img.png" alt="">--></td>
+                            <td class="lftFoot"><!--<img src="' . $images_destination . '/ticket-images/veneer-lft-img.png" alt="">--></td>
                             <td class="dep footIN">
                                 <table>
                                     <tr>
-                                        <td class="itBx"><span class="itTxt">Item '.$v['lineItemNum'].'</span></td>
+                                        <td class="itBx"><span class="itTxt">Item ' . $v['lineItemNum'] . '</span></td>
                                         <td class="footImg">
-                                            <img src="assets/img/ticket-images/foot-img-1.png" alt="">
-                                            <!-- <img src="assets/img/ticket-images/foot-img-2.png" alt=""> -->
+                                            <img src="' . $images_destination . '/ticket-images/foot-img-1.png" alt="">
+                                            <!-- <img src="' . $images_destination . '/ticket-images/foot-img-2.png" alt=""> -->
                                         </td>
                                     </tr>
                                 </table>
@@ -1964,22 +2101,22 @@ class OrderController extends Controller
                 <div class="ticketScreen core">
                     <table class="ticketHead">
                         <tr>
-                            <td class="lftLogo"><img src="assets/img/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                            <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
                             <td class="dep">Core Department</td>
                         </tr>
                     </table>
                     <table class="ticketDesc">
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc"><label class="custName">'.$v['username'].'</label></td>
+                            <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc">'.$v['refNum'].'</td>
+                            <td class="cellDesc">' . $v['refNum'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc">'.$v['estNumber'].'</td>
+                            <td class="cellDesc">' . $v['estNumber'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
@@ -1989,79 +2126,79 @@ class OrderController extends Controller
                     <table class="ticketDesc">
                         <tr>
                             <td class="cellLabel"><label>Quantity</label></td>
-                            <td class="cellDesc">'.$v['quantity'].' Pieces</td>
+                            <td class="cellDesc">' . $v['quantity'] . ' Pieces</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Species</label></td>
-                            <td class="cellDesc">'.$v['SpecieName'].' - '.$v['patternName'].'</td>
+                            <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Size</label></td>
-                            <td class="cellDesc">'.($v['width']+1).'" x '.$v['length'].'"</td>
+                            <td class="cellDesc">' . ($v['width'] + 1) . '" x ' . $v['length'] . '"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Thickness</label></td>
-                            <td class="cellDesc">'.$v['panelThicknessName'].'</td>
+                            <td class="cellDesc">' . $v['panelThicknessName'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Grade</label></td>
-                            <td class="cellDesc">'.$v['faceGradeName'].'</td>
+                            <td class="cellDesc">' . $v['faceGradeName'] . '</td>
                         </tr>';
-                if(!empty($v['backerName'])){
-                    $plywoodHtml.='<tr>
+        if (!empty($v['backerName'])) {
+            $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label>Back</label></td>
-                                <td class="cellDesc">'.$v['backerName'].'</td>
+                                <td class="cellDesc">' . $v['backerName'] . '</td>
                             </tr>';
-                }
-                if(!empty($edge)){
-                    $plywoodHtml.='<tr>
+        }
+        if (!empty($edge)) {
+            $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label>Edge</label></td>
-                                <td class="cellDesc">'.$edge.'</td>
+                                <td class="cellDesc">' . $edge . '</td>
                             </tr>';
-                }
-                if(!empty($v['comments'])){
-                    $plywoodHtml.='<tr>
+        }
+        if (!empty($v['comments'])) {
+            $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label>Notes:</label></td>
-                                <td class="cellDesc">'.$v['comments'].'</td>
+                                <td class="cellDesc">' . $v['comments'] . '</td>
                             </tr>';
-                }
-                if(empty($v['backerName'])){
-                    $plywoodHtml.='<tr>
+        }
+        if (empty($v['backerName'])) {
+            $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label></label></td>
                                 <td class="cellDesc"></td>
                             </tr>';
-                }
-                if(empty($edge)){
-                    $plywoodHtml.='<tr>
+        }
+        if (empty($edge)) {
+            $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label></label></td>
                                 <td class="cellDesc"></td>
                             </tr>';
-                }
-                if(empty($v['comments'])){
-                    $plywoodHtml.='<tr>
+        }
+        if (empty($v['comments'])) {
+            $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label>:/label></td>
                                 <td class="cellDesc"></td>
                             </tr>';
-                }
-                $plywoodHtml.='<tr>
+        }
+        $plywoodHtml .= '<tr>
                             <td class="cellLabel"><label></label></td>
                             <td class="cellDesc"></td>
                         </tr>';
-                $plywoodHtml.='</table>
+        $plywoodHtml .= '</table>
                         <table class="ticketFoot">
                         <tr>
                             <td class="cellLabel"><label>Due</label></td>
-                            <td class="cellDesc"><label class="custName">'.date('Y-m-d',strtotime($v['deliveryDate'])).'</label></td>
+                            <td class="cellDesc"><label class="custName">' . date('l', strtotime($v['deliveryDate'])) . ' | ' . date('M d', strtotime($v['deliveryDate'])) . '</label></td>
                         </tr>
                         <tr>
                             <td class="lftFoot">&nbsp;</td>
                             <td class="dep footIN">
                                 <table>
                                     <tr>
-                                        <td class="itBx"><span class="itTxt">Item '.$v['lineItemNum'].'</span></td>
+                                        <td class="itBx"><span class="itTxt">Item ' . $v['lineItemNum'] . '</span></td>
                                         <td class="footImg">
-                                            <img src="assets/img/ticket-images/foot-img-1.png" alt="">
-                                            <img src="assets/img/ticket-images/foot-img-2.png" alt="">
+                                            <img src="' . $images_destination . '/ticket-images/foot-img-1.png" alt="">
+                                            <img src="' . $images_destination . '/ticket-images/foot-img-2.png" alt="">
                                         </td>
                                     </tr>
                                 </table>
@@ -2075,22 +2212,22 @@ class OrderController extends Controller
                 <div class="ticketScreen sanding">
                     <table class="ticketHead">
                         <tr>
-                            <td class="lftLogo"><img src="assets/img/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                            <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
                             <td class="dep">Sanding Department</td>
                         </tr>
                     </table>
                     <table class="ticketDesc">
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc"><label class="custName">'.$v['username'].'</label></td>
+                            <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc">'.$v['refNum'].'</td>
+                            <td class="cellDesc">' . $v['refNum'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc">'.$v['estNumber'].'</td>
+                            <td class="cellDesc">' . $v['estNumber'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
@@ -2100,35 +2237,35 @@ class OrderController extends Controller
                     <table class="ticketDesc">
                         <tr>
                             <td class="cellLabel"><label>Quantity</label></td>
-                            <td class="cellDesc">'.$v['quantity'].' Pieces</td>
+                            <td class="cellDesc">' . $v['quantity'] . ' Pieces</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Species/Face</label></td>
-                            <td class="cellDesc">'.$v['SpecieName'].' - '.$v['patternName'].'</td>
+                            <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Finished Size</label></td>
-                            <td class="cellDesc">'.$v['width'].'" x '.$v['length'].'"</td>
+                            <td class="cellDesc">' . $v['width'] . '" x ' . $v['length'] . '"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Finished Thickness</label></td>
-                            <td class="cellDesc">'.$v['thicknessName'].'"</td>
+                            <td class="cellDesc">' . $v['thicknessName'] . '"</td>
                         </tr>';
-                if(!empty($v['comments'])){
-                    $plywoodHtml.='<tr>
+        if (!empty($v['comments'])) {
+            $plywoodHtml .= '<tr>
                         <td class="cellLabel"><label>Notes:</label></td>
-                        <td class="cellDesc">'.$v['comments'].'</td>
+                        <td class="cellDesc">' . $v['comments'] . '</td>
                     </tr>
                     ';
-                }
-                if(empty($v['comments'])){
-                    $plywoodHtml.='<tr>
+        }
+        if (empty($v['comments'])) {
+            $plywoodHtml .= '<tr>
                         <td class="cellLabel"><label></label></td>
                         <td class="cellDesc"></td>
                     </tr>
                     ';
-                }
-                $plywoodHtml.='<tr>
+        }
+        $plywoodHtml .= '<tr>
                                 <td class="cellLabel"><label></label></td>
                                 <td class="cellDesc"></td>
                             </tr>
@@ -2137,17 +2274,17 @@ class OrderController extends Controller
                     <table class="ticketFoot">
                         <tr>
                             <td class="cellLabel"><label>Due</label></td>
-                            <td class="cellDesc"><label class="custName">'.date('Y-m-d',strtotime($v['deliveryDate'])).'</label></td>
+                            <td class="cellDesc"><label class="custName">' . date('l', strtotime($v['deliveryDate'])) . ' | ' . date('M d', strtotime($v['deliveryDate'])) . '</label></td>
                         </tr>
                         <tr>
                             <td class="lftFoot">&nbsp;</td>
                             <td class="dep footIN">
                                 <table>
                                     <tr>
-                                        <td class="itBx"><span class="itTxt">Item '.$v['lineItemNum'].'</span></td>
+                                        <td class="itBx"><span class="itTxt">Item ' . $v['lineItemNum'] . '</span></td>
                                         <td class="footImg">
-                                            <img src="assets/img/ticket-images/foot-img-1.png" alt="">
-                                            <!-- <img src="assets/img/ticket-images/foot-img-2.png" alt=""> -->
+                                            <img src="' . $images_destination . '/ticket-images/foot-img-1.png" alt="">
+                                            <!-- <img src="' . $images_destination . '/ticket-images/foot-img-2.png" alt=""> -->
                                         </td>
                                     </tr>
                                 </table>
@@ -2157,9 +2294,13 @@ class OrderController extends Controller
                 </div>
             </div><br/>
         </div>';
-            }
-        }
-        $html='<!DOCTYPE html>
+        return $plywoodHtml;
+    }
+    
+    private function getOrderTicketHTML($lineItemHTML){
+        $html='';
+        if(!empty($lineItemHTML)){
+            $html .= '<!DOCTYPE html>
         <html>
             <head>
                 <meta charset="UTF-8">
@@ -2241,151 +2382,12 @@ class OrderController extends Controller
                 .sanding td.dep{background-color:#a5b500;}.door td.dep,.shipping td.dep{background-color:#808080;}
     }
                 </style>
-                <link href="//fonts.googleapis.com/css?family=Libre+Franklin:400,600" rel="stylesheet">
             </head>
             <body>
-            '.$veneerHtml.$plywoodHtml.'
+            ' . $lineItemHTML . '
             </body>
         </html>';
-        $pdfName = 'uploads/order_tickets/OrderTicketPDF-'.$quoteId.'-'.time().'.pdf';
-        $quotePdfUrl = $this->createQuoteLineitemPDF($html, $pdfName, $request);
-        print_r($veneerData);die;
-       
-    }
-    
-    private function getPlywoodDataByQuoteId($quoteId){
-        if(!empty($quoteId)){
-            $query = $this->getDoctrine()->getManager();
-            $result = $query->createQueryBuilder()
-                ->select(['v.quantity','v.plywoodWidth as width','v.plywoodLength as length','v.comments','v.speciesId','v.topEdge','v.bottomEdge',
-                    'v.rightEdge','v.leftEdge', "v.finishThickId as pThicknessName",'v.finishThickType',
-                    "v.finThickFraction","v.thickness as panelThicknessName",'v.lineItemNum','v.isSequenced'])
-                ->from('AppBundle:Plywood', 'v')
-                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
-                ->addSelect(['q.refNum','q.deliveryDate'])
-                ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
-                ->addSelect(['u.company as username'])
-                ->leftJoin('AppBundle:Species', 's', 'WITH', "v.speciesId = s.id")
-                ->addSelect(['s.name as SpecieName'])
-                ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "v.patternId = p.id")
-                ->addSelect(['p.name as patternName'])
-                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
-                ->addSelect(['t.name as thicknessName'])
-                ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
-                ->addSelect(['fg.name as faceGradeName'])
-                ->leftJoin('AppBundle:Backer', 'b', 'WITH', "v.backerId = b.id")
-                ->addSelect(['b.name as backerName'])
-                ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "v.grainDirectionId = gd.id")
-                ->addSelect(['gd.name as grainDirectionName'])
-                ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
-                ->addSelect(['o.orderDate as orderDate','o.estNumber as estNumber'])
-                ->leftJoin('AppBundle:EdgeFinish', 'tef', 'WITH', "v.topEdge = tef.id")
-                ->addSelect(['tef.name as topEdgeName'])
-                ->leftJoin('AppBundle:EdgeFinish', 'bef', 'WITH', "v.bottomEdge = bef.id")
-                ->addSelect(['bef.name as bottomEdgeName'])
-                ->leftJoin('AppBundle:EdgeFinish', 'ref', 'WITH', "v.rightEdge = ref.id")
-                ->addSelect(['ref.name as rightEdgeName'])
-                ->leftJoin('AppBundle:EdgeFinish', 'lef', 'WITH', "v.leftEdge = lef.id")
-                ->addSelect(['lef.name as leftEdgeName'])
-                    
-                ->leftJoin('AppBundle:SizeEdgeMaterial', 'tem', 'WITH', "v.edgeMaterialId = tem.id")
-                ->addSelect(['tem.name as topEdgeMaterialName'])
-                ->leftJoin('AppBundle:SizeEdgeMaterial', 'bem', 'WITH', "v.bedgeMaterialId = bem.id")
-                ->addSelect(['bem.name as bottomEdgeMaterialName'])
-                ->leftJoin('AppBundle:SizeEdgeMaterial', 'rem', 'WITH', "v.redgeMaterialId = rem.id")
-                ->addSelect(['rem.name as rightEdgeMaterialName'])
-                ->leftJoin('AppBundle:SizeEdgeMaterial', 'lem', 'WITH', "v.ledgeMaterialId = lem.id")
-                ->addSelect(['lem.name as leftEdgeMaterialName'])
-                    
-                ->leftJoin('AppBundle:Species', 'ts', 'WITH', "v.edgeFinishSpeciesId = ts.id")
-                ->addSelect(['ts.name as topSpeciesName'])
-                ->leftJoin('AppBundle:Species', 'bs', 'WITH', "v.bedgeFinishSpeciesId = bs.id")
-                ->addSelect(['bs.name as bottomSpeciesName'])
-                ->leftJoin('AppBundle:Species', 'rs', 'WITH', "v.redgeFinishSpeciesId = rs.id")
-                ->addSelect(['rs.name as rightSpeciesName'])
-                ->leftJoin('AppBundle:Species', 'ls', 'WITH', "v.ledgeFinishSpeciesId = ls.id")
-                ->addSelect(['ls.name as leftSpeciesName'])
-                ->where('v.quoteId = '.$quoteId)
-                ->getQuery()
-                ->getResult();
-//                ->getSQL();            
-        } else {
-            $result=[];
         }
-        return $result;
-    }
-    
-    private function getVeneerDataByQuoteId($quoteId){
-        if(!empty($quoteId)){
-            $query = $this->getDoctrine()->getManager();
-            $result = $query->createQueryBuilder()
-                ->select(['v.quantity','v.width','v.length','v.comments','v.sequenced','v.lineItemNum'])
-                ->from('AppBundle:Veneer', 'v')
-                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
-                ->addSelect(['q.refNum','q.deliveryDate'])
-                ->leftJoin('AppBundle:User', 'u', 'WITH', "q.customerId = u.id and u.userType='customer' and u.roleId=11")
-                ->addSelect(['u.username'])
-                ->leftJoin('AppBundle:Species', 's', 'WITH', "v.speciesId = s.id")
-                ->addSelect(['s.name as SpecieName'])
-                ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "v.patternId = p.id")
-                ->addSelect(['p.name as patternName'])
-                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
-                ->addSelect(['t.name as thicknessName'])
-                ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
-                ->addSelect(['fg.name as faceGradeName'])
-                ->leftJoin('AppBundle:Backer', 'b', 'WITH', "v.backer = b.id")
-                ->addSelect(['b.name as backerName'])
-                ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "v.grainDirectionId = gd.id")
-                ->addSelect(['gd.name as grainDirectionName'])
-                ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
-                ->addSelect(['o.orderDate as orderDate','o.estNumber as estNumber'])
-                ->where('v.quoteId = '.$quoteId)
-                ->getQuery()
-                ->getResult();
-        } else {
-            $result = [];
-        }
-        return $result;
-    }
-    
-    private function getDoorDataByQuoteId($quoteId){
-        if(!empty($quoteId)){
-//            $query = $this->getDoctrine()->getManager();
-//            $result = $query->createQueryBuilder()
-//                ->select(['d.qty as quantity','d.width','d.length','d.comment as comments','d.sequence as sequenced',
-//                    'd.finishThickId as pThicknessName','d.panelThickness as panelThicknessName'])
-//                ->from('AppBundle:Doors', 'd')
-//                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'd.quoteId = q.id')
-//                ->addSelect(['q.refNum','q.deliveryDate'])
-//                ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
-//                ->addSelect(['u.company as username'])
-//                ->leftJoin('AppBundle:Skins', 's', 'WITH', "s.doorId = d.id")
-//                ->addSelect(['s.species','grade','pattern'])
-//                ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "s.grain_dir = gd.id")
-//                ->addSelect(['gd.name as grainDirectionName'])
-//                ->leftJoin('AppBundle:Species', 'sp', 'WITH', "s.species = sp.id")
-//                ->addSelect(['s.name as SpecieName'])
-//                ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "s.pattern = p.id")
-//                ->addSelect(['p.name as patternName'])
-//                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "s.thicknessId = t.id")
-//                ->addSelect(['t.name as thicknessName'])
-//                ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
-//                ->addSelect(['fg.name as faceGradeName'])
-//                ->where('d.quoteId = '.$quoteId)
-//                ->getQuery()
-//                ->getResult()
-//            ;
-//            print_r($result);die;
-        }
-    }
-    
-    private function createQuoteLineitemPDF($html,$pdfName, $request) {
-        $fs = new Filesystem();
-        $snappy = new Pdf(  '../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename=$pdfName');
-        $snappy->generateFromHtml($html, $pdfName);
-        $fs->chmod($pdfName, 0777);
-        return 'http://'.$request->getHost().'/'.$request->getBasePath().'/'.$pdfName;
+        return $html;
     }
 }
