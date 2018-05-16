@@ -388,6 +388,7 @@ class OrderController extends Controller {
         $_DATA = file_get_contents('php://input');
         $_DATA = json_decode($_DATA, true);
         $quoteId = $_DATA['orderId'];
+        $printType = ($_DATA['type'] == 'printShipper') ? 'SHIPPER' : 'ORDER';
         $orderData = $this->getOrderDetailsById($quoteId);
         try {
             $quoteData = $this->getQuoteDataById($quoteId);
@@ -408,10 +409,10 @@ class OrderController extends Controller {
                 $arrApi['data']['userEmail'] = $this->getCustomerEmailById($quoteData->getEstimatorId());
                 $arrApi['data']['customerEmail'] = $this->getCustomerEmailById($quoteData->getCustomerId());
                 $arrApi['data']['customerId'] = $quoteData->getCustomerId();
-                $arrApi['data']['referenceNumber'] = $quoteData->getRefNum();
+                $arrApi['data']['referenceNumber'] = ($quoteData->getRefNum()) ? 'PO-'.$quoteData->getRefNum() : 'None';
                 $arrApi['data']['salesman'] = $this->getSalesmanNameById($quoteData->getSalesmanId());
                 $arrApi['data']['salesmanId'] = $quoteData->getSalesmanId();
-                $arrApi['data']['job'] = $quoteData->getJobName();
+                $arrApi['data']['job'] = ($quoteData->getJobName()) ? $quoteData->getJobName() : 'None';
                 $arrApi['data']['term'] = (string) $quoteData->getTermId();
                 $arrApi['data']['shipMethod'] = $this->getShipMethodNamebyId($quoteData->getShipMethdId());
                 $arrApi['data']['shipMethodId'] = $quoteData->getShipMethdId();
@@ -421,7 +422,7 @@ class OrderController extends Controller {
                 $arrApi['data']['leadTime'] = $quoteData->getLeadTime();
                 $arrApi['data']['status'] = $quoteData->getStatus();
                 $arrApi['data']['comment'] = $quoteData->getComment();
-                $arrApi['data']['deliveryDate'] = $quoteData->getDeliveryDate();
+                $arrApi['data']['deliveryDate'] = date("M d, Y",strtotime($quoteData->getDeliveryDate()));
                 $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot())?str_replace(',','',number_format($quoteData->getQuoteTot(),0)):'00.00';
                 $arrApi['data']['expFee'] = !empty($quoteData->getExpFee())?str_replace(',','',number_format($quoteData->getExpFee(),2)):'00.00';
                 $arrApi['data']['discount'] = !empty($quoteData->getDiscount())?str_replace(',','',number_format($quoteData->getDiscount(),2)):'00.00';
@@ -441,12 +442,19 @@ class OrderController extends Controller {
             throw $e->getMessage();
         }
 
-        $html = "<html>
+        $calSqrft = 0;
+        foreach($arrApi['data']['lineitems'] as $key=>$qData){
+            $calSqrft += ((float)($qData['width'] + $qData['widthFraction'])*(float)($qData['length'] + $qData['lengthFraction']))/144;
+        }
+
+        $html = "<!DOCTYPE html>
+                <html>
                 <head>
                     <style>
                         body{font-family:'Roboto',Helvetica,Arial,sans-serif;font-weight:400;line-height:1.4;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong{font-family:'Libre Franklin',Arial,sans-serif;font-weight:600;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
                         .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;margin-bottom:18px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}.itemListTablHldr{min-height:300px;}table.prodItmLst th,table.prodItmLst td{font-size:12px;text-align:center;padding:3px 6px;vertical-align:top;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#000000;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;font-weight:500;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:500;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:500;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:500;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:500;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
                     </style>
+                            <link href=\'//fonts.googleapis.com/css?family=Libre+Franklin:600|Roboto:400,500\' rel=\'stylesheet\'>       
                 </head>
                 <body>
                     <div class='invoiceWrap'>
@@ -486,7 +494,7 @@ class OrderController extends Controller {
                                         </table>
                                     </td>
                                     <td class='invCapt'>
-                                        <div class='captBTxt'>ORDER</div>
+                                        <div class='captBTxt'>".$printType."</div>
                                         <div class='subTxt'>O-".$arrApi['data']['controlNumber']."-".$arrApi['data']['version']."</div>
                                         <p>".$arrApi['data']['date']." &nbsp;|&nbsp; Net 30 days</p>
                                         <p><em>At Talbert Architectural <br>Your Total Satisfaction <br>is Our Goal!</em></p>
@@ -498,11 +506,11 @@ class OrderController extends Controller {
                             <div class='custOdrDtls'>
                                 <table>
                                     <tr>
-                                        <td>Customer Reference: PO-".$arrApi['data']['referenceNumber']."</td>
+                                        <td>Customer Reference: ".$arrApi['data']['referenceNumber']."</td>
                                         <td>Job Name: ".$arrApi['data']['job']."</td>
                                         <td>Delivery Date: ".$arrApi['data']['deliveryDate']."</td>
                                         <td>Ship Via: ".$arrApi['data']['shipMethod']."</td>
-                                        <td>SqFt: O-".$arrApi['data']['controlNumber'].'-'.$arrApi['data']['version']."</td>
+                                        <td>SqFt: ".number_format($calSqrft,2)."</td>
                                     </tr>
                                 </table>
                             </div>
@@ -521,12 +529,14 @@ class OrderController extends Controller {
                                             <th>Back</th>
                                             <th>Dimensions</th>
                                             <th>Core</th>
-                                            <th class='t-left'>Details</th>
-                                            <th>Unit Price</th>
-                                            <th>Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>";
+                                            <th class='t-left'>Details</th>";
+                                    if ($printType == 'ORDER') {
+                                        $html .= "<th>Unit Price</th>
+                                                  <th>Total</th>";
+                                    } else {
+                                        $html .= "<th class='t-left'>Qty Shipped</th>";
+                                    }
+                                            $html .= "</tr></thead><tbody>";
 
         foreach($arrApi['data']['lineitems'] as $key=>$qData){
 
@@ -561,24 +571,32 @@ class OrderController extends Controller {
             $html .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
             $html .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
 
-                                    $html .= " <td>$".$qData['unitPrice']."</td>
-                                            <td>$".$qData['totalPrice']."</td>
-                                        </tr>";
-
+            if ($printType == 'ORDER') {
+                $html .= " <td>$".$qData['unitPrice']."</td>
+                           <td>$".$qData['totalPrice']."</td>
+                           </tr>";
+            } else {
+                if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
+                    $html .= " <td>".$qData['quantity']."</td>
+                           </tr>";
+                } else {
+                    $html .= " <td>BACK ORDERED</td>
+                           </tr>";
+                }
+            }
         }
-
 
         $html .= "</tbody>
                                 </table>
                                 <table class='totalPrice'>
-                                    <tr>
-                                        <td>Special Tooling - Description</td>
-                                        <td class='price'>$350.00</td>
-                                    </tr>
-                                </table>
-                            </div>
-                            
-            
+                                    <tr>";
+        if ($printType == 'ORDER') {
+            $html .= "<td>Special Tooling - Description</td><td class='price'>$350.00</td>";
+        } else {
+            $html .= "<td></td><td class='price'></td>";
+        }
+        $html .= "</tr></table>
+                            </div>  
                             <div class='invoiceFooter'>
                                 <!--<div class='custOdrDtls'>
                                     <table>
@@ -608,8 +626,9 @@ class OrderController extends Controller {
                                         </td>
                                         <td>
                                             <img src='".$images_destination."/fsc-order.png' alt=''>
-                                        </td>
-                                        <td class='sideBox'>
+                                        </td>";
+        if ($printType == 'ORDER') {
+            $html .="<td class='sideBox'>
                                             <table class='totalTxt'>
                                                 <tr>
                                                     <td>Sub Total</td>
@@ -632,18 +651,30 @@ class OrderController extends Controller {
                                                     <td><strong>$".$arrApi['data']['projectTot']."</strong></td>
                                                 </tr>
                                             </table>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-            
-                        </div>
-                        
-                    </div>
-                </body>
-            </html>";
+                                        </td>";
+        } else {
+            $html .="<td class='sideBox'><table class='totalTxt'>
+                                                <tr><td></td><td></td></tr>
+                                                <tr><td></td><td></td></tr>
+                                                <tr><td></td><td></td></tr>
+                                                <tr><td></td><td></td></tr>
+                                                <tr><td><strong></strong></td><td><strong></strong></td></tr>
+                                            </table>
+                                        </td>";
+        }
+                                        $html .= "</tr></table></div>
+                                                            </div>   
+                                                        </div>
+                                                    </body>
+                                                </html>";
 
         return new Response($this->get('knp_snappy.pdf')->getOutputFromHtml($html, array('orientation'=>'Landscape', 'default-header'=>false)), 200, array('Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Work-Order-Print.pdf"'));
+    }
+
+    private function convertToDecimal($fraction)
+    {
+        $numbers=explode("/",$fraction);
+        return round($numbers[0]/$numbers[1],6);
     }
 
     private function getOrderDetailsById($orderId) {
@@ -1312,9 +1343,11 @@ class OrderController extends Controller {
                     $lineItem[$i]['url'] = 'door/edit-door';
                     $lineItem[$i]['quantity'] = $d['qty'];
                     if ($this->getSpeciesNameById($this->getSpeciesIdByDoorId($d['id'])) == null) {
+                        $lineItem[$i]['grain'] = 'Other';
                         $lineItem[$i]['species'] = 'Other';
                     } else {
                         $lineItem[$i]['species'] = $this->getSpeciesNameById($this->getSpeciesIdByDoorId($d['id']));
+                        $lineItem[$i]['grain'] = $this->getGrainPatternOfDoor($d['id']);
                     }
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($this->getPatternIdByDoorId($d['id']));
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($this->getGradeIdByDoorId($d['id'])))[0];
@@ -1328,7 +1361,6 @@ class OrderController extends Controller {
                     $lineItem[$i]['totalPrice'] = $totalCost;
                     $lineItem[$i]['widthFraction'] = $this->float2rat($d['widthFraction']);
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($d['lengthFraction']);
-                    $lineItem[$i]['grain'] = $this->getGrainPattern($d['id'],'door');
                     $lineItem[$i]['edgeDetail'] = ($d['edgeFinish']) ? '1' : 0;
                     $lineItem[$i]['topEdge'] = $d['topEdge'];
                     $lineItem[$i]['bottomEdge'] = $d['bottomEdge'];
@@ -1357,23 +1389,6 @@ class OrderController extends Controller {
             return $lineItem;
         }
     }
-
-
-    private function getFirstLabel($labels) {
-        return explode(',', $labels)[0];
-    }
-
-    private function getUVCuredNameById($id) {
-        return ($id == 2) ? 'Pacific Collection' : ($id == 3) ? 'Custom Stain Match' : '';
-    }
-
-    private function getSheenById($id) {
-        return ($id == 1) ? '3' : ($id == 2) ? '5' : ($id == 3) ? '10' : ($id == 4) ? '20' : ($id == 5) ? '30' : ($id == 6) ? '40' : ($id == 7) ? '50' : ($id == 8) ? '60' : ($id == 9) ? '70' : ($id == 10) ? '80' : ($id == 11) ? '90' : ($id == 12) ? '100' : '0';
-    }
-
-    private function getFacPaintById($id) {
-        return ($id == 1) ? 'Prime Only' : ($id == 2) ? 'White / Light Color' : 'Dark Color';
-    }
     
     private function getGrainPattern($id,$type=''){
         if($type=='door'){
@@ -1392,6 +1407,12 @@ class OrderController extends Controller {
         }
     }
 
+    private function getGrainNameById($id) {
+        $grain = $this->getDoctrine()->getRepository('AppBundle:GrainPattern')
+                            ->findOneById($id);
+        return $grain->getName();
+    }
+    
     private function getCustomerEmailById($customer_id) {
         if (!empty($customer_id)) {
             $profileObj = $this->getDoctrine()
@@ -2763,5 +2784,25 @@ class OrderController extends Controller {
         </html>';
         }
         return $html;
+    }
+    private function getFirstLabel($labels) {
+        return explode(',', $labels)[0];
+    }
+
+    private function getUVCuredNameById($id) {
+        return ($id == 2) ? 'Pacific Collection' : ($id == 3) ? 'Custom Stain Match' : '';
+    }
+
+    private function getSheenById($id) {
+        return ($id == 1) ? '3' : ($id == 2) ? '5' : ($id == 3) ? '10' : ($id == 4) ? '20' : ($id == 5) ? '30' : ($id == 6) ? '40' : ($id == 7) ? '50' : ($id == 8) ? '60' : ($id == 9) ? '70' : ($id == 10) ? '80' : ($id == 11) ? '90' : ($id == 12) ? '100' : '0';
+    }
+
+    private function getFacPaintById($id) {
+        return ($id == 1) ? 'Prime Only' : ($id == 2) ? 'White / Light Color' : 'Dark Color';
+    }
+
+    private function getGrainPatternOfDoor($id) {
+        $skin= $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(['doorId'=>$id]);
+        return $this->getGrainNameById($skin->getGrain());
     }
 }
