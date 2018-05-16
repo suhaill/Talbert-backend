@@ -390,22 +390,11 @@ class QuoteController extends Controller
         $calSqrft = 0;
 
         foreach($arrApi['data']['lineitems'] as $key=>$qData){
-
-            if($qData['type'] == 'plywood'){
-                $index = ($key+1)." P"; 
-            }
-            else if($qData['type'] == 'veneer'){
-                $index = ($key+1)." V"; 
-            }
-            else{
-                $index = ($key+1)." D"; 
-            }
-
             $calSqrft += ((float)($qData['width'] + $this->convertToDecimal($qData['widthFraction']))*(float)($qData['length'] + $this->convertToDecimal($qData['lengthFraction'])))/144;
-
         }
 
-        $html = "<html>
+        $html = "<!DOCTYPE html>
+                <html>
                 <head>
                     <style>
                         body{font-family:'Roboto',Helvetica,Arial,sans-serif;font-weight:400;line-height:1.4;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong{font-family:'Libre Franklin',Arial,sans-serif;font-weight:600;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
