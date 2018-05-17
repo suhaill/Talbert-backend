@@ -2001,10 +2001,9 @@ class OrderController extends Controller {
         $quoteId = !empty($data->get('quote_id')) ? trim($data->get('quote_id')) : '';
         $plywoodData = $this->getPlywoodDataByQuoteId($quoteId);
         $veneerData = $this->getVeneerDataByQuoteId($quoteId);
-//        $doorData= $this->getDoorDataByQuoteId($quoteId);
-        $arr = array_merge($veneerData, $plywoodData);
+        $doorData= $this->getDoorDataByQuoteId($quoteId);
+        $arr = array_merge($veneerData, $plywoodData, $doorData);
         $final = $this->arraySortByColumn($arr, 'lineItemNum');
-//        print_r($final);die;
         $images_destination = $this->container->getParameter('images_destination');
 //        $veneerHtml = '';
 //        $plywoodHtml='';
@@ -2017,11 +2016,14 @@ class OrderController extends Controller {
                 if (!empty($v['type']) && $v['type'] == 'Veneer') {
                     $lineItemHTML .= $this->getOrderTicketVeneerHTML($v, $images_destination);
                 }
+                if (!empty($v['type']) && $v['type'] == 'Door') {
+                    $lineItemHTML .= $this->getOrderTicketOrderHTML($v, $images_destination);
+                }
             }
         }
         $html = $this->getOrderTicketHTML($lineItemHTML);
-        
-        return new Response($this->get('knp_snappy.pdf')->getOutputFromHtml($html, ['orientation' => 'Landscape', 'default-header' => false]), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Test.pdf"']);
+
+        return new Response($this->get('knp_snappy.pdf')->getOutputFromHtml($html, ['orientation' => 'portrait', 'default-header' => false]), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Test.pdf"']);
     }
 
     private function getPlywoodDataByQuoteId($quoteId) {
@@ -2119,32 +2121,29 @@ class OrderController extends Controller {
 
     private function getDoorDataByQuoteId($quoteId) {
         if (!empty($quoteId)) {
-//            $query = $this->getDoctrine()->getManager();
-//            $result = $query->createQueryBuilder()
-//                ->select(['d.qty as quantity','d.width','d.length','d.comment as comments','d.sequence as sequenced',
-//                    'd.finishThickId as pThicknessName','d.panelThickness as panelThicknessName'])
-//                ->from('AppBundle:Doors', 'd')
-//                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'd.quoteId = q.id')
-//                ->addSelect(['q.refNum','q.deliveryDate'])
-//                ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
-//                ->addSelect(['u.company as username'])
-//                ->leftJoin('AppBundle:Skins', 's', 'WITH', "s.doorId = d.id")
-//                ->addSelect(['s.species','grade','pattern'])
-//                ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "s.grain_dir = gd.id")
-//                ->addSelect(['gd.name as grainDirectionName'])
-//                ->leftJoin('AppBundle:Species', 'sp', 'WITH', "s.species = sp.id")
-//                ->addSelect(['s.name as SpecieName'])
-//                ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "s.pattern = p.id")
-//                ->addSelect(['p.name as patternName'])
-//                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "s.thicknessId = t.id")
-//                ->addSelect(['t.name as thicknessName'])
-//                ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
-//                ->addSelect(['fg.name as faceGradeName'])
-//                ->where('d.quoteId = '.$quoteId)
-//                ->getQuery()
-//                ->getResult()
-//            ;
-//            print_r($result);die;
+            $query = $this->getDoctrine()->getManager();
+            $result = $query->createQueryBuilder()
+                ->select(['d.id','d.qty as quantity','d.width','d.length','d.comment as comments','d.lineItemNum','d.sequence as sequenced',
+                    'd.finishThickId as pThicknessName','d.panelThickness as panelThicknessName', "'Door' as type"])
+                ->from('AppBundle:Doors', 'd')
+                ->leftJoin('AppBundle:Skins', 's', 'WITH', 'd.id = s.doorId AND d.quoteId = s.quoteId')
+                ->addSelect(['s.species as SpecieName','s.grade','s.pattern'])
+                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'd.quoteId = q.id')
+                ->addSelect(['q.refNum','q.deliveryDate','q.controlNumber','q.version'])
+                ->leftJoin('AppBundle:Profile', 'u', 'WITH', 'q.customerId = u.userId')
+                ->addSelect(['u.company as username'])
+                ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "s.grainDir = gd.id")
+                ->addSelect(['gd.name as grainDirectionName'])
+                ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "s.pattern = p.id")
+                ->addSelect(['p.name as patternName'])
+                ->leftJoin('AppBundle:Thickness', 't', 'WITH', "s.thickness = t.id")
+                ->addSelect(['t.name as thicknessName'])
+                ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "s.grade = fg.id")
+                ->addSelect(['fg.name as faceGradeName'])
+                ->where('d.quoteId = '.$quoteId)
+                ->getQuery()
+                ->getResult();
+            return $result;
         }
     }
 
@@ -2341,6 +2340,180 @@ class OrderController extends Controller {
             </div><br/>
         </div>';
         return $veneerHtml;
+    }
+
+    private function getOrderTicketOrderHTML($v, $images_destination) {
+        $doorHtml = '';
+        $doorHtml .= '<div class="ticketWrap broad">
+            <div class="ticketScreen door">
+                <table class="ticketHead">
+                    <tbody><tr>
+                        <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo" alt="Department Logo"></td>
+                        <td class="dep">Door Department - Milling</td>
+                    </tr> 
+                </tbody></table>
+                <table class="hlfGrdTable">
+                    <tbody><tr>
+                        <td class="fstGrd">
+                            <table class="ticketDesc">
+                                <tbody><tr>
+                                    <td class="cellLabel"></td>
+                                    <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"></td>
+                                    <td class="cellDesc">' . $v['refNum'] . '</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"></td>
+                                    <td class="cellDesc">O-' . $v['controlNumber'] . '-' . $v['version'] . ' </td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"></td>
+                                    <td class="cellDesc"><hr></td>
+                                </tr>
+                            </tbody></table>
+                            <table class="ticketDesc">
+                                <tbody><tr>
+                                    <td class="cellLabel"><label>Quantity</label></td>
+                                    <td class="cellDesc">' . $v['quantity'] . ' Pieces </td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Species/Face</label></td>
+                                    <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Finished Size</label></td>
+                                    <td class="cellDesc">' . $v['width'] . '" x ' . $v['length'] . '"</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Finished Thickness</label></td>
+                                    <td class="cellDesc">1-3/4"</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Door Core</label></td>
+                                    <td class="cellDesc">LS-1 Standard</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Door Type</label></td>
+                                    <td class="cellDesc">Interior</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Finish</label></td>
+                                    <td class="cellDesc">
+                                        <table>
+                                            <tbody><tr>
+                                                <td>UV Clear 50% Sheen <br>2 sides, BE,TE,RE,LE</td>
+                                                <td class="w20p"></td>
+                                            </tr>
+                                        </tbody></table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Notes:</label></td>
+                                    <td class="cellDesc"><span class="noteTxt">' . $v['comments'] . '</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Labels</label></td>
+                                    <td class="cellDesc">No</td>
+                                </tr>
+                            </tbody></table>
+                        </td>
+                        <td>
+                            <table class="ticketDesc">
+                                <tbody><tr>
+                                    <td class="cellLabel"><label>Swing</label></td>
+                                    <td class="cellDesc">RTA</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Bevel</label></td>
+                                    <td class="cellDesc">Hinge Side</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Light Opening</label></td>
+                                    <td class="cellDesc">Cut Out Only</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Louvers</label></td>
+                                    <td class="cellDesc">Wood Slat</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Glass</label></td>
+                                    <td class="cellDesc">No</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Door Frame</label></td>
+                                    <td class="cellDesc">Metal</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Surface Machining</label></td>
+                                    <td class="cellDesc">
+                                        <table>
+                                            <tbody><tr>
+                                                <td>Square Slot - 1/4" - Front</td>
+                                                <td class="w20p"></td>
+                                            </tr>
+                                        </tbody></table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Stiles</label></td>
+                                    <td class="cellDesc">12" x 20" - Match</td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Hinges</label></td>
+                                    <td class="cellDesc">SI5768<br>
+                                        Standard .124<br>
+                                        5-1/2"
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Hinge Position</label></td>
+                                    <td class="cellDesc">
+                                        8-1/2" <br>
+                                        1/8"
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Handle Bolt</label></td>
+                                    <td class="cellDesc">
+                                        Free Text <br>
+                                        38-1/2"
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="cellLabel"><label>Vertical Rod</label></td>
+                                    <td class="cellDesc">Surface</td>
+                                </tr>
+                            </tbody></table>
+                        </td>
+                    </tr>
+                </tbody></table>
+
+
+                <table class="ticketFoot">
+                    <tbody><tr>
+                        <td class="cellLabel"><label>Due</label></td>
+                        <td class="cellDesc"><label class="custName">' . date('l', strtotime($v['deliveryDate'])) . ' | ' . date('M d', strtotime($v['deliveryDate'])) . '</label></td>
+                    </tr>
+                    <tr>
+                        <td class="lftFoot">&nbsp;</td>
+                        <td class="dep footIN">
+                            <table>
+                                <tbody><tr>
+                                    <td class="itBx"><span class="itTxt">Item ' . $v['lineItemNum'] . '</span></td>
+                                    <td class="footImg">
+                                        <img src="' . $images_destination . '/ticket-images/foot-img-1.png" alt="">
+                                        <img src="' . $images_destination . '/ticket-images/foot-img-2.png" alt="">
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                        </td>
+                    </tr> 
+                </tbody></table>
+            </div>
+        </div>';
+        return $doorHtml;
     }
 
     private function getOrderTicketPlywoodHTML($v, $images_destination) {
