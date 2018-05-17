@@ -999,7 +999,7 @@ class PlywoodController extends Controller
                 ->addSelect(['ls.name as leftSpeciesName'])
                 ->where('v.quoteId = '.$quoteId)
                 ->getQuery()
-                ->getResult();
+                ->getResult();print_r($result);die;
 //                ->getSQL();
             if (empty($result) ) {
                 $arrApi['status'] = 0;
