@@ -388,7 +388,7 @@ class OrderController extends Controller {
         $_DATA = file_get_contents('php://input');
         $_DATA = json_decode($_DATA, true);
         $quoteId = $_DATA['orderId'];
-        $printType = ($_DATA['type'] == 'printShipper') ? 'SHIPPER' : 'ORDER';
+        $printType = ($_DATA['type'] == 'printShipper') ? 'SHIPPER' : (($_DATA['type'] == 'printInvoice') ? 'INVOICE' : 'ORDER');
         $orderData = $this->getOrderDetailsById($quoteId);
         try {
             $quoteData = $this->getQuoteDataById($quoteId);
@@ -530,7 +530,7 @@ class OrderController extends Controller {
                                             <th>Dimensions</th>
                                             <th>Core</th>
                                             <th class='t-left'>Details</th>";
-                                    if ($printType == 'ORDER') {
+                                    if ($printType == 'ORDER' || $printType == 'INVOICE') {
                                         $html .= "<th>Unit Price</th>
                                                   <th>Total</th>";
                                     } else {
@@ -575,6 +575,16 @@ class OrderController extends Controller {
                 $html .= " <td>$".$qData['unitPrice']."</td>
                            <td>$".$qData['totalPrice']."</td>
                            </tr>";
+            } elseif ($printType == 'INVOICE') {
+                if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
+                    $html .= "<td>$".$qData['unitPrice']."</td>
+                              <td>$".$qData['totalPrice']."</td>
+                              </tr>";
+                } else {
+                    $html .= "<td></td>
+                              <td>BACK ORDERED</td>
+                              </tr>";
+                }
             } else {
                 if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
                     $html .= " <td>".$qData['quantity']."</td>
@@ -590,7 +600,7 @@ class OrderController extends Controller {
                                 </table>
                                 <table class='totalPrice'>
                                     <tr>";
-        if ($printType == 'ORDER') {
+        if ($printType == 'ORDER' || $printType == 'INVOICE') {
             $html .= "<td>Special Tooling - Description</td><td class='price'>$350.00</td>";
         } else {
             $html .= "<td></td><td class='price'></td>";
@@ -627,7 +637,7 @@ class OrderController extends Controller {
                                         <td>
                                             <img src='".$images_destination."/fsc-order.png' alt=''>
                                         </td>";
-        if ($printType == 'ORDER') {
+        if ($printType == 'ORDER' || $printType == 'INVOICE') {
             $html .="<td class='sideBox'>
                                             <table class='totalTxt'>
                                                 <tr>
