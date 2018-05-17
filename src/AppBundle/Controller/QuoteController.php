@@ -390,7 +390,7 @@ class QuoteController extends Controller
         $calSqrft = 0;
 
         foreach($arrApi['data']['lineitems'] as $key=>$qData){
-            $calSqrft += ((float)($qData['width'] + $this->convertToDecimal($qData['widthFraction']))*(float)($qData['length'] + $this->convertToDecimal($qData['lengthFraction'])))/144;
+            $calSqrft += ((float)($qData['width'] + $qData['widthFraction'])*(float)($qData['length'] + $qData['lengthFraction']))/144;
         }
 
         $html = "<!DOCTYPE html>
