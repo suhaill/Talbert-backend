@@ -29,6 +29,13 @@ class UvCured
     private $name;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="abbr", type="string", length=20, nullable=true)
+     */
+    private $abbr;
+
+    /**
      * @var \DateTime
      *
      * @ORM\Column(name="createdAt", type="datetime")
@@ -68,6 +75,30 @@ class UvCured
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * Set abbr
+     *
+     * @param string $abbr
+     *
+     * @return UvCured
+     */
+    public function setAbbr($abbr)
+    {
+        $this->abbr = $abbr;
+
+        return $this;
+    }
+
+    /**
+     * Get abbr
+     *
+     * @return string
+     */
+    public function getAbbr()
+    {
+        return $this->abbr;
     }
 
     /**
