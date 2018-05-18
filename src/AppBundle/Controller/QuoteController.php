@@ -396,14 +396,14 @@ class QuoteController extends Controller
         $html = "<!DOCTYPE html>
                 <html>
                 <head>
+                <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
                     <style>
-                        body{font-family:'Roboto',Helvetica,Arial,sans-serif;font-weight:400;line-height:1.4;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong{font-family:'Libre Franklin',Arial,sans-serif;font-weight:600;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
-                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;margin-bottom:18px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}.itemListTablHldr{min-height:300px;}table.prodItmLst th,table.prodItmLst td{font-size:12px;text-align:center;padding:3px 6px;vertical-align:top;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#000000;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;font-weight:500;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:500;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:500;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:500;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:500;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                        body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',Arial,sans-serif;font-weight:700;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
+                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;margin-bottom:18px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}.itemListTablHldr{min-height:300px;}table.prodItmLst th,table.prodItmLst td{font-size:14px;text-align:center;padding:3px 6px;vertical-align:top;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#000000;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;font-weight:700;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
                     </style>
-                    <link href=\'//fonts.googleapis.com/css?family=Libre+Franklin:600|Roboto:400,500\' rel=\'stylesheet\'>
                 </head>
                 <body>
-                    <div class='invoiceWrap'>
+                    <div class=''>
             
                         <div class='invoiceCtnr'>
                             <table class='invoiceHeader'>
@@ -466,7 +466,7 @@ class QuoteController extends Controller
                                 <table class='prodItmLst'>
                                     <thead>
                                         <tr>
-                                            <th>#</th>
+                                            <th style='width:30px;'>#</th>
                                             <th>Qty</th>
                                             <th>Grain</th>
                                             <th>Species</th>
@@ -476,7 +476,7 @@ class QuoteController extends Controller
                                             <th>Dimensions</th>
                                             <th>Core</th>
                                             <th class='t-left'>Details</th>
-                                            <th>Unit Price</th>
+                                            <th style='width:80px;'>Unit Price</th>
                                             <th>Total</th>
                                         </tr>
                                     </thead>
@@ -2287,7 +2287,13 @@ class QuoteController extends Controller
     }
 
     private function getUVCuredNameById($id) {
-        return ($id == 2) ? 'Pacific Collection' : ($id == 3) ? 'Custom Stain Match' : '';
+        //return ($id == 2) ? 'Pacific Collection' : ($id == 3) ? 'Custom Stain Match' : '';
+        $data= $this->getDoctrine()->getRepository('AppBundle:UvCured')->findOneBy(['id'=>$id]);
+        if(!empty($data)){
+            return $data->getAbbr();
+        } else {
+            return '';
+        }
     }
 
     private function getSheenById($id) {
@@ -2295,7 +2301,7 @@ class QuoteController extends Controller
     }
 
     private function getFacPaintById($id) {
-        return ($id == 1) ? 'Prime Only' : ($id == 2) ? 'White / Light Color' : 'Dark Color';
+        return ($id == 1) ? 'PO' : ($id == 2) ? 'WLC' : 'DCL';
     }
 
     private function getVeneerslistbyQuoteId($qId) {
@@ -2335,7 +2341,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['totalPrice'] = $p->getTotalCost();
                     $lineItem[$i]['widthFraction'] = $this->float2rat($p->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($p->getLengthFraction());
-                    $lineItem[$i]['grain'] = $this->getGrainPattern($p->getGrainPatternId());
+                    $lineItem[$i]['grain'] = $this->getGrainPattern( $p->getPatternId(),'plywood' );
                     $lineItem[$i]['edgeDetail'] = ($p->getEdgeDetail()) ? 1 : 0;
                     $lineItem[$i]['topEdge'] = $p->getTopEdge();
                     $lineItem[$i]['bottomEdge'] = $p->getBottomEdge();
@@ -2481,6 +2487,14 @@ class QuoteController extends Controller
                 $id=0;
             }
         }
+        else if($type == 'plywood'){
+            $data= $this->getDoctrine()->getRepository('AppBundle:GrainPattern')->findOneBy(['id'=>$id]);
+            if(!empty($data)){
+                return $data->getAbbr();
+            } else {
+                return '';
+            }
+        }
         $data= $this->getDoctrine()->getRepository('AppBundle:GrainDirection')->findOneBy(['id'=>$id]);
         if(!empty($data)){
             return $data->getName();
@@ -2524,7 +2538,7 @@ class QuoteController extends Controller
     private function getPatternNameById($pattern_id) {
         $patternRecord = $this->getDoctrine()->getRepository('AppBundle:Pattern')->findOneById($pattern_id);
         if (!empty($patternRecord)) {
-            return $patternRecord->getName();
+            return $patternRecord->getAbbr();
         }
     }
 
@@ -2538,7 +2552,7 @@ class QuoteController extends Controller
     private function getBackNameById($bId) {
         $backRecord = $this->getDoctrine()->getRepository('AppBundle:BackerGrade')->findOneById($bId);
         if (!empty($backRecord)) {
-            return $backRecord->getName();
+            return $backRecord->getAbbr();
         }
     }
 
@@ -2552,7 +2566,7 @@ class QuoteController extends Controller
     private function getCoreNameById($cId) {
         $cTypeRecord = $this->getDoctrine()->getRepository('AppBundle:CoreType')->findOneById($cId);
         if (!empty($cTypeRecord)) {
-            return $cTypeRecord->getName();
+            return $cTypeRecord->getAbbr();
         }
     }
 
