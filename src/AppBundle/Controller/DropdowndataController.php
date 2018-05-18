@@ -539,7 +539,7 @@ class DropdowndataController extends Controller
 //            $subspecies = $this->getDoctrine()->getRepository('AppBundle:Subspecies')->findAll();
 //        }
 
-         $subspecies = $this->getDoctrine()->getRepository('AppBundle:GrainPattern')->findAll();
+        $subspecies = $this->getDoctrine()->getRepository('AppBundle:GrainPattern')->findAll();
 
         $arrApi = array();
         $statusCode = 200;

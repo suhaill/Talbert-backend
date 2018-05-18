@@ -2100,7 +2100,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['totalPrice'] = $v->getTotalCost();
                     $lineItem[$i]['widthFraction'] = $this->float2rat($v->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($v->getLengthFraction());
-                    $lineItem[$i]['grain'] = $this->getGrainPattern($v->getGrainPatternId());
+                    $lineItem[$i]['grain'] = $this->getGrainPattern( $v->getPatternId(),'veneer' );
                     $lineItem[$i]['edgeDetail'] = 0;
                     $lineItem[$i]['topEdge'] = 1;
                     $lineItem[$i]['bottomEdge'] = 1;
@@ -2167,7 +2167,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['widthFraction'] = $this->float2rat($d->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($d->getLengthFraction());
                     $lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
-                    $lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
+                    //$lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
                     $lineItem[$i]['edgeDetail'] = ($d->getEdgeFinish()) ? '1' : 0;
                     $lineItem[$i]['topEdge'] = $d->getTopEdge();
                     $lineItem[$i]['bottomEdge'] = $d->getBottomEdge();
@@ -2211,7 +2211,7 @@ class QuoteController extends Controller
                 return '';
             }
         }
-        $data= $this->getDoctrine()->getRepository('AppBundle:GrainDirection')->findOneBy(['id'=>$id]);
+        $data= $this->getDoctrine()->getRepository('AppBundle:GrainPattern')->findOneBy(['id'=>$id]);
         if(!empty($data)){
             return $data->getName();
         } else {
