@@ -1268,7 +1268,8 @@ class QuoteController extends Controller
             } else {
                 $quote->setVersion(1);
 //                $quote->setControlNumber($this->getLastControlNumber()+1);
-                $quote->setControlNumber($this->getLastControlNumberById()+1);
+                $sstNo = $this->getLastControlNumberById()+1;
+                $quote->setControlNumber($sstNo);
                 $quote->setRefid($qData->getId());
             }
             $quote->setEstimatedate($qData->getEstimatedate());
@@ -1282,11 +1283,7 @@ class QuoteController extends Controller
             $quote->setShipMethdId($qData->getShipMethdId());
             $quote->setShipAddId($qData->getShipAddId());
             $quote->setLeadTime($qData->getLeadTime());
-            if ($editFlag == 'backOrder') {
-                $quote->setStatus('Approved');
-            } else {
-                $quote->setStatus('Current');
-            }
+            $quote->setStatus('Current');
             $quote->setComment($qData->getComment());
             $quote->setCreatedAt($datime);
             $quote->setUpdatedAt($datime);
@@ -1303,37 +1300,14 @@ class QuoteController extends Controller
                 $order = $em->getRepository(Orders::class)->findOneBy(['quoteId'=>$quoteId]);
                 $order->setIsActive(0);
                 $em->persist($order);
-//            print_r($order);die;
                 $em->flush();
-            } elseif ($editFlag=='backOrder') {
-                $orders = new Orders();
-                $orders->setQuoteId($quote->getId());
-                $dateForOrder = $this->getOrderDate($quote->getId());
-                $orders->setEstNumber('E-'.($this->getLastControlNumberById()+1).'-1');
-                $orders->setOrderNumber('O-'.($this->getLastControlNumberById()+1).'-1');
-//                $orders->setApprovedBy();
-//                $orders->setVia();
-//                $orders->setOther($other);
-                $orders->setOrderDate($dateForOrder);
-//                $orders->setPoNumber($custPO);
-                $orders->setShipDate($dateForOrder);
-                $orders->setIsActive(1);
-                $em->persist($orders);
-                $em->flush();
-                $newOrderStatus = new OrderStatus();
-                $newOrderStatus->setOrderId($orders->getId());
-                $newOrderStatus->setStatusId(5);
-                $newOrderStatus->setCreatedAt($datime);
-                $newOrderStatus->setUpdatedAt($datime);
-                $newOrderStatus->setIsActive(1);
-                $em->persist($newOrderStatus);
-                $em->flush();
+            } elseif ($editFlag == 'backOrder') {
+                $this->approveQuoteForBackOrder($quote->getId(), 'E-'.$sstNo.'-1', '', '', '', '');
             }
             $em->getConnection()->commit();
         } catch (Exception $ex) {
             $em->getConnection()->rollback();
         }
-
         return $quote->getId();
     }
 
@@ -3009,5 +2983,18 @@ class QuoteController extends Controller
                 </body>
             </html>";
         return $html;
+    }
+
+    private function approveQuoteForBackOrder($qId, $estNo, $approveBy, $via, $other, $custPO) {
+        $datime = new \DateTime('now');
+        $deliveryDate = '';
+        $orderDate = $this->getOrderDate($qId);
+        $orderExists = $this->checkIfOrderAlreadyExists($qId);
+        if ($orderExists) {
+            $this->updateOrderData($qId, $estNo, $estNo, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate);
+        } else {
+            $this->saveOrderData($qId, $estNo, $estNo, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate);
+        }
+        $this->updateQuoteStatus($qId, 'Approved', $deliveryDate, $datime);
     }
 }
