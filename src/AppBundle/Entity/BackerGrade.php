@@ -31,6 +31,13 @@ class BackerGrade
     /**
      * @var string
      *
+     * @ORM\Column(name="abbr", type="string", length=20, nullable=true)
+     */
+    private $abbr;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="backerThickness", type="float")
      */
      private $backerThickness;
@@ -76,6 +83,30 @@ class BackerGrade
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * Set abbr
+     *
+     * @param string $abbr
+     *
+     * @return BackerGrade
+     */
+    public function setAbbr($abbr)
+    {
+        $this->abbr = $abbr;
+
+        return $this;
+    }
+
+    /**
+     * Get abbr
+     *
+     * @return string
+     */
+    public function getAbbr()
+    {
+        return $this->abbr;
     }
 
     /**
