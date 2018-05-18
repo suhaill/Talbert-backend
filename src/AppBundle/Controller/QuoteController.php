@@ -1566,7 +1566,11 @@ class QuoteController extends Controller
             $quote->setShipMethdId($qData->getShipMethdId());
             $quote->setShipAddId($qData->getShipAddId());
             $quote->setLeadTime($qData->getLeadTime());
-            $quote->setStatus('Current');
+            if ($editFlag == 'backOrder') {
+                $quote->setStatus('Approved');
+            } else {
+                $quote->setStatus('Current');
+            }
             $quote->setComment($qData->getComment());
             $quote->setCreatedAt($datime);
             $quote->setUpdatedAt($datime);
@@ -1585,8 +1589,30 @@ class QuoteController extends Controller
                 $em->persist($order);
 //            print_r($order);die;
                 $em->flush();
+            } elseif ($editFlag=='backOrder') {
+                $orders = new Orders();
+                $orders->setQuoteId($quote->getId());
+                $dateForOrder = $this->getOrderDate($quote->getId());
+                $orders->setEstNumber('E-'.($this->getLastControlNumberById()+1).'-1');
+                $orders->setOrderNumber('O-'.($this->getLastControlNumberById()+1).'-1');
+//                $orders->setApprovedBy();
+//                $orders->setVia();
+//                $orders->setOther($other);
+                $orders->setOrderDate($dateForOrder);
+//                $orders->setPoNumber($custPO);
+                $orders->setShipDate($dateForOrder);
+                $orders->setIsActive(1);
+                $em->persist($orders);
+                $em->flush();
+                $newOrderStatus = new OrderStatus();
+                $newOrderStatus->setOrderId($orders->getId());
+                $newOrderStatus->setStatusId(5);
+                $newOrderStatus->setCreatedAt($datime);
+                $newOrderStatus->setUpdatedAt($datime);
+                $newOrderStatus->setIsActive(1);
+                $em->persist($newOrderStatus);
+                $em->flush();
             }
-
             $em->getConnection()->commit();
         } catch (Exception $ex) {
             $em->getConnection()->rollback();
