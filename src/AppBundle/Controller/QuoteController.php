@@ -169,7 +169,7 @@ class QuoteController extends Controller
             for ($i=0;$i<count($quotes);$i++) {
                 $quoteList[$i]=[
                     'id'=>$quotes[$i]['id'],
-                    'estimateNumber'=>'E-'.$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
+                    'estimateNumber'=>$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
                     'customername'=>$quotes[$i]['fname'],
                     'companyname'=>$quotes[$i]['companyname'],
                     // 'orderId'=>$quotes[$i]['orderId'],
@@ -650,7 +650,7 @@ class QuoteController extends Controller
                     for($i=0;$i<count($quotes);$i++) {
                         $quoteList[$i]=[
                             'id'=>$quotes[$i]['id'],
-                            'estimateNumber'=>'E-'.$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
+                            'estimateNumber'=>$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
                             'customername'=>$quotes[$i]['fname'],
                             'companyname'=>$quotes[$i]['companyname'],
                             //                            'orderId'=>$quotes[$i]['orderId'],
