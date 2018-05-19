@@ -192,15 +192,28 @@ class OrderController extends Controller {
             $quoteId = $request->query->get('id');
             if (empty($quoteId)) {
 //                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=>['Approved']),array('id'=>'desc'));
+                $quoteStatus    = $this->getDoctrine()->getManager();
+                $status         = $quoteStatus->createQueryBuilder()
+                    ->select(['s.id'])
+                    ->from('AppBundle:Status', 's')
+                    ->where("s.type = 'Quote' and s.statusName = 'Approved' and s.isActive=1")
+                    ->getQuery()
+                    ->getResult();
+
                 $query = $this->getDoctrine()->getManager();
                 $quotes = $query->createQueryBuilder()
-                        ->select(['q.id'])
+                        ->select(['q.id', 'qs.updatedAt', 'qs.statusId'])
                         ->from('AppBundle:Quotes', 'q')
                         ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
-                        ->where("o.isActive = 1 and q.status='Approved'")
+                        ->leftJoin('AppBundle:QuoteStatus', 'qs', 'WITH', "q.id = qs.quoteId")
+                        ->leftJoin('AppBundle:Status', 's', 'WITH', "qs.statusId=s.id ")
+                        ->where("o.isActive = 1 and q.status='Approved' and qs.statusId = ".$status[0]['id'])
+                        ->groupBy('qs.quoteId')
                         ->orderBy('o.id', 'desc')
+                        ->orderBy('qs.updatedAt', 'desc')
                         ->getQuery()
                         ->getResult();
+
                 if (!empty($quotes)) {
                     $quoteId = $quotes[0]['id'];
                 }
@@ -215,7 +228,8 @@ class OrderController extends Controller {
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived order details';
                 $arrApi['data']['id'] = $quoteData->getId();
-                $arrApi['data']['date'] = $quoteData->getEstimateDate();
+                //$arrApi['data']['date'] = $quoteData->getEstimateDate();
+                $arrApi['data']['date'] = $quotes[0]['updatedAt']->format('Y-m-d H:i:s');
                 $arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
                 $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
                 $arrApi['data']['version'] = $quoteData->getVersion();

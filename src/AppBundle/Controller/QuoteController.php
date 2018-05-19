@@ -72,7 +72,7 @@ class QuoteController extends Controller
                 } else {
                     $ctrlNo = $lastCtrlNo+1;
                 }
-//                $refNocount = $this->checkIfRefNoExists($refNo);
+            //                $refNocount = $this->checkIfRefNoExists($refNo);
                 $refNocount=[];
                 if (!empty($refNocount)) {
                     $arrApi['status'] = 0;
@@ -106,35 +106,80 @@ class QuoteController extends Controller
         $columnName = trim($data->get('columnName'));
         $orderBy = trim($data->get('orderBy'));
         $requestColumnName='';
-        if($columnName=='' || $columnName=='customer'){
+        if($columnName=='' || $columnName=='customer' || $columnName == 'id'){
             $requestColumnName=$columnName;
             $requestOrderBy=$orderBy;
-            $columnName='id';
+            $columnName='q.id';
             $orderBy='DESC';
         }
         if($columnName=='estimatorId'){
-            $sortArray=['controlNumber'=>$orderBy];
-        } else {
+            $columnName = 'q.controlNumber';
+            $sortArray=['q.controlNumber'=>$orderBy];
+        }
+        else if($columnName == 'estimatedate')   {
+            $columnName = 'q.estimatedate';
+        }
+        else {
             $sortArray=[$columnName=>$orderBy];
         }
-        $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold','Dead')),$sortArray);
+
+        //$quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold','Dead')),$sortArray);
+        $condition="q.status != :status and qs.statusId!='' and qs.isActive=1 ";
+        $query = $this->getDoctrine()->getManager();
+        $quotes=$query->createQueryBuilder()
+        ->select(['q.controlNumber','q.version','q.customerId','q.estimatedate','q.id',
+                'qs.statusId',
+                's.statusName as status',
+                's.abbr as stsAbbr',
+                'u.company as companyname','u.fname','u.lname'
+                ])
+            ->from('AppBundle:Quotes', 'q')
+            // ->leftJoin('AppBundle:Quotes', 'q', 'WITH', "q.id = o.quoteId")
+            ->innerJoin('AppBundle:QuoteStatus', 'qs', 'WITH', "q.id = qs.quoteId")
+            ->leftJoin('AppBundle:Status', 's', 'WITH', "qs.statusId=s.id ")
+            ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
+            ->where($condition)
+            ->orderBy($columnName, $orderBy)
+            ->setParameter('status', 'Approved')
+            ->getQuery()->getResult();
+
         
         if (empty($quotes) ) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'There is no quote.';
             $statusCode = 422;
         } else {
-            $arrApi['status'] = 1;
+            /* $arrApi['status'] = 1;
             $arrApi['message'] = 'Successfully retreived the quote list.';
             $quoteList=[];
             for($i=0;$i<count($quotes);$i++) {
-                $quoteList[$i]['id'] = $quotes[$i]->getId();
-                $quoteList[$i]['estimateNumber'] = 'E-'.$quotes[$i]->getControlNumber().'-'.$quotes[$i]->getVersion();
-                $quoteList[$i]['customername'] = strtoupper($this->getCustomerNameById($quotes[$i]->getCustomerId()));
-                $quoteList[$i]['companyname'] = strtoupper($this->getCompanyById($quotes[$i]->getCustomerId()));
-                $quoteList[$i]['status'] = $quotes[$i]->getStatus();
+                $quoteList[$i]['id']                = $quotes[$i]->getId();
+                $quoteList[$i]['estimateNumber']    = 'E-'.$quotes[$i]->getControlNumber().'-'.$quotes[$i]->getVersion();
+                $quoteList[$i]['customername']      = strtoupper($this->getCustomerNameById($quotes[$i]->getCustomerId()));
+                $quoteList[$i]['companyname']       = strtoupper($this->getCompanyById($quotes[$i]->getCustomerId()));
+                $quoteList[$i]['status']            = $quotes[$i]->getStatus();
+                $quoteList[$i]['stsAbbr']           = $quotes[$i]->getAbbr();
+
                 $quoteList[$i]['estDate'] = $this->getEstimateDateFormate($quotes[$i]->getEstimateDate());
+            } */
+
+            $arrApi['status'] = 1;
+            $arrApi['message'] = 'Successfully retreived the order list.';
+            $quoteList=[];
+            for ($i=0;$i<count($quotes);$i++) {
+                $quoteList[$i]=[
+                    'id'=>$quotes[$i]['id'],
+                    'estimateNumber'=>$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
+                    'customername'=>$quotes[$i]['fname'],
+                    'companyname'=>$quotes[$i]['companyname'],
+                    // 'orderId'=>$quotes[$i]['orderId'],
+                    'status'=>$quotes[$i]['status'],
+                    'stsabbr' => $quotes[$i]['stsAbbr'],
+                    'estDate'=>$this->getEstimateDateFormate($quotes[$i]['estimatedate']),
+                ];
             }
+            $arrApi['data']['quotes'] = $quoteList;
+
             
             if($requestColumnName=='customer'){
                 $arrApi['data']['quotes'] = $this->__arraySortByColumn($quoteList, 'customername',$requestOrderBy);
@@ -523,15 +568,15 @@ class QuoteController extends Controller
         $statusCode = 200;
         $jsontoarraygenerator = new JsonToArrayGenerator();
         $data = $jsontoarraygenerator->getJson($request);
-//        $pageNo = $data->get('current_page');
-//        $limit = $data->get('limit');
-//        $sortBy = $data->get('sort_by');
-//        $order = $data->get('order');
+        //        $pageNo = $data->get('current_page');
+        //        $limit = $data->get('limit');
+        //        $sortBy = $data->get('sort_by');
+        //        $order = $data->get('order');
         $searchVal = trim($data->get('searchVal'));
         $startDate = $data->get('startDate');
         $endDate = $data->get('endDate');
         $type = $data->get('type');
-//        $offset = ($pageNo - 1)  * $limit;
+        //        $offset = ($pageNo - 1)  * $limit;
         if (false) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Parameter missing.';
@@ -545,18 +590,18 @@ class QuoteController extends Controller
                     $estimate = explode('-',$searchVal);
                     $condition.=$concat."q.controlNumber= :searchVal ";
                     $keyword = $estimate[1];
-//                    $concat = " AND ";
+                //                    $concat = " AND ";
                 } else if ($searchType == 'company'){
                     if($type=='status'){
                         if($searchVal!='all'){
                             $keyword=$searchVal;                  
                             $condition.=$concat."qs.statusId = :searchVal ";
-//                            $concat = " AND ";
+                //                            $concat = " AND ";
                         }                        
                     } else {
                         $keyword='%'.$searchVal.'%';                  
                         $condition.=$concat."u.company Like :searchVal ";
-//                        $concat = " AND ";
+                //                        $concat = " AND ";
                     }                    
                 }
                 if(!empty($startDate) && !empty($endDate)){
@@ -571,10 +616,11 @@ class QuoteController extends Controller
                 ->select(['q.controlNumber','q.version','q.customerId','q.estimatedate','q.id',
                         'qs.statusId',
                         's.statusName as status',
+                        's.abbr as stsAbbr',
                         'u.company as companyname','u.fname','u.lname'
                         ])
                     ->from('AppBundle:Quotes', 'q')
-//                    ->leftJoin('AppBundle:Quotes', 'q', 'WITH', "q.id = o.quoteId")
+                //                    ->leftJoin('AppBundle:Quotes', 'q', 'WITH', "q.id = o.quoteId")
                     ->innerJoin('AppBundle:QuoteStatus', 'qs', 'WITH', "q.id = qs.quoteId")
                     ->leftJoin('AppBundle:Status', 's', 'WITH', "qs.statusId=s.id ")
                     ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
@@ -592,7 +638,7 @@ class QuoteController extends Controller
                     $query1->setParameter('to', date('Y-m-d',strtotime($endDate)));
                 }
                 $quotes=$query1->orderBy('q.estimatedate','DESC')->getQuery()->getResult();
-//                $quotes=$query1->getQuery()->getSQL();print_r($quotes);die;
+                //                $quotes=$query1->getQuery()->getSQL();print_r($quotes);die;
                 if (empty($quotes) ) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'There is no order.';
@@ -604,11 +650,12 @@ class QuoteController extends Controller
                     for($i=0;$i<count($quotes);$i++) {
                         $quoteList[$i]=[
                             'id'=>$quotes[$i]['id'],
-                            'estimateNumber'=>'E-'.$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
+                            'estimateNumber'=>$quotes[$i]['controlNumber'].'-'.$quotes[$i]['version'],
                             'customername'=>$quotes[$i]['fname'],
                             'companyname'=>$quotes[$i]['companyname'],
-//                            'orderId'=>$quotes[$i]['orderId'],
+                            //                            'orderId'=>$quotes[$i]['orderId'],
                             'status'=>$quotes[$i]['status'],
+                            'stsabbr' => $quotes[$i]['stsAbbr'],
                             'estDate'=>$this->getEstimateDateFormate($quotes[$i]['estimatedate']),
                         ];
                     }
