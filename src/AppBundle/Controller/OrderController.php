@@ -2043,35 +2043,62 @@ class OrderController extends Controller {
         $doorData= $this->getDoorDataByQuoteId($quoteId);
         $arr = array_merge($veneerData, $plywoodData, $doorData);
         $final = $this->arraySortByColumn($arr, 'lineItemNum');
+        //print_r($final);die;
         $images_destination = $this->container->getParameter('images_destination');
-//        $veneerHtml = '';
-//        $plywoodHtml='';
         $lineItemHTML = '';
+        $plyHtmlV ='';
+        $plyHtmlC ='';
+        $plyHtmlS ='';
+        $venHTMLV ='';
+        $venHTMLS ='';
+        $htmlBlocks = [];
+
         if (!empty($final)) {
             foreach ($final as $v) {
                 if (!empty($v['type']) && $v['type'] == 'Plywood') {
-                    $lineItemHTML .= $this->getOrderTicketPlywoodHTML($v, $images_destination);
+                    for ($i=0;$i<$v['quantity'];$i++) {
+                        $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLV($v, $images_destination);
+                        $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLC($v, $images_destination);
+                        $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLS($v, $images_destination);
+                    }
                 }
                 if (!empty($v['type']) && $v['type'] == 'Veneer') {
-                    $lineItemHTML .= $this->getOrderTicketVeneerHTML($v, $images_destination);
+                    for ($i=0;$i<$v['quantity'];$i++) {
+                        $htmlBlocks[] = $this->getOrderTicketVeneerHTMLV($v, $images_destination);
+                        $htmlBlocks[] = $this->getOrderTicketVeneerHTMLS($v, $images_destination);
+                    }
                 }
-                if (!empty($v['type']) && $v['type'] == 'Door') {
-                    $lineItemHTML .= $this->getOrderTicketOrderHTML($v, $images_destination);
-                }
+//                if (!empty($v['type']) && $v['type'] == 'Door') {
+//                    $lineItemHTML .= $this->getOrderTicketOrderHTML($v, $images_destination);
+//                }
             }
         }
+
         $html = $this->getOrderTicketHTML($lineItemHTML);
 
-        return new Response($this->get('knp_snappy.pdf')->getOutputFromHtml($html, ['orientation' => 'portrait', 'default-header' => false]), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Test.pdf"']);
+        return new Response(
+            $this->get('knp_snappy.pdf')
+                ->getOutputFromHtml(
+                    $htmlBlocks, [
+                        'orientation' => 'portrait',
+                        'default-header' => false,
+                        'page-height' => 203,
+                        'page-width'  => 140,
+                    ]
+                ),
+            200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="Test.pdf"'
+            ]);
     }
 
     private function getPlywoodDataByQuoteId($quoteId) {
         if (!empty($quoteId)) {
             $query = $this->getDoctrine()->getManager();
             $result = $query->createQueryBuilder()
-                    ->select(['v.quantity', 'v.plywoodWidth as width', 'v.plywoodLength as length', 'v.comments', 'v.speciesId', 'v.topEdge', 'v.bottomEdge',
+                    ->select(['v.id','v.quantity', 'v.plywoodWidth as width','v.widthFraction', 'v.plywoodLength as length','v.lengthFraction', 'v.comments', 'v.speciesId', 'v.topEdge', 'v.bottomEdge',
                         'v.rightEdge', 'v.leftEdge', "v.finishThickId as pThicknessName", 'v.finishThickType', "'Plywood' as type",
-                        "v.finThickFraction", "v.thickness as panelThicknessName", 'v.lineItemNum', 'v.isSequenced'])
+                        "v.finThickFraction", "v.thickness as panelThicknessName", 'v.lineItemNum', 'v.isSequenced','v.isLabels'])
                     ->from('AppBundle:Plywood', 'v')
                     ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
                     ->addSelect(['q.refNum', 'q.deliveryDate'])
@@ -2079,14 +2106,18 @@ class OrderController extends Controller {
                     ->addSelect(['u.company as username'])
                     ->leftJoin('AppBundle:Species', 's', 'WITH', "v.speciesId = s.id")
                     ->addSelect(['s.name as SpecieName'])
-                    ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "v.patternId = p.id")
-                    ->addSelect(['p.name as patternName'])
+                    ->leftJoin('AppBundle:GrainPattern', 'gp', 'WITH', "v.patternId = gp.id")
+                    ->addSelect(['gp.name as patternName'])
                     ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
                     ->addSelect(['t.name as thicknessName'])
                     ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
                     ->addSelect(['fg.name as faceGradeName'])
-                    ->leftJoin('AppBundle:Backer', 'b', 'WITH', "v.backerId = b.id")
-                    ->addSelect(['b.name as backerName'])
+                    ->leftJoin('AppBundle:Pattern', 'p', 'WITH', "p.id = v.patternMatch")
+                    ->addSelect(['p.name as patternMatch'])
+                    ->leftJoin('AppBundle:CoreType', 'ct', 'WITH', "ct.id = v.coreType")
+                    ->addSelect(['ct.name as coreType'])
+                    ->leftJoin('AppBundle:BackerGrade', 'bgrd', 'WITH', "v.backerId = bgrd.id")
+                    ->addSelect(['bgrd.name as backerName'])
                     ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "v.grainDirectionId = gd.id")
                     ->addSelect(['gd.name as grainDirectionName'])
                     ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
@@ -2129,7 +2160,7 @@ class OrderController extends Controller {
         if (!empty($quoteId)) {
             $query = $this->getDoctrine()->getManager();
             $result = $query->createQueryBuilder()
-                    ->select(['v.quantity', 'v.width', 'v.length', 'v.comments', 'v.sequenced', 'v.lineItemNum', "'Veneer' as type"])
+                    ->select(['v.quantity', 'v.width','v.widthFraction', 'v.length','v.lengthFraction', 'v.comments', 'v.sequenced', 'v.lineItemNum', "'Veneer' as type"])
                     ->from('AppBundle:Veneer', 'v')
                     ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
                     ->addSelect(['q.refNum', 'q.deliveryDate'])
@@ -2148,6 +2179,8 @@ class OrderController extends Controller {
                     ->leftJoin('AppBundle:GrainDirection', 'gd', 'WITH', "v.grainDirectionId = gd.id")
                     ->addSelect(['gd.name as grainDirectionName'])
                     ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
+                    ->leftJoin('AppBundle:CoreType', 'ct', 'WITH', "ct.id = v.coreTypeId")
+                    ->addSelect(['ct.name as coreType'])
                     ->addSelect(['o.orderDate as orderDate', 'o.estNumber as estNumber'])
                     ->where('v.quoteId = ' . $quoteId)
                     ->getQuery()
@@ -2207,711 +2240,596 @@ class OrderController extends Controller {
         return $arr;
     }
 
-    private function getOrderTicketVeneerHTML($v, $images_destination) {
+    private function getOrderTicketVeneerHTMLV($v, $images_destination) {
         $veneerHtml = '';
-        $veneerHtml .= '<div style="page-break-after:always" *ngFor="let v of data">
-            <div class="ticketWrap">
-                <div class="ticketScreen veneer">
-                    <table class="ticketHead">
-                        <tr>
-                            <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
-                            <td class="dep" >Veneer Department</td>
-                        </tr>
-                    </table>
-                    <table class="ticketDesc">
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc">' . $v['refNum'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc">' . $v['estNumber'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc"><hr></td>
-                        </tr>
-                    </table>
-                    <table class="ticketDesc">
-                        <tr>
-                            <td class="cellLabel"><label>Quantity</label></td>
-                            <td class="cellDesc">' . $v['quantity'] . ' Pieces</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Species</label></td>
-                            <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Size</label></td>
-                            <td class="cellDesc">' . $v['width'] . ' - ' . $v['length'] . '"</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Thickness</label></td>
-                            <td class="cellDesc">' . $v['thicknessName'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Grade</label></td>
-                            <td class="cellDesc">' . $v['faceGradeName'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Back</label></td>
-                            <td class="cellDesc">' . $v['backerName'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Grain Direction</label></td>
-                            <td class="cellDesc">' . $v['grainDirectionName'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Sequenced</label></td>
-                            <td class="cellDesc">' . $v['sequenced'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Labels</label></td>
-                            <td class="cellDesc">No</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Notes:</label></td>
-                            <td class="cellDesc"><span class="noteTxt">' . $v['comments'] . '</span></td>
-                        </tr>
-                    </table>
+        $veneerHtml .= '<div class="ticketWrap">
+        <div class="ticketScreen veneer">
+            <table class="ticketHead">
+                <tr>
+                    <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                    <td class="dep">Veneer Department</td>
+                </tr> 
+            </table>
+            <table class="ticketDesc">
+                <tr>
+                    <td class="cellLabel"></td>
+                    <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"></td>
+                    <td class="cellDesc">PO: ' . $v['refNum'] . '<br>Order: ' . $v['estNumber'] . '<br>Item: '.$v['lineItemNum'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"></td>
+                    <td class="cellDesc"><hr></td>
+                </tr>
+            </table>
+            <table class="ticketDesc" style="min-height:300px;">
+                <tr>
+                    <td class="cellLabel"><label>Quantity</label></td>
+                    <td class="cellDesc">' . $v['quantity'] . ' Pieces</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Species</label></td>
+                    <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Veneer Size</label></td>
+                    <td class="cellDesc">'.($v['width'] + 1).' '.$this->float2rat($v['widthFraction']).'" x '.($v['length']+1).' '.$this->float2rat($v['lengthFraction']).'"</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Thickness</label></td>
+                    <td class="cellDesc">'.$v['thicknessName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Species</label></td>
+                    <td class="cellDesc">'.$v['SpecieName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Face Grade</label></td>
+                    <td class="cellDesc">'.$v['faceGradeName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Grain Direction</label></td>
+                    <td class="cellDesc">'.$v['grainDirectionName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Back</label></td>
+                    <td class="cellDesc">'.$v['backerName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Sequenced</label></td>
+                    <td class="cellDesc">'.($v['sequenced'] ? 'Yes' : 'No').'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Pattern</label></td>
+                    <td class="cellDesc">'.$v['patternName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Label</label></td>
+                    <td class="cellDesc">No</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Core</label></td>
+                    <td class="cellDesc">'.$v['coreType'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Notes:</label></td>
+                    <td class="cellDesc"><strong>'.$v['comments'].'</strong></td>
+                </tr>
+            </table>
 
-                    <table class="ticketFoot">
-                        <tr>
-                            <td class="cellLabel"><label>Due</label></td>
-                            <td class="cellDesc"><label class="custName">' . date('l', strtotime($v['deliveryDate'])) . ' | ' . date('M d', strtotime($v['deliveryDate'])) . '</label></td>
-                        </tr>
-                        <tr>
-                            <td class="lftFoot"><!--<img src="' . $images_destination . '/ticket-images/veneer-lft-img.png" alt="">--></td>
-                            <td class="dep footIN">
-                                <table>
-                                    <tr>
-                                        <td class="itBx"><span class="itTxt">Item ' . $v['lineItemNum'] . '</span></td>
-                                        <td class="footImg">
-                                            <img src="' . $images_destination . '/ticket-images/foot-img-1.png" alt="">
-                                            <!-- <img src="' . $images_destination . '/ticket-images/foot-img-2.png" alt=""> -->
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div><br/><br/>
-            <!-- End: \ Ticket for Sanding Department -->
-            <div class="ticketWrap">
-                <div class="ticketScreen sanding">
-                    <table class="ticketHead">
-                        <tr>
-                            <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
-                            <td class="dep">Sanding Department</td>
-                        </tr>
-                    </table>
-                    <table class="ticketDesc">
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc">' . $v['refNum'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc">' . $v['estNumber'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc"><hr></td>
-                        </tr>
-                    </table>
-                    <table class="ticketDesc">
-                        <tr>
-                            <td class="cellLabel"><label>Quantity</label></td>
-                            <td class="cellDesc">' . $v['quantity'] . ' Pieces</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Species/Face</label></td>
-                            <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Finished Size</label></td>
-                            <td class="cellDesc">' . $v['width'] . '" x ' . $v['length'] . '"</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Finished Thickness</label></td>
-                            <td class="cellDesc">' . $v['thicknessName'] . '"</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Notes:</label></td>
-                            <td class="cellDesc"><span class="noteTxt">' . $v['comments'] . '</span></td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Labels</label></td>
-                            <td class="cellDesc">No</td>
-                        </tr>
-                    </table>
+            <table class="ticketFoot">
+                <tr>
+                    <td class="lftFoot"></td>
+                    <td class="dep footIN">
+                        <table>
+                            <tr>
+                                <td><span class="itTxt t-left">' . date('l | M d', strtotime($v['orderDate'])) . '</span></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr> 
+            </table>
+        </div>
+    </div>';
+        $html='';
+        if(!empty($veneerHtml)){
+            $html .= '<!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                        body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                        .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    </style>
+                </head>
+                <body>
+                ' . $veneerHtml . '
+                </body>
+            </html>';
+        }
+        return $html;
+    }
 
-                    <table class="ticketFoot">
-                        <tr>
-                            <td class="cellLabel"><label>Due</label></td>
-                            <td class="cellDesc"><label class="custName">' . date('l', strtotime($v['deliveryDate'])) . ' | ' . date('M d', strtotime($v['deliveryDate'])) . '</label></td>
-                        </tr>
-                        <tr>
-                            <td class="lftFoot">&nbsp;</td>
-                            <td class="dep footIN">
-                                <table>
-                                    <tr>
-                                        <td class="itBx"><span class="itTxt">Item ' . $v['lineItemNum'] . '</span></td>
-                                        <td class="footImg">
-                                            <img src="' . $images_destination . '/ticket-images/foot-img-1.png" alt="">
-                                            <!-- <img src="' . $images_destination . '/ticket-images/foot-img-2.png" alt=""> -->
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div><br/>
-        </div>';
-        return $veneerHtml;
+    private function getOrderTicketVeneerHTMLS($v, $images_destination) {
+        $veneerHtml = '';
+        $veneerHtml .= '<div class="ticketWrap">
+        <div class="ticketScreen sanding">
+            <table class="ticketHead">
+                <tr>
+                    <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                    <td class="dep">Sanding Department</td>
+                </tr> 
+            </table>
+            <table class="ticketDesc">
+                <tr>
+                    <td class="cellLabel"></td>
+                    <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"></td>
+                    <td class="cellDesc">PO: ' . $v['refNum'] . '<br>Order: ' . $v['estNumber'] . '<br>Item: '.$v['lineItemNum'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"></td>
+                    <td class="cellDesc"><hr></td>
+                </tr>
+            </table>
+            <table class="ticketDesc">
+                <tr>
+                    <td class="cellLabel"><label>Quantity</label></td>
+                    <td class="cellDesc">' . $v['quantity'] . ' Pieces</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Species</label></td>
+                    <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Veneer Size</label></td>
+                    <td class="cellDesc">'.($v['width'] + 1).' '.$this->float2rat($v['widthFraction']).'" x '.($v['length']+1).' '.$this->float2rat($v['lengthFraction']).'"</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Thickness</label></td>
+                    <td class="cellDesc">'.$v['thicknessName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Species</label></td>
+                    <td class="cellDesc">'.$v['SpecieName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Face Grade</label></td>
+                    <td class="cellDesc">'.$v['faceGradeName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Grain Direction</label></td>
+                    <td class="cellDesc">'.$v['grainDirectionName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Back</label></td>
+                    <td class="cellDesc">'.$v['backerName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Sequenced</label></td>
+                    <td class="cellDesc">'.($v['sequenced'] ? 'Yes' : 'No').'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Pattern</label></td>
+                    <td class="cellDesc">'.$v['patternName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Label</label></td>
+                    <td class="cellDesc">No</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Core</label></td>
+                    <td class="cellDesc">'.$v['coreType'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Notes:</label></td>
+                    <td class="cellDesc"><strong>'.$v['comments'].'</strong></td>
+                </tr>
+            </table>
+            <table class="ticketFoot">
+                <tr>
+                    <td class="lftFoot"></td>
+                    <td class="dep footIN">
+                        <table>
+                            <tr>
+                                <td><span class="itTxt t-left">' . date('l | M d', strtotime($v['orderDate'])) . '</span></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr> 
+            </table>
+        </div>
+    </div>';
+        $html='';
+        if(!empty($veneerHtml)){
+            $html .= '<!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                        body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                        .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    </style>
+                </head>
+                <body>
+                ' . $veneerHtml . '
+                </body>
+            </html>';
+        }
+        return $html;
     }
 
     private function getOrderTicketOrderHTML($v, $images_destination) {
         $doorHtml = '';
-        $doorHtml .= '<div class="ticketWrap broad">
-            <div class="ticketScreen door">
-                <table class="ticketHead">
-                    <tbody><tr>
-                        <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo" alt="Department Logo"></td>
-                        <td class="dep">Door Department - Milling</td>
-                    </tr> 
-                </tbody></table>
-                <table class="hlfGrdTable">
-                    <tbody><tr>
-                        <td class="fstGrd">
-                            <table class="ticketDesc">
-                                <tbody><tr>
-                                    <td class="cellLabel"></td>
-                                    <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"></td>
-                                    <td class="cellDesc">' . $v['refNum'] . '</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"></td>
-                                    <td class="cellDesc">O-' . $v['controlNumber'] . '-' . $v['version'] . ' </td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"></td>
-                                    <td class="cellDesc"><hr></td>
-                                </tr>
-                            </tbody></table>
-                            <table class="ticketDesc">
-                                <tbody><tr>
-                                    <td class="cellLabel"><label>Quantity</label></td>
-                                    <td class="cellDesc">' . $v['quantity'] . ' Pieces </td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Species/Face</label></td>
-                                    <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Finished Size</label></td>
-                                    <td class="cellDesc">' . $v['width'] . '" x ' . $v['length'] . '"</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Finished Thickness</label></td>
-                                    <td class="cellDesc">1-3/4"</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Door Core</label></td>
-                                    <td class="cellDesc">LS-1 Standard</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Door Type</label></td>
-                                    <td class="cellDesc">Interior</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Finish</label></td>
-                                    <td class="cellDesc">
-                                        <table>
-                                            <tbody><tr>
-                                                <td>UV Clear 50% Sheen <br>2 sides, BE,TE,RE,LE</td>
-                                                <td class="w20p"></td>
-                                            </tr>
-                                        </tbody></table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Notes:</label></td>
-                                    <td class="cellDesc"><span class="noteTxt">' . $v['comments'] . '</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Labels</label></td>
-                                    <td class="cellDesc">No</td>
-                                </tr>
-                            </tbody></table>
-                        </td>
-                        <td>
-                            <table class="ticketDesc">
-                                <tbody><tr>
-                                    <td class="cellLabel"><label>Swing</label></td>
-                                    <td class="cellDesc">RTA</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Bevel</label></td>
-                                    <td class="cellDesc">Hinge Side</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Light Opening</label></td>
-                                    <td class="cellDesc">Cut Out Only</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Louvers</label></td>
-                                    <td class="cellDesc">Wood Slat</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Glass</label></td>
-                                    <td class="cellDesc">No</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Door Frame</label></td>
-                                    <td class="cellDesc">Metal</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Surface Machining</label></td>
-                                    <td class="cellDesc">
-                                        <table>
-                                            <tbody><tr>
-                                                <td>Square Slot - 1/4" - Front</td>
-                                                <td class="w20p"></td>
-                                            </tr>
-                                        </tbody></table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Stiles</label></td>
-                                    <td class="cellDesc">12" x 20" - Match</td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Hinges</label></td>
-                                    <td class="cellDesc">SI5768<br>
-                                        Standard .124<br>
-                                        5-1/2"
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Hinge Position</label></td>
-                                    <td class="cellDesc">
-                                        8-1/2" <br>
-                                        1/8"
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Handle Bolt</label></td>
-                                    <td class="cellDesc">
-                                        Free Text <br>
-                                        38-1/2"
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="cellLabel"><label>Vertical Rod</label></td>
-                                    <td class="cellDesc">Surface</td>
-                                </tr>
-                            </tbody></table>
-                        </td>
-                    </tr>
-                </tbody></table>
-
-
-                <table class="ticketFoot">
-                    <tbody><tr>
-                        <td class="cellLabel"><label>Due</label></td>
-                        <td class="cellDesc"><label class="custName">' . date('l', strtotime($v['deliveryDate'])) . ' | ' . date('M d', strtotime($v['deliveryDate'])) . '</label></td>
-                    </tr>
-                    <tr>
-                        <td class="lftFoot">&nbsp;</td>
-                        <td class="dep footIN">
-                            <table>
-                                <tbody><tr>
-                                    <td class="itBx"><span class="itTxt">Item ' . $v['lineItemNum'] . '</span></td>
-                                    <td class="footImg">
-                                        <img src="' . $images_destination . '/ticket-images/foot-img-1.png" alt="">
-                                        <img src="' . $images_destination . '/ticket-images/foot-img-2.png" alt="">
-                                    </td>
-                                </tr>
-                            </tbody></table>
-                        </td>
-                    </tr> 
-                </tbody></table>
-            </div>
-        </div>';
+        $doorHtml .= '';
         return $doorHtml;
     }
 
-    private function getOrderTicketPlywoodHTML($v, $images_destination) {
-        $topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
-        $bottomEdgeName = !empty($v['bottomEdgeName']) ? $v['bottomEdgeName'] : 'N/A';
-        $rightEdgeName = !empty($v['rightEdgeName']) ? $v['rightEdgeName'] : 'N/A';
-        $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
-        $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
-        $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
-        $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
-        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
-        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
-        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
-        $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
-        $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
+    private function getOrderTicketPlywoodHTMLV($v, $images_destination) {
+//        $topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+//        $bottomEdgeName = !empty($v['bottomEdgeName']) ? $v['bottomEdgeName'] : 'N/A';
+//        $rightEdgeName = !empty($v['rightEdgeName']) ? $v['rightEdgeName'] : 'N/A';
+//        $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
+//        $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
+//        $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
+//        $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+//        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
+//        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
+//        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
+//        $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
+//        $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
+//
+//
+//        $edge = '';
+//        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
+//                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
+//                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
+//                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
+//            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
+//                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
+//            }
+//            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
+//                $edge .= 'TE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
+//            }
+//            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
+//                $edge .= 'TE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
+//            }
+//            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
+//                $edge .= 'TE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+//            }
+//        } else {
+//            $edge = 'No';
+//        }
 
-
-        $edge = '';
-        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
-                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
-                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
-                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
-            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
-                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
-            }
-            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
-                $edge .= 'TE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
-            }
-            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
-                $edge .= 'TE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
-            }
-            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
-                $edge .= 'TE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
-            }
-        } else {
-            $edge = 'No';
-        }
-        $plywoodHtml = '';
-        $plywoodHtml .= '
-                    <div style="page-break-after:always" *ngFor="let v of data">
-            <div class="ticketWrap">
+        //print_r($v['quantity']);die;
+                $plywoodHtml = '';
+                $plywoodHtml .= '<div class="ticketWrap">
                 <div class="ticketScreen veneer">
                     <table class="ticketHead">
                         <tr>
                             <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
-                            <td class="dep" >Veneer Department</td>
-                        </tr>
+                            <td class="dep">Veneer Department</td>
+                        </tr> 
                     </table>
                     <table class="ticketDesc">
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
+                            <td class="cellDesc"><label class="custName">' . $v["username"] . '</label></td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
-                            <td class="cellDesc">' . $v['refNum'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc">' . $v['estNumber'] . '</td>
+                            <td class="cellDesc">PO: ' . $v["refNum"] . '<br>Order: ' . $v["estNumber"] . '<br>Item: '.$v["lineItemNum"].'</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"></td>
                             <td class="cellDesc"><hr></td>
                         </tr>
                     </table>
-                    <table class="ticketDesc">
+                    <table class="ticketDesc" style="min-height:300px;">
                         <tr>
                             <td class="cellLabel"><label>Quantity</label></td>
-                            <td class="cellDesc">' . $v['quantity'] . ' Pieces</td>
+                            <td class="cellDesc">' . $v["quantity"] . ' Pieces</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Species</label></td>
-                            <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
+                            <td class="cellDesc">' . $v["SpecieName"] . ' - ' . $v["patternName"] . '</td>
                         </tr>
                         <tr>
-                            <td class="cellLabel"><label>Size</label></td>
-                            <td class="cellDesc">' . ($v['width'] + 1) . '" x ' . $v['length'] . '"</td>
+                            <td class="cellLabel"><label>Veneer Size</label></td>
+                            <td class="cellDesc">'.($v["width"] + 1).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]+1).' '.$this->float2rat($v["lengthFraction"]).'"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Thickness</label></td>
-                            <td class="cellDesc">' . $v['thicknessName'] . '</td>
+                            <td class="cellDesc">' . $v["thicknessName"] . '"</td>
                         </tr>
                         <tr>
-                            <td class="cellLabel"><label>Grade</label></td>
-                            <td class="cellDesc">' . $v['faceGradeName'] . '</td>
+                            <td class="cellLabel"><label>Species</label></td>
+                            <td class="cellDesc">' . $v["patternName"] . '</td>
                         </tr>
-                       ';
-        if (!empty($v['backerName'])) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label></label></td>
-                                <td class="cellDesc">' . $v['backerName'] . '</td>
-                            </tr>';
-        }
-        $plywoodHtml .= '<tr>
+                        <tr>
+                            <td class="cellLabel"><label>Face Grade</label></td>
+                            <td class="cellDesc">' . $v["faceGradeName"] . '</td>
+                        </tr>
+                        <tr>
                             <td class="cellLabel"><label>Grain Direction</label></td>
-                            <td class="cellDesc">' . $v['grainDirectionName'] . '</td>
-                        </tr>';
-        if (!empty($v['isSequenced']) && $v['isSequenced'] == 1) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label>Sequenced</label></td>
-                                <td class="cellDesc">' . ($v['isSequenced'] == 1 ? 'Yes' : '') . '</td>
-                            </tr>';
-        }
-        if (!empty($v['comments'])) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label>Notes:</label></td>
-                                <td class="cellDesc">' . ($v['comments']) . '</td>
-                            </tr>';
-        }
-        if (!empty($v['backerName'])) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label></label></td>
-                                <td class="cellDesc">' . ($v['backerName']) . '</td>
-                            </tr>';
-        }
-        if (empty($v['isSequenced']) && $v['isSequenced'] == 0) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label></label></td>
-                                <td class="cellDesc"></td>
-                            </tr>';
-        }
-        if (empty($v['comments'])) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label></label></td>
-                                <td class="cellDesc"></td>
-                            </tr>';
-        }
-        if (empty($v['backerName'])) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label></label></td>
-                                <td class="cellDesc"></td>
-                            </tr>';
-        }
-        $plywoodHtml .= '<tr>
-                            <td class="cellLabel"><label></label></td>
-                            <td class="cellDesc"></td>
-                        </tr></table>
-
+                            <td class="cellDesc">' . $v["grainDirectionName"] . '</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Back</label></td>
+                            <td class="cellDesc">' . $v["backerName"] . '</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Sequenced</label></td>
+                            <td class="cellDesc">'.($v["isSequenced"] == 1 ? "Yes" : "No").'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Pattern</label></td>
+                            <td class="cellDesc">'.$v['patternMatch'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Label</label></td>
+                            <td class="cellDesc">'.($v["isLabels"] ? "Yes" : "No").'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Core</label></td>
+                            <td class="cellDesc">'.$v["coreType"].' - '.$this->float2rat($v["panelThicknessName"]).'"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Notes:</label></td>
+                            <td class="cellDesc"><strong>'.$v["comments"].'</strong></td>
+                        </tr>
+                    </table>
                     <table class="ticketFoot">
                         <tr>
-                            <td class="cellLabel"><label>Due</label></td>
-                            <td class="cellDesc"><label class="custName">' . date('l', strtotime($v['deliveryDate'])) . ' | ' . date('M d', strtotime($v['deliveryDate'])) . '</label></td>
-                        </tr>
-                        <tr>
-                            <td class="lftFoot"><!--<img src="' . $images_destination . '/ticket-images/veneer-lft-img.png" alt="">--></td>
+                            <td class="lftFoot"></td>
                             <td class="dep footIN">
                                 <table>
                                     <tr>
-                                        <td class="itBx"><span class="itTxt">Item ' . $v['lineItemNum'] . '</span></td>
-                                        <td class="footImg">
-                                            <img src="' . $images_destination . '/ticket-images/foot-img-1.png" alt="">
-                                            <!-- <img src="' . $images_destination . '/ticket-images/foot-img-2.png" alt=""> -->
-                                        </td>
+                                        <td><span class="itTxt t-left">'.date("D | M d",strtotime($v["orderDate"])).'</span></td>
                                     </tr>
                                 </table>
                             </td>
-                        </tr>
+                        </tr> 
                     </table>
                 </div>
-            </div><br/><br/>
-            <div class="ticketWrap">
-                <div class="ticketScreen core">
-                    <table class="ticketHead">
-                        <tr>
-                            <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
-                            <td class="dep">Core Department</td>
-                        </tr>
-                    </table>
-                    <table class="ticketDesc">
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc">' . $v['refNum'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc">' . $v['estNumber'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc"><hr></td>
-                        </tr>
-                    </table>
-                    <table class="ticketDesc">
-                        <tr>
-                            <td class="cellLabel"><label>Quantity</label></td>
-                            <td class="cellDesc">' . $v['quantity'] . ' Pieces</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Species</label></td>
-                            <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Size</label></td>
-                            <td class="cellDesc">' . ($v['width'] + 1) . '" x ' . $v['length'] . '"</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Thickness</label></td>
-                            <td class="cellDesc">' . $v['panelThicknessName'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Grade</label></td>
-                            <td class="cellDesc">' . $v['faceGradeName'] . '</td>
-                        </tr>';
-        if (!empty($v['backerName'])) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label>Back</label></td>
-                                <td class="cellDesc">' . $v['backerName'] . '</td>
-                            </tr>';
+            </div>';
+        $html='';
+        if(!empty($plywoodHtml)){
+            $html .= '<!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                </style>
+            </head>
+            <body>
+            ' . $plywoodHtml . '
+            </body>
+        </html>';
         }
-        if (!empty($edge)) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label>Edge</label></td>
-                                <td class="cellDesc">' . $edge . '</td>
-                            </tr>';
-        }
-        if (!empty($v['comments'])) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label>Notes:</label></td>
-                                <td class="cellDesc">' . $v['comments'] . '</td>
-                            </tr>';
-        }
-        if (empty($v['backerName'])) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label></label></td>
-                                <td class="cellDesc"></td>
-                            </tr>';
-        }
-        if (empty($edge)) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label></label></td>
-                                <td class="cellDesc"></td>
-                            </tr>';
-        }
-        if (empty($v['comments'])) {
-            $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label>:/label></td>
-                                <td class="cellDesc"></td>
-                            </tr>';
-        }
-        $plywoodHtml .= '<tr>
-                            <td class="cellLabel"><label></label></td>
-                            <td class="cellDesc"></td>
-                        </tr>';
-        $plywoodHtml .= '</table>
-                        <table class="ticketFoot">
-                        <tr>
-                            <td class="cellLabel"><label>Due</label></td>
-                            <td class="cellDesc"><label class="custName">' . date('l', strtotime($v['deliveryDate'])) . ' | ' . date('M d', strtotime($v['deliveryDate'])) . '</label></td>
-                        </tr>
-                        <tr>
-                            <td class="lftFoot">&nbsp;</td>
-                            <td class="dep footIN">
-                                <table>
-                                    <tr>
-                                        <td class="itBx"><span class="itTxt">Item ' . $v['lineItemNum'] . '</span></td>
-                                        <td class="footImg">
-                                            <img src="' . $images_destination . '/ticket-images/foot-img-1.png" alt="">
-                                            <img src="' . $images_destination . '/ticket-images/foot-img-2.png" alt="">
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div><br/>
-            <!-- End: \ Ticket for Sanding Department -->
-            <div class="ticketWrap">
-                <div class="ticketScreen sanding">
-                    <table class="ticketHead">
-                        <tr>
-                            <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
-                            <td class="dep">Sanding Department</td>
-                        </tr>
-                    </table>
-                    <table class="ticketDesc">
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc">' . $v['refNum'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc">' . $v['estNumber'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"></td>
-                            <td class="cellDesc"><hr></td>
-                        </tr>
-                    </table>
-                    <table class="ticketDesc">
-                        <tr>
-                            <td class="cellLabel"><label>Quantity</label></td>
-                            <td class="cellDesc">' . $v['quantity'] . ' Pieces</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Species/Face</label></td>
-                            <td class="cellDesc">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Finished Size</label></td>
-                            <td class="cellDesc">' . $v['width'] . '" x ' . $v['length'] . '"</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Finished Thickness</label></td>
-                            <td class="cellDesc">' . $v['thicknessName'] . '"</td>
-                        </tr>';
-        if (!empty($v['comments'])) {
-            $plywoodHtml .= '<tr>
+        return $html;
+    }
+
+    private function getOrderTicketPlywoodHTMLC($v, $images_destination) {
+        $plywoodHtml = '';
+        $plywoodHtml .= '<div class="ticketWrap">
+            <div class="ticketScreen core">
+                <table class="ticketHead">
+                    <tr>
+                        <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                        <td class="dep">Core Department</td>
+                    </tr> 
+                </table>
+                <table class="ticketDesc">
+                    <tr>
+                        <td class="cellLabel"></td>
+                        <td class="cellDesc"><label class="custName">' . $v["username"] . '</label></td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"></td>
+                        <td class="cellDesc">PO: ' . $v["refNum"] . '<br>Order: ' . $v["estNumber"] . '<br>Item: '.$v["lineItemNum"].'</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"></td>
+                        <td class="cellDesc"><hr></td>
+                    </tr>
+                </table>
+                <table class="ticketDesc">
+                    <tr>
+                        <td class="cellLabel"><label>Quantity</label></td>
+                        <td class="cellDesc">' . $v["quantity"] . ' Pieces</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Species</label></td>
+                        <td class="cellDesc">' . $v["SpecieName"] . ' - ' . $v["patternName"] . '</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Cut Size</label></td>
+                        <td class="cellDesc">'.($v["width"] + 1).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]+1).' '.$this->float2rat($v["lengthFraction"]).'"</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Finished Size</label></td>
+                        <td class="cellDesc">'.($v["width"] + 1).'" x '.($v["length"]+1).'"</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Fln. Thickness</label></td>
+                        <td class="cellDesc">'.($v["pThicknessName"] ? $v["pThicknessName"] : '').' '.$this->float2rat($v["finThickFraction"]).'"</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Back</label></td>
+                        <td class="cellDesc">'.$v["backerName"].'</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Sequenced</label></td>
+                        <td class="cellDesc">'.($v["isSequenced"] == 1 ? "Yes" : "No").'</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Label</label></td>
+                        <td class="cellDesc">'.($v["isLabels"] ? "Yes" : "No").'</td>
+                    </tr>
+                    <tr>
                         <td class="cellLabel"><label>Notes:</label></td>
-                        <td class="cellDesc">' . $v['comments'] . '</td>
+                        <td class="cellDesc"><strong>'.$v["comments"].'</strong></td>
                     </tr>
-                    ';
-        }
-        if (empty($v['comments'])) {
-            $plywoodHtml .= '<tr>
-                        <td class="cellLabel"><label></label></td>
-                        <td class="cellDesc"></td>
-                    </tr>
-                    ';
-        }
-        $plywoodHtml .= '<tr>
-                                <td class="cellLabel"><label></label></td>
-                                <td class="cellDesc"></td>
-                            </tr>
+                </table>
+                <table class="ticketFoot">
+                    <tr>
+                        <td class="lftFoot"></td>
+                        <td class="dep footIN">
+                            <table>
+                                <tr>
+                                    <td><span class="itTxt t-left">'.date("D | M d",strtotime($v["orderDate"])).'</span></td>
+                                </tr>
                             </table>
-
-                    <table class="ticketFoot">
-                        <tr>
-                            <td class="cellLabel"><label>Due</label></td>
-                            <td class="cellDesc"><label class="custName">' . date('l', strtotime($v['deliveryDate'])) . ' | ' . date('M d', strtotime($v['deliveryDate'])) . '</label></td>
-                        </tr>
-                        <tr>
-                            <td class="lftFoot">&nbsp;</td>
-                            <td class="dep footIN">
-                                <table>
-                                    <tr>
-                                        <td class="itBx"><span class="itTxt">Item ' . $v['lineItemNum'] . '</span></td>
-                                        <td class="footImg">
-                                            <img src="' . $images_destination . '/ticket-images/foot-img-1.png" alt="">
-                                            <!-- <img src="' . $images_destination . '/ticket-images/foot-img-2.png" alt=""> -->
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div><br/>
+                        </td>
+                    </tr> 
+                </table>
+            </div>
         </div>';
-        return $plywoodHtml;
+        $html='';
+        if(!empty($plywoodHtml)){
+            $html .= '<!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                </style>
+            </head>
+            <body>
+            ' . $plywoodHtml . '
+            </body>
+        </html>';
+        }
+        return $html;
+    }
+
+    private function getOrderTicketPlywoodHTMLS($v, $images_destination) {
+        $plywoodHtml = '';
+        $plywoodHtml .= '<div class="ticketWrap">
+            <div class="ticketScreen sanding">
+                <table class="ticketHead">
+                    <tr>
+                        <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                        <td class="dep">Sanding Department</td>
+                    </tr> 
+                </table>
+                <table class="ticketDesc">
+                    <tr>
+                        <td class="cellLabel"></td>
+                        <td class="cellDesc"><label class="custName">'.$v["username"].'</label></td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"></td>
+                        <td class="cellDesc">PO: ' . $v["refNum"] . '<br>Order: ' . $v["estNumber"] . '<br>Item: '.$v["lineItemNum"].'</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"></td>
+                        <td class="cellDesc"><hr></td>
+                    </tr>
+                </table>
+                <table class="ticketDesc">
+                    <tr>
+                        <td class="cellLabel"><label>Quantity</label></td>
+                        <td class="cellDesc">' . $v["quantity"] . ' Pieces</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Species</label></td>
+                        <td class="cellDesc">' . $v["SpecieName"] . ' - ' . $v["patternName"] . '</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Veneer Size</label></td>
+                        <td class="cellDesc">'.($v["width"] + 1).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]+1).' '.$this->float2rat($v["lengthFraction"]).'"</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Thickness</label></td>
+                        <td class="cellDesc">' . $v["thicknessName"] . '"</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Species</label></td>
+                        <td class="cellDesc">' . $v["patternName"] . '</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Face Grade</label></td>
+                        <td class="cellDesc">' . $v["faceGradeName"] . '</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Grain Direction</label></td>
+                        <td class="cellDesc">' . $v["grainDirectionName"] . '</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Back</label></td>
+                        <td class="cellDesc">' . $v["backerName"] . '</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Sequenced</label></td>
+                        <td class="cellDesc">'.($v["isSequenced"] == 1 ? "Yes" : "No").'</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Pattern</label></td>
+                        <td class="cellDesc">'.$v["patternMatch"].'</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Label</label></td>
+                        <td class="cellDesc">'.($v["isLabels"] ? "Yes" : "No").'</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Core</label></td>
+                        <td class="cellDesc">'.$v["coreType"].' - '.$this->float2rat($v["panelThicknessName"]).'"</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Notes:</label></td>
+                        <td class="cellDesc"><strong>'.$v["comments"].'</strong></td>
+                    </tr>
+                </table>
+                <table class="ticketFoot">
+                    <tr>
+                        <td class="lftFoot"></td>
+                        <td class="dep footIN">
+                            <table>
+                                <tr>
+                                    <td><span class="itTxt t-left">'.date("D | M d",strtotime($v["orderDate"])).'</span></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr> 
+                </table>
+            </div>
+        </div>';
+        $html='';
+        if(!empty($plywoodHtml)){
+            $html .= '<!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                </style>
+            </head>
+            <body>
+            ' . $plywoodHtml . '
+            </body>
+        </html>';
+        }
+        return $html;
     }
     
     private function getOrderTicketHTML($lineItemHTML){
@@ -2923,81 +2841,9 @@ class OrderController extends Controller {
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <style>
-                @media print {
-                    body {
-                       -webkit-print-color-adjust: exact;
-                       -moz-print-color-adjust: exact;
-                       print-color-adjust: exact;
-                       margin:0mm;
-                    }
-                 }
-                 @page {
-                    size: A5 Portrait;
-                    margin:0;
-                }
-                body{
-                    font-family:"Libre Franklin",
-                    Arial,sans-serif;font-weight:400;
-                }
-                table{width:100%;border-collapse:collapse;border-spacing:0;}
-                h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}
-                table.ticketFoot{margin-top:50px;}
-                .ticketWrap{width:600px; margin:auto; min-height:800px;}
-                .ticketWrap.broad{width:1132px;}
-                .ticketScreen{padding:40px 0;}
-                .ticketHead{margin-bottom:30px;}
-                .lftLogo,.cellLabel{width:121px;line-height:0;}
-                .lftFoot{width:111px;line-height:0;}
-                .ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}
-                td.dep{padding:0 30px;color:#ffffff;font-size:30px;font-weight:600;height:95px;}
-                .lftLogo img{margin:0 0 0 6px;display:block;padding:0;}
-                .ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}
-                td.cellDesc{font-size:20px; line-height:21px; color:#212121; vertical-align:top;}
-                td.cellLabel{font-size:20px; line-height:21px; color:#999999;text-align:right; vertical-align:top;}
-                .ticketDesc td.cellDesc{padding-left:0;}
-                .cellLabel label{padding-right:10px;display:inline-block;padding-top:0px}
-                label.custName,td.cellDesc label.custName{font-size:42px;font-weight:600;color:#212121;padding:0;line-height:1;}
-                table.ticketDesc td{padding:3px 6px;}
-                td.cellDesc label{
-                    padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:11px;font-weight:600;
-                }
-                table td hr{
-                    height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;
-                }
-                td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}
-                td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}
-                td.dep.footIN{height:auto;padding:10px 15px 15px 0;}
-                .footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}
-                td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}
-                .footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}
-                .footImg img{margin:0 16px;display:inline;}
-                .ticketFoot td.cellDesc label.custName{font-size:32px;}
-                .ticketWrap table.hlfGrdTable{width:100%;}
-                .ticketWrap table.hlfGrdTable td{
-                    width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;
-                }
-                .ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}
-                .ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}
-                .ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{
-                    padding-left:6px;padding-right:6px;border:0;
-                }
-                .ticketWrap table.hlfGrdTable td.fstGrd{
-                    padding-left:0;padding-right:0;border:0;
-                }
-                .ticketWrap.broad table.ticketHead .lftLogo,
-                .ticketWrap.broad table.ticketFoot .cellLabel,
-                .ticketWrap.broad table.ticketFoot .lftFoot{
-                    width:131px;
-                }
-                .ticketWrap.broad .lftLogo img{margin-left:16px;}
-                .ticketWrap table.ticketDesc td.cellDesc td,
-                .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}
-                .ticketWrap table.ticketDesc td.cellDesc td,
-                .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,
-                td.w20p{width:20%;}
-                .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#efa500;}
-                .sanding td.dep{background-color:#a5b500;}.door td.dep,.shipping td.dep{background-color:#808080;}
-    }
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body>
@@ -3007,6 +2853,9 @@ class OrderController extends Controller {
         }
         return $html;
     }
+
+
+
     private function getFirstLabel($labels) {
         return explode(',', $labels)[0];
     }
