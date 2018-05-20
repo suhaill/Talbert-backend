@@ -1387,19 +1387,22 @@ class QuoteController extends Controller
                         } else if($editFlag=='backOrder'){
                             $type = 'Quote';                            
                         }
-                        $lineItemStatus=new LineItemStatus();
-                        $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
-                        $lineItemStatus->setType($type);
-                        $lineItemStatus->setLineItemId($newEntity->getId());
-                        $lineItemStatus->setStatusId(1);
-                        $lineItemStatus->setLineItemType('Plywood');
-                        $lineItemStatus->setIsActive(1);
-                        $lineItemStatus->setCreatedAt($datime);
-                        $lineItemStatus->setUpdatedAt($datime);
-                        $em->persist($lineItemStatus);
-                        $em->flush();
+                        
                     }
-
+                    else {
+                        $type = 'Quote';
+                    }
+                    $lineItemStatus=new LineItemStatus();
+                    $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
+                    $lineItemStatus->setType($type);
+                    $lineItemStatus->setLineItemId($newEntity->getId());
+                    $lineItemStatus->setStatusId(1);
+                    $lineItemStatus->setLineItemType('Plywood');
+                    $lineItemStatus->setIsActive(1);
+                    $lineItemStatus->setCreatedAt($datime);
+                    $lineItemStatus->setUpdatedAt($datime);
+                    $em->persist($lineItemStatus);
+                    $em->flush();
                 }
                 $em->getConnection()->commit();
             } catch (Exception $ex) {
@@ -1543,18 +1546,23 @@ class QuoteController extends Controller
                         } else if($editFlag=='backOrder'){
                             $type = 'Quote';                            
                         }
-                        $lineItemStatus=new LineItemStatus();
-                        $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
-                        $lineItemStatus->setType($type);
-                        $lineItemStatus->setLineItemId($newEntity->getId());
-                        $lineItemStatus->setStatusId(1);
-                        $lineItemStatus->setLineItemType('Veneer');
-                        $lineItemStatus->setIsActive(1);
-                        $lineItemStatus->setCreatedAt($datime);
-                        $lineItemStatus->setUpdatedAt($datime);
-                        $em->persist($lineItemStatus);
-                        $em->flush();
+                        
                     }
+                    else {
+                        $type = 'Quote';
+                    }
+                    $lineItemStatus=new LineItemStatus();
+                    $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
+                    $lineItemStatus->setType($type);
+                    $lineItemStatus->setLineItemId($newEntity->getId());
+                    $lineItemStatus->setStatusId(1);
+                    $lineItemStatus->setLineItemType('Veneer');
+                    $lineItemStatus->setIsActive(1);
+                    $lineItemStatus->setCreatedAt($datime);
+                    $lineItemStatus->setUpdatedAt($datime);
+                    $em->persist($lineItemStatus);
+                    $em->flush();
+
 
                 }
                 $em->getConnection()->commit();
@@ -1675,18 +1683,20 @@ class QuoteController extends Controller
                         } else if($editFlag=='backOrder'){
                             $type = 'Quote';                            
                         }
-                        $lineItemStatus=new LineItemStatus();
-                        $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
-                        $lineItemStatus->setType($type);
-                        $lineItemStatus->setLineItemId($newEntity->getId());
-                        $lineItemStatus->setStatusId(1);
-                        $lineItemStatus->setLineItemType('Door');
-                        $lineItemStatus->setIsActive(1);
-                        $lineItemStatus->setCreatedAt($datime);
-                        $lineItemStatus->setUpdatedAt($datime);
-                        $em->persist($lineItemStatus);
-                        $em->flush();
+                    } else {
+                        $type = 'Quote';
                     }
+                    $lineItemStatus=new LineItemStatus();
+                    $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
+                    $lineItemStatus->setType($type);
+                    $lineItemStatus->setLineItemId($newEntity->getId());
+                    $lineItemStatus->setStatusId(1);
+                    $lineItemStatus->setLineItemType('Door');
+                    $lineItemStatus->setIsActive(1);
+                    $lineItemStatus->setCreatedAt($datime);
+                    $lineItemStatus->setUpdatedAt($datime);
+                    $em->persist($lineItemStatus);
+                    $em->flush();
                 }
             }
             $em->getConnection()->commit();
