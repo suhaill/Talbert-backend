@@ -324,6 +324,8 @@ class QuoteController extends Controller
                     'veneerCost'=>$veneerNew['veneerCost'],
                     'doorCost'=>$doorNew['doorCost']
                 ]);
+                $this->updateQuoteStatus($clonedQuoteId, 'Current', null, $datime);
+
             }
         }
         catch(Exception $e) {
@@ -1138,7 +1140,7 @@ class QuoteController extends Controller
                 $em->flush();
                 $currentdatime = new \DateTime('now');
                 $quoteStatus = $em->getRepository('AppBundle:QuoteStatus')->findOneBy(['quoteId'=>$qId,'isActive'=>1]);
-//                $quoteStatus->setStatusId($this->getQuoteStatusId($status));
+                // $quoteStatus->setStatusId($this->getQuoteStatusId($status));
                 if(!empty($quoteStatus)){
                     $quoteStatus->setUpdatedAt($currentdatime);
                     $quoteStatus->setIsActive(0);
@@ -1314,14 +1316,14 @@ class QuoteController extends Controller
                 $quote->setRefid($qData->getControlNumber());
             } else {
                 $quote->setVersion(1);
-//                $quote->setControlNumber($this->getLastControlNumber()+1);
+                // $quote->setControlNumber($this->getLastControlNumber()+1);
                 $sstNo = $this->getLastControlNumberById()+1;
                 $quote->setControlNumber($sstNo);
                 $quote->setRefid($qData->getId());
             }
             $quote->setEstimatedate($qData->getEstimatedate());
             $quote->setEstimatorId($qData->getEstimatorId());
-            //$quote->setControlNumber($this->getLastControlNumber()+1);
+            // $quote->setControlNumber($this->getLastControlNumber()+1);
             $quote->setCustomerId($qData->getCustomerId());
             $quote->setRefNum($qData->getRefNum());
             $quote->setSalesmanId($qData->getSalesmanId());
