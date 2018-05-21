@@ -2365,7 +2365,7 @@ class QuoteController extends Controller
     private function getEdgeNameById($eId) {
         $eFinishRecord = $this->getDoctrine()->getRepository('AppBundle:EdgeFinish')->findOneById($eId);
         if (!empty($eFinishRecord)) {
-            return $eFinishRecord->getName();
+            return $eFinishRecord->getAbbr();
         }
     }
 
