@@ -202,7 +202,8 @@ class QuoteController extends Controller
         try {
             $quoteId = $request->query->get('id');
             if (empty($quoteId)) {
-                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold')),array('id'=>'desc'));
+                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold','Dead')),array('id'=>'desc'));
+                //print_R($quotes);
                 if (!empty($quotes)) {
                     $quoteId = $quotes[0]->getId();
                 }
@@ -324,6 +325,8 @@ class QuoteController extends Controller
                     'veneerCost'=>$veneerNew['veneerCost'],
                     'doorCost'=>$doorNew['doorCost']
                 ]);
+                $this->updateQuoteStatus($clonedQuoteId, 'Current', null, $datime);
+
             }
         }
         catch(Exception $e) {
@@ -1138,7 +1141,7 @@ class QuoteController extends Controller
                 $em->flush();
                 $currentdatime = new \DateTime('now');
                 $quoteStatus = $em->getRepository('AppBundle:QuoteStatus')->findOneBy(['quoteId'=>$qId,'isActive'=>1]);
-//                $quoteStatus->setStatusId($this->getQuoteStatusId($status));
+                // $quoteStatus->setStatusId($this->getQuoteStatusId($status));
                 if(!empty($quoteStatus)){
                     $quoteStatus->setUpdatedAt($currentdatime);
                     $quoteStatus->setIsActive(0);
@@ -1314,14 +1317,14 @@ class QuoteController extends Controller
                 $quote->setRefid($qData->getControlNumber());
             } else {
                 $quote->setVersion(1);
-//                $quote->setControlNumber($this->getLastControlNumber()+1);
+                // $quote->setControlNumber($this->getLastControlNumber()+1);
                 $sstNo = $this->getLastControlNumberById()+1;
                 $quote->setControlNumber($sstNo);
                 $quote->setRefid($qData->getId());
             }
             $quote->setEstimatedate($qData->getEstimatedate());
             $quote->setEstimatorId($qData->getEstimatorId());
-            //$quote->setControlNumber($this->getLastControlNumber()+1);
+            // $quote->setControlNumber($this->getLastControlNumber()+1);
             $quote->setCustomerId($qData->getCustomerId());
             $quote->setRefNum($qData->getRefNum());
             $quote->setSalesmanId($qData->getSalesmanId());
@@ -1385,19 +1388,22 @@ class QuoteController extends Controller
                         } else if($editFlag=='backOrder'){
                             $type = 'Quote';                            
                         }
-                        $lineItemStatus=new LineItemStatus();
-                        $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
-                        $lineItemStatus->setType($type);
-                        $lineItemStatus->setLineItemId($newEntity->getId());
-                        $lineItemStatus->setStatusId(1);
-                        $lineItemStatus->setLineItemType('Plywood');
-                        $lineItemStatus->setIsActive(1);
-                        $lineItemStatus->setCreatedAt($datime);
-                        $lineItemStatus->setUpdatedAt($datime);
-                        $em->persist($lineItemStatus);
-                        $em->flush();
+                        
                     }
-
+                    else {
+                        $type = 'Quote';
+                    }
+                    $lineItemStatus=new LineItemStatus();
+                    $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
+                    $lineItemStatus->setType($type);
+                    $lineItemStatus->setLineItemId($newEntity->getId());
+                    $lineItemStatus->setStatusId(1);
+                    $lineItemStatus->setLineItemType('Plywood');
+                    $lineItemStatus->setIsActive(1);
+                    $lineItemStatus->setCreatedAt($datime);
+                    $lineItemStatus->setUpdatedAt($datime);
+                    $em->persist($lineItemStatus);
+                    $em->flush();
                 }
                 $em->getConnection()->commit();
             } catch (Exception $ex) {
@@ -1541,18 +1547,23 @@ class QuoteController extends Controller
                         } else if($editFlag=='backOrder'){
                             $type = 'Quote';                            
                         }
-                        $lineItemStatus=new LineItemStatus();
-                        $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
-                        $lineItemStatus->setType($type);
-                        $lineItemStatus->setLineItemId($newEntity->getId());
-                        $lineItemStatus->setStatusId(1);
-                        $lineItemStatus->setLineItemType('Veneer');
-                        $lineItemStatus->setIsActive(1);
-                        $lineItemStatus->setCreatedAt($datime);
-                        $lineItemStatus->setUpdatedAt($datime);
-                        $em->persist($lineItemStatus);
-                        $em->flush();
+                        
                     }
+                    else {
+                        $type = 'Quote';
+                    }
+                    $lineItemStatus=new LineItemStatus();
+                    $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
+                    $lineItemStatus->setType($type);
+                    $lineItemStatus->setLineItemId($newEntity->getId());
+                    $lineItemStatus->setStatusId(1);
+                    $lineItemStatus->setLineItemType('Veneer');
+                    $lineItemStatus->setIsActive(1);
+                    $lineItemStatus->setCreatedAt($datime);
+                    $lineItemStatus->setUpdatedAt($datime);
+                    $em->persist($lineItemStatus);
+                    $em->flush();
+
 
                 }
                 $em->getConnection()->commit();
@@ -1673,18 +1684,20 @@ class QuoteController extends Controller
                         } else if($editFlag=='backOrder'){
                             $type = 'Quote';                            
                         }
-                        $lineItemStatus=new LineItemStatus();
-                        $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
-                        $lineItemStatus->setType($type);
-                        $lineItemStatus->setLineItemId($newEntity->getId());
-                        $lineItemStatus->setStatusId(1);
-                        $lineItemStatus->setLineItemType('Door');
-                        $lineItemStatus->setIsActive(1);
-                        $lineItemStatus->setCreatedAt($datime);
-                        $lineItemStatus->setUpdatedAt($datime);
-                        $em->persist($lineItemStatus);
-                        $em->flush();
+                    } else {
+                        $type = 'Quote';
                     }
+                    $lineItemStatus=new LineItemStatus();
+                    $lineItemStatus->setQuoteOrOrderId($clonedQuoteId);
+                    $lineItemStatus->setType($type);
+                    $lineItemStatus->setLineItemId($newEntity->getId());
+                    $lineItemStatus->setStatusId(1);
+                    $lineItemStatus->setLineItemType('Door');
+                    $lineItemStatus->setIsActive(1);
+                    $lineItemStatus->setCreatedAt($datime);
+                    $lineItemStatus->setUpdatedAt($datime);
+                    $em->persist($lineItemStatus);
+                    $em->flush();
                 }
             }
             $em->getConnection()->commit();
@@ -2353,7 +2366,7 @@ class QuoteController extends Controller
     private function getEdgeNameById($eId) {
         $eFinishRecord = $this->getDoctrine()->getRepository('AppBundle:EdgeFinish')->findOneById($eId);
         if (!empty($eFinishRecord)) {
-            return $eFinishRecord->getName();
+            return $eFinishRecord->getAbbr();
         }
     }
 
@@ -2418,6 +2431,7 @@ class QuoteController extends Controller
     }
 
     private function updateQuoteData($quoteId) {
+        //echo $quoteId;
         $salesTaxRate = 0;
         $salesTaxAmount = 0;
         $quoteSubTotal = $this->getPlywoodSubTotalByQuoteId($quoteId) + $this->getVeneerSubTotalByQuoteId($quoteId) + $this->getDoorSubTotalByQuoteId($quoteId);
@@ -2873,7 +2887,7 @@ class QuoteController extends Controller
                                     </td>
                                     <td class='invCapt'>
                                         <div class='captBTxt'>Quote</div>
-                                        <div class='subTxt'>E-".$arrApi['data']['controlNumber']."-".$arrApi['data']['version']."</div>
+                                        <div class='subTxt'>Q-".$arrApi['data']['controlNumber']."-".$arrApi['data']['version']."</div>
                                         <p>".$arrApi['data']['date']." &nbsp;|&nbsp; Net 30 days</p>
                                         <p><em>At Talbert Architectural <br>Your Total Satisfaction <br>is Our Goal!</em></p>
                                     </td>

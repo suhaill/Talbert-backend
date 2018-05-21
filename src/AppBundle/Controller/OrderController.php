@@ -191,7 +191,7 @@ class OrderController extends Controller {
         try {
             $quoteId = $request->query->get('id');
             if (empty($quoteId)) {
-//                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=>['Approved']),array('id'=>'desc'));
+                // $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=>['Approved']),array('id'=>'desc'));
                 $quoteStatus    = $this->getDoctrine()->getManager();
                 $status         = $quoteStatus->createQueryBuilder()
                     ->select(['s.id'])
@@ -219,7 +219,7 @@ class OrderController extends Controller {
                 }
             }
             $this->updateQuoteData($quoteId);
-            $quoteData = $this->getOrderDataById($quoteId);
+            $quoteData = $this->getOrderDataById($quoteId);//print_r($quoteData);die();
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'This order does not exists';
@@ -229,7 +229,7 @@ class OrderController extends Controller {
                 $arrApi['message'] = 'Successfully retreived order details';
                 $arrApi['data']['id'] = $quoteData->getId();
                 //$arrApi['data']['date'] = $quoteData->getEstimateDate();
-                $arrApi['data']['date'] = $quotes[0]['updatedAt']->format('Y-m-d H:i:s');
+                $arrApi['data']['date'] = $quoteData->getUpdatedAt()->format('Y-m-d H:i:s');
                 $arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
                 $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
                 $arrApi['data']['version'] = $quoteData->getVersion();
