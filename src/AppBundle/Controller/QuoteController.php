@@ -202,7 +202,8 @@ class QuoteController extends Controller
         try {
             $quoteId = $request->query->get('id');
             if (empty($quoteId)) {
-                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold')),array('id'=>'desc'));
+                $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold','Dead')),array('id'=>'desc'));
+                //print_R($quotes);
                 if (!empty($quotes)) {
                     $quoteId = $quotes[0]->getId();
                 }
@@ -2430,6 +2431,7 @@ class QuoteController extends Controller
     }
 
     private function updateQuoteData($quoteId) {
+        //echo $quoteId;
         $salesTaxRate = 0;
         $salesTaxAmount = 0;
         $quoteSubTotal = $this->getPlywoodSubTotalByQuoteId($quoteId) + $this->getVeneerSubTotalByQuoteId($quoteId) + $this->getDoorSubTotalByQuoteId($quoteId);
