@@ -377,7 +377,7 @@ class QuoteController extends Controller
     */
     public function printQuotePdfAction($id,Request $request) {
         $html = $this->getQuoteHtmlByQuoteId($id);
-        return new Response($this->get('knp_snappy.pdf')->getOutputFromHtml($html, array('orientation'=>'Landscape', 'default-header'=>false)), 200, array('Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Test.pdf"'));
+        return new Response($this->get('knp_snappy.pdf')->getOutputFromHtml($html, array('orientation'=>'Landscape', 'default-header'=>false,  'page-size' => 'Letter')), 200, array('Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Test.pdf"'));
     }
 
     /**
@@ -1171,7 +1171,7 @@ class QuoteController extends Controller
         $snappy = new Pdf(  '../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename=$pdfName');
-        $snappy->generateFromHtml($html, $pdfName, array('orientation'=>'Landscape', 'default-header'=>false));
+        $snappy->generateFromHtml($html, $pdfName, array('orientation'=>'Landscape', 'default-header'=>false, 'page-size' => 'Letter'));
         $fs->chmod($pdfName, 0777);
         return 'http://'.$request->getHost().'/'.$request->getBasePath().'/'.$pdfName;
     }
@@ -2917,7 +2917,7 @@ class QuoteController extends Controller
                                     <tr>
                                         <td>Customer Reference: PO-".$arrApi['data']['referenceNumber']."</td>
                                         <td>Job Name: ".$arrApi['data']['job']."</td>
-                                        <td>Delivery Date: ".$arrApi['data']['deliveryDate']."</td>
+                                        <td>Delivery Date: ".$arrApi['data']['leadTime']."</td>
                                         <td>Ship Via: ".$arrApi['data']['shipMethod']."</td>
                                         <td>SqFt: ".number_format($calSqrft,2)."</td>
                                     </tr>

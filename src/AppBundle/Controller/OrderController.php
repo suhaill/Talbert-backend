@@ -693,7 +693,7 @@ class OrderController extends Controller {
                                                     </body>
                                                 </html>";
 
-        return new Response($this->get('knp_snappy.pdf')->getOutputFromHtml($html, array('orientation'=>'Landscape', 'default-header'=>false)), 200, array('Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Work-Order-Print.pdf"'));
+        return new Response($this->get('knp_snappy.pdf')->getOutputFromHtml($html, array('orientation'=>'Landscape', 'default-header'=>false, 'page-size' => 'Letter')), 200, array('Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Work-Order-Print.pdf"'));
     }
 
     private function convertToDecimal($fraction)
@@ -2359,7 +2359,7 @@ class OrderController extends Controller {
                     <td class="dep footIN">
                         <table>
                             <tr>
-                                <td><span class="itTxt t-left">' . date('l | M d', strtotime($v['orderDate'])) . '</span></td>
+                                <td><span class="itTxt t-left">' . date('l | M d', strtotime($v['deliveryDate'])) . '</span></td>
                             </tr>
                         </table>
                     </td>
@@ -2472,7 +2472,7 @@ class OrderController extends Controller {
                     <td class="dep footIN">
                         <table>
                             <tr>
-                                <td><span class="itTxt t-left">' . date('l | M d', strtotime($v['orderDate'])) . '</span></td>
+                                <td><span class="itTxt t-left">' . date('l | M d', strtotime($v['deliveryDate'])) . '</span></td>
                             </tr>
                         </table>
                     </td>
@@ -2627,7 +2627,7 @@ class OrderController extends Controller {
                             <td class="dep footIN">
                                 <table>
                                     <tr>
-                                        <td><span class="itTxt t-left">'.date("D | M d",strtotime($v["orderDate"])).'</span></td>
+                                        <td><span class="itTxt t-left">'.date("D | M d",strtotime($v["deliveryDate"])).'</span></td>
                                     </tr>
                                 </table>
                             </td>
@@ -2724,7 +2724,7 @@ class OrderController extends Controller {
                         <td class="dep footIN">
                             <table>
                                 <tr>
-                                    <td><span class="itTxt t-left">'.date("D | M d",strtotime($v["orderDate"])).'</span></td>
+                                    <td><span class="itTxt t-left">'.date("D | M d",strtotime($v["deliveryDate"])).'</span></td>
                                 </tr>
                             </table>
                         </td>
@@ -2787,7 +2787,7 @@ class OrderController extends Controller {
                         <td class="cellDesc">' . $v["SpecieName"] . ' - ' . $v["patternName"] . '</td>
                     </tr>
                     <tr>
-                        <td class="cellLabel"><label>Veneer Size</label></td>
+                        <td class="cellLabel"><label>Finished Size</label></td>
                         <td class="cellDesc">'.($v["width"] + 1).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]+1).' '.$this->float2rat($v["lengthFraction"]).'"</td>
                     </tr>
                     <tr>
@@ -2837,7 +2837,7 @@ class OrderController extends Controller {
                         <td class="dep footIN">
                             <table>
                                 <tr>
-                                    <td><span class="itTxt t-left">'.date("D | M d",strtotime($v["orderDate"])).'</span></td>
+                                    <td><span class="itTxt t-left">'.date("D | M d",strtotime($v["deliveryDate"])).'</span></td>
                                 </tr>
                             </table>
                         </td>
