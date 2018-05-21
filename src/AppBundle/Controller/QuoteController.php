@@ -325,8 +325,9 @@ class QuoteController extends Controller
                     'veneerCost'=>$veneerNew['veneerCost'],
                     'doorCost'=>$doorNew['doorCost']
                 ]);
-                $this->updateQuoteStatus($clonedQuoteId, 'Current', null, $datime);
-
+                if ($backOrder != 'backOrder') {
+                    $this->updateQuoteStatus($clonedQuoteId, 'Current', null, $datime);
+                }
             }
         }
         catch(Exception $e) {
