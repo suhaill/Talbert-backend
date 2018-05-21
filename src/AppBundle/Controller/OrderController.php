@@ -142,7 +142,7 @@ class OrderController extends Controller {
         $quotes = $query->createQueryBuilder()
                 ->select(['o.id as orderId', 'q.controlNumber', 'q.version', 'q.customerId', 'q.estimatedate', 'q.id',
                     'os.statusId',
-                    's.statusName as status',
+                    's.abbr as status',
                     'u.company as companyname', 'u.fname', 'u.lname'
                 ])
                 ->from('AppBundle:Orders', 'o')
@@ -1935,7 +1935,7 @@ class OrderController extends Controller {
                 $query1 = $query->createQueryBuilder()
                         ->select(['o.id as orderId', 'q.controlNumber', 'q.version', 'q.customerId', 'q.estimatedate', 'q.id',
                             'os.statusId',
-                            's.statusName as status',
+                            's.abbr as status',
                             'u.company as companyname', 'u.fname', 'u.lname'
                         ])
                         ->from('AppBundle:Orders', 'o')
