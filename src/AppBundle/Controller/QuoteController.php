@@ -2089,6 +2089,7 @@ class QuoteController extends Controller
 //        print_r($doorRecords);die;
         if (!empty($plywoodRecords) || !empty($doorRecords) || !empty($veneerRecords)) {
             if (!empty($plywoodRecords)) {
+                $html='';
                 foreach ($plywoodRecords as $p) {
                     if($p->getFinishThickType() == 'inch'){
                         if($p->getFinishThickId()>0){
@@ -2137,6 +2138,11 @@ class QuoteController extends Controller
                     $lineItem[$i]['isLabels'] = $p->getIsLabels();
                     $lineItem[$i]['autoNumber'] = $this->getFirstLabel($p->getAutoNumber());
                     $lineItem[$i]['comment'] = $p->getComments();
+                    $lineItem[$i]['topEdgeName'] = $this->getEdgeNameById($p->getTopEdge());
+                    $lineItem[$i]['bottomEdgeName'] = $this->getEdgeNameById($p->getBottomEdge());
+                    $lineItem[$i]['rightEdgeName'] = $this->getEdgeNameById($p->getRightEdge());
+                    $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($p->getLeftEdge());
+                    $lineItem[$i]['millingName'] = $this->getUnitNameById($p->getMilling());
                     $i++;
                 }
             }
@@ -2180,6 +2186,11 @@ class QuoteController extends Controller
                     $lineItem[$i]['isLabels'] = 0;
                     $lineItem[$i]['autoNumber'] = 0;
                     $lineItem[$i]['comment'] = $v->getComments();
+                    $lineItem[$i]['topEdgeName'] = '';
+                    $lineItem[$i]['bottomEdgeName'] = '';
+                    $lineItem[$i]['rightEdgeName'] = '';
+                    $lineItem[$i]['leftEdgeName'] = '';
+                    $lineItem[$i]['millingName'] = '';
                     $i++;
                 }
             }
@@ -2247,6 +2258,11 @@ class QuoteController extends Controller
                     $lineItem[$i]['isLabels'] = $d->getIsLabel();
                     $lineItem[$i]['autoNumber'] = $this->getFirstLabel($d->getAutoNumber());
                     $lineItem[$i]['comment'] = $d->getComment();
+                    $lineItem[$i]['topEdgeName'] = $this->getEdgeNameById($p->getTopEdge());
+                    $lineItem[$i]['bottomEdgeName'] = $this->getEdgeNameById($d->getBottomEdge());
+                    $lineItem[$i]['rightEdgeName'] = $this->getEdgeNameById($d->getRightEdge());
+                    $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($d->getLeftEdge());
+                    $lineItem[$i]['millingName'] = $this->getUnitNameById($d->isMilling());
                     $i++;
                 }
             }
