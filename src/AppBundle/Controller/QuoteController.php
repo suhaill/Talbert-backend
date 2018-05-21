@@ -2166,7 +2166,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['totalPrice'] = $v->getTotalCost();
                     $lineItem[$i]['widthFraction'] = $this->float2rat($v->getWidthFraction());
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($v->getLengthFraction());
-                    $lineItem[$i]['grain'] = $this->getGrainPattern( $v->getPatternId(),'veneer' );
+                    $lineItem[$i]['grain'] = $this->getGrainPattern( $v->getPatternId(),'plywood' );
                     $lineItem[$i]['edgeDetail'] = 0;
                     $lineItem[$i]['topEdge'] = 1;
                     $lineItem[$i]['bottomEdge'] = 1;
@@ -2272,7 +2272,7 @@ class QuoteController extends Controller
 
     private function getGrainPattern($id,$type=''){
         if($type=='door'){
-            $grainId= $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(['id'=>$id]);
+            $grainId= $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(['doorId'=>$id]);
             if(!empty($grainId)){
                 $id=$grainId->getGrain();
             } else {
@@ -2289,7 +2289,7 @@ class QuoteController extends Controller
         }
         $data= $this->getDoctrine()->getRepository('AppBundle:GrainPattern')->findOneBy(['id'=>$id]);
         if(!empty($data)){
-            return $data->getName();
+            return $data->getAbbr();
         } else {
             return '';
         }
