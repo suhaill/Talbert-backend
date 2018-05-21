@@ -2258,7 +2258,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['isLabels'] = $d->getIsLabel();
                     $lineItem[$i]['autoNumber'] = $this->getFirstLabel($d->getAutoNumber());
                     $lineItem[$i]['comment'] = $d->getComment();
-                    $lineItem[$i]['topEdgeName'] = $this->getEdgeNameById($p->getTopEdge());
+                    $lineItem[$i]['topEdgeName'] = $this->getEdgeNameById($d->getTopEdge());
                     $lineItem[$i]['bottomEdgeName'] = $this->getEdgeNameById($d->getBottomEdge());
                     $lineItem[$i]['rightEdgeName'] = $this->getEdgeNameById($d->getRightEdge());
                     $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($d->getLeftEdge());
