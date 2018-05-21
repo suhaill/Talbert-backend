@@ -166,7 +166,7 @@ class OrderController extends Controller {
             for ($i = 0; $i < count($quotes); $i++) {
                 $quoteList[$i] = [
                     'id' => $quotes[$i]['id'],
-                    'estimateNumber' => 'O-' . $quotes[$i]['controlNumber'] . '-' . $quotes[$i]['version'],
+                    'estimateNumber' => $quotes[$i]['controlNumber'] . '-' . $quotes[$i]['version'],
                     'customername' => $quotes[$i]['fname'],
                     'companyname' => $quotes[$i]['companyname'],
                     'orderId' => $quotes[$i]['orderId'],
@@ -1311,6 +1311,11 @@ class OrderController extends Controller {
                     $lineItem[$i]['isGreyedOut'] = $p['statusName'];
                     $lineItem[$i]['greyedOutClass'] = ($p['statusName'] == 'LineItemBackOrder') ? 'greyedOut' : '';
                     $lineItem[$i]['greyedOutEstNo'] = $p['backOrderEstNo'];
+                    $lineItem[$i]['topEdgeName'] = $this->getEdgeNameById($p['topEdge']);
+                    $lineItem[$i]['bottomEdgeName'] = $this->getEdgeNameById($p['bottomEdge']);
+                    $lineItem[$i]['rightEdgeName'] = $this->getEdgeNameById($p['rightEdge']);
+                    $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($p['leftEdge']);
+                    $lineItem[$i]['millingName'] = $this->getUnitNameById($p['milling']);
                     $i++;
                 }
             }
@@ -1356,6 +1361,11 @@ class OrderController extends Controller {
                     $lineItem[$i]['isGreyedOut'] = $v['statusName'];
                     $lineItem[$i]['greyedOutClass'] = ($v['statusName'] == 'LineItemBackOrder') ? 'greyedOut' : '';
                     $lineItem[$i]['greyedOutEstNo'] = $v['backOrderEstNo'];
+                    $lineItem[$i]['topEdgeName'] = '';
+                    $lineItem[$i]['bottomEdgeName'] = '';
+                    $lineItem[$i]['rightEdgeName'] = '';
+                    $lineItem[$i]['leftEdgeName'] = '';
+                    $lineItem[$i]['millingName'] = '';
                     $i++;
                 }
             }
@@ -1424,6 +1434,11 @@ class OrderController extends Controller {
                     $lineItem[$i]['isGreyedOut'] = $d['statusName'];
                     $lineItem[$i]['greyedOutClass'] = ($d['statusName'] == 'LineItemBackOrder') ? 'greyedOut' : '';
                     $lineItem[$i]['greyedOutEstNo'] = $d['backOrderEstNo'];
+                    $lineItem[$i]['topEdgeName'] = $this->getEdgeNameById($d['topEdge']);
+                    $lineItem[$i]['bottomEdgeName'] = $this->getEdgeNameById($d['bottomEdge']);
+                    $lineItem[$i]['rightEdgeName'] = $this->getEdgeNameById($d['rightEdge']);
+                    $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($d['leftEdge']);
+                    $lineItem[$i]['millingName'] = $this->getUnitNameById($d['milling']);
                     $i++;
                 }
             }
