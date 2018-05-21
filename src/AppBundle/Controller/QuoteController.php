@@ -1171,7 +1171,7 @@ class QuoteController extends Controller
         $snappy = new Pdf(  '../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename=$pdfName');
-        $snappy->generateFromHtml($html, $pdfName);
+        $snappy->generateFromHtml($html, $pdfName, array('orientation'=>'Landscape', 'default-header'=>false));
         $fs->chmod($pdfName, 0777);
         return 'http://'.$request->getHost().'/'.$request->getBasePath().'/'.$pdfName;
     }
