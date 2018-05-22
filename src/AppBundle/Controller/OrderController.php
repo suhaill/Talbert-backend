@@ -734,7 +734,7 @@ class OrderController extends Controller {
     }
     
     private function clonePlywoodData($quoteId, $clonedQuoteId, $datime) {
-        $ply = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $quoteId));
+        $ply = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findBy(array('quoteId' => $quoteId,'isAtive'=>1));
         if (!empty($ply)) {
             $em = $this->getDoctrine()->getManager();
             for ($i = 0; $i < count($ply); $i++) {
@@ -867,7 +867,7 @@ class OrderController extends Controller {
     }
 
     private function cloneVeneerData($quoteId, $clonedQuoteId, $datime) {
-        $veneeerData = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $quoteId));
+        $veneeerData = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findBy(array('quoteId' => $quoteId,'isActive'=>1));
         if (!empty($veneeerData)) {
             $em = $this->getDoctrine()->getManager();
             for ($i = 0; $i < count($veneeerData); $i++) {
@@ -923,7 +923,7 @@ class OrderController extends Controller {
     }
 
     private function cloneDoorData($quoteId, $clonedQuoteId, $datime) {
-        $doorData = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $quoteId));
+        $doorData = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $quoteId,'status'=>1));
         if (!empty($doorData)) {
             $em = $this->getDoctrine()->getManager();
             for ($i = 0; $i < count($doorData); $i++) {
@@ -1239,7 +1239,7 @@ class OrderController extends Controller {
             ->addSelect(['pat.name as pattern'])
             ->leftJoin('AppBundle:BackerGrade', 'bgrd', 'WITH', "p.backerId = bgrd.id")
             ->addSelect(['bgrd.name as backerName'])
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId and p.isActive=1")
             ->orderBy('p.id','ASC')
             ->setParameter('quoteId', $qId)
             ->setParameter('lineItemType', 'Plywood')
@@ -1260,7 +1260,7 @@ class OrderController extends Controller {
             ->addSelect(['b.name as backerName'])
             ->leftJoin('AppBundle:CoreType', 'ct', 'WITH', "ct.id = v.coreTypeId")
             ->addSelect(['ct.name as coreType'])
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND v.quoteId = :quoteId")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND v.quoteId = :quoteId and v.isActive=1")
             ->orderBy('v.id','ASC')
             ->setParameter('quoteId', $qId)
             ->setParameter('lineItemType', 'Veneer')
@@ -1271,7 +1271,7 @@ class OrderController extends Controller {
             ->from('AppBundle:Doors', 'd')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND d.quoteId = :quoteId")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND d.quoteId = :quoteId and d.status=1")
             ->orderBy('d.id','ASC')
             ->setParameter('quoteId', $qId)
             ->setParameter('lineItemType', 'Door')
