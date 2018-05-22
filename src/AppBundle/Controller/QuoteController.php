@@ -1955,11 +1955,21 @@ class QuoteController extends Controller
             $profileObj = $this->getDoctrine()
                 ->getRepository('AppBundle:Profile')
                 ->findOneBy(array('userId' => $customer_id));
-            $customerName =  $profileObj->getFname();
-            $custArr = explode(' ', $customerName);
-            if (!empty($custArr)) {
-                return $custArr[0];
-            }
+            if(!empty($profileObj)){
+                if(!empty($profileObj->getFname())){
+                    $customerName =  $profileObj->getFname();
+                    $custArr = explode(' ', $customerName);
+                    if (!empty($custArr)) {
+                        return $custArr[0];
+                    }
+                } else {
+                    return '';
+                }
+            } else {
+                return '';
+            }            
+        } else {
+            return '';
         }
     }
 
