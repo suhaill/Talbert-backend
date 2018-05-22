@@ -36,7 +36,7 @@ class SalesmanController extends Controller
             $users = $query->createQueryBuilder()
                 ->select(['u.id'])
                 ->from('AppBundle:User', 'u')
-                ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+                ->rightJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
                 ->addSelect(["p.fname"])
                 ->where('u.roleId = :value1 AND u.isActive = :value2')
                 ->setParameters(array('value1'=>4,'value2'=>1))
