@@ -453,7 +453,7 @@ class OrderController extends Controller {
                 } else {
                     $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
                 }
-                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
+                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId,$printType);
             }
         }
         catch(Exception $e) {
@@ -1227,10 +1227,69 @@ class OrderController extends Controller {
         }
     }
 
-    private function getVeneerslistbyQuoteId($qId) {
-        $lineItem = array();
+    private function getVeneerslistbyQuoteId($qId,$printType=null) {
+        
         $query = $this->getDoctrine()->getManager();
-        $plywoodRecords = $query->createQueryBuilder()
+
+        if($printType == 'SHIPPER'){
+           
+            $plywoodRecords = $query->createQueryBuilder()
+            ->select(['p.id, p.quantity, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName'])
+            ->from('AppBundle:Plywood', 'p')
+            ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
+            ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
+            ->leftJoin('AppBundle:GrainPattern', 'gp', 'WITH', "p.patternId = gp.id")
+            ->addSelect(['gp.name as grain'])
+            ->leftJoin('AppBundle:Thickness', 't', 'WITH', "p.thicknessId = t.id")
+            ->addSelect(['t.name as thicknessName'])
+            ->leftJoin('AppBundle:Pattern', 'pat', 'WITH', "pat.id = p.patternMatch")
+            ->addSelect(['pat.name as pattern'])
+            ->leftJoin('AppBundle:BackerGrade', 'bgrd', 'WITH', "p.backerId = bgrd.id")
+            ->addSelect(['bgrd.name as backerName'])
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId and p.isActive=1 AND s.statusName !='LineItemBackOrder'")
+            ->orderBy('p.id','ASC')
+            ->setParameter('quoteId', $qId)
+            ->setParameter('lineItemType', 'Plywood')
+            ->getQuery()
+            ->getResult();
+
+            $veneerRecords = $query->createQueryBuilder()
+            ->select(['v.id, v.quantity, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName'])
+            ->from('AppBundle:Veneer', 'v')
+            ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
+            ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
+            ->leftJoin('AppBundle:GrainPattern', 'gp', 'WITH', "v.patternId = gp.id")
+            ->addSelect(['gp.name as grain'])
+            ->leftJoin('AppBundle:Thickness', 't', 'WITH', "v.thicknessId = t.id")
+            ->addSelect(['t.name as thicknessName'])
+            ->leftJoin('AppBundle:FaceGrade', 'fg', 'WITH', "v.gradeId = fg.id")
+            ->addSelect(['fg.name as faceGradeName'])
+            ->leftJoin('AppBundle:Backer', 'b', 'WITH', "v.backer = b.id")
+            ->addSelect(['b.name as backerName'])
+            ->leftJoin('AppBundle:CoreType', 'ct', 'WITH', "ct.id = v.coreTypeId")
+            ->addSelect(['ct.name as coreType'])
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND v.quoteId = :quoteId and v.isActive=1 AND s.statusName !='LineItemBackOrder'")
+            ->orderBy('v.id','ASC')
+            ->setParameter('quoteId', $qId)
+            ->setParameter('lineItemType', 'Veneer')
+            ->getQuery()
+            ->getResult();
+            $doorRecords = $query->createQueryBuilder()
+                ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType'])
+                ->from('AppBundle:Doors', 'd')
+                ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
+                ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
+                ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND d.quoteId = :quoteId and d.status=1 AND s.statusName !='LineItemBackOrder'")
+                ->orderBy('d.id','ASC')
+                ->setParameter('quoteId', $qId)
+                ->setParameter('lineItemType', 'Door')
+                ->getQuery()
+                ->getResult();
+        }
+        else{
+
+
+            $plywoodRecords = $query->createQueryBuilder()
             ->select(['p.id, p.quantity, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName'])
             ->from('AppBundle:Plywood', 'p')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
@@ -1281,6 +1340,11 @@ class OrderController extends Controller {
             ->setParameter('lineItemType', 'Door')
             ->getQuery()
             ->getResult();
+
+        }
+        
+        $lineItem = array();
+        
         $i=0;
         if (!empty($plywoodRecords) || !empty($veneerRecords) || !empty($doorRecords)) {
             if (!empty($plywoodRecords)) {
