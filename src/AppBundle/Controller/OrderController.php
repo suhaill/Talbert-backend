@@ -581,7 +581,7 @@ class OrderController extends Controller {
                         <td>".$qData['core']."</td>
                         ";
             $html .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
-            $html .= ($qData['milling'] == 1) ? "Miling: ".$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
+            $html .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
             if ($qData['finish'] == 'UV') {
                 $html .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']." %-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
             } elseif ($qData['finish'] == 'Paint') {
@@ -1240,7 +1240,7 @@ class OrderController extends Controller {
         if($printType == 'SHIPPER'){
            
             $plywoodRecords = $query->createQueryBuilder()
-            ->select(['p.id, p.quantity, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName'])
+            ->select(['p.id, p.quantity, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName','p.millingDescription'])
             ->from('AppBundle:Plywood', 'p')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1260,7 +1260,7 @@ class OrderController extends Controller {
             ->getResult();
 
             $veneerRecords = $query->createQueryBuilder()
-            ->select(['v.id, v.quantity, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName'])
+            ->select(['v.id, v.quantity, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName',"'' as millingDescription"])
             ->from('AppBundle:Veneer', 'v')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1281,7 +1281,7 @@ class OrderController extends Controller {
             ->getQuery()
             ->getResult();
             $doorRecords = $query->createQueryBuilder()
-                ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType'])
+                ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType,d.millingDescription'])
                 ->from('AppBundle:Doors', 'd')
                 ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
                 ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1296,7 +1296,7 @@ class OrderController extends Controller {
 
 
             $plywoodRecords = $query->createQueryBuilder()
-            ->select(['p.id, p.quantity, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName'])
+            ->select(['p.id, p.quantity, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName,p.millingDescription'])
             ->from('AppBundle:Plywood', 'p')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1315,7 +1315,7 @@ class OrderController extends Controller {
             ->getQuery()
             ->getResult();
         $veneerRecords = $query->createQueryBuilder()
-            ->select(['v.id, v.quantity, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName'])
+            ->select(['v.id, v.quantity, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName',"'' as millingDescription"])
             ->from('AppBundle:Veneer', 'v')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1336,7 +1336,7 @@ class OrderController extends Controller {
             ->getQuery()
             ->getResult();
         $doorRecords = $query->createQueryBuilder()
-            ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType'])
+            ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType,d.millingDescription'])
             ->from('AppBundle:Doors', 'd')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1409,6 +1409,7 @@ class OrderController extends Controller {
                     $lineItem[$i]['rightEdgeName'] = $this->getEdgeNameById($p['rightEdge']);
                     $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($p['leftEdge']);
                     $lineItem[$i]['millingName'] = $this->getUnitNameById($p['milling']);
+                    $lineItem[$i]['millingDescription'] = $p['millingDescription'];
                     $i++;
                 }
             }
@@ -1459,6 +1460,7 @@ class OrderController extends Controller {
                     $lineItem[$i]['rightEdgeName'] = '';
                     $lineItem[$i]['leftEdgeName'] = '';
                     $lineItem[$i]['millingName'] = '';
+                    $lineItem[$i]['millingDescription'] = $v['millingDescription'];
                     $i++;
                 }
             }
@@ -1532,6 +1534,7 @@ class OrderController extends Controller {
                     $lineItem[$i]['rightEdgeName'] = $this->getEdgeNameById($d['rightEdge']);
                     $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($d['leftEdge']);
                     $lineItem[$i]['millingName'] = $this->getUnitNameById($d['milling']);
+                    $lineItem[$i]['millingDescription'] = $d['millingDescription'];
                     $i++;
                 }
             }
@@ -2151,7 +2154,7 @@ class OrderController extends Controller {
         $doorData= $this->getDoorDataByQuoteId($quoteId);
         $arr = array_merge($veneerData, $plywoodData, $doorData);
         $final = $this->arraySortByColumn($arr, 'lineItemNum');
-        //print_r($final);die;
+//        print_r($final);die;
         $images_destination = $this->container->getParameter('images_destination');
         $lineItemHTML = '';
         $plyHtmlV ='';
@@ -2673,10 +2676,6 @@ class OrderController extends Controller {
                             <td class="cellDesc">' . $v["quantity"] . ' Pieces</td>
                         </tr>
                         <tr>
-                            <td class="cellLabel"><label>Species</label></td>
-                            <td class="cellDesc">' . $v["SpecieName"] . ' - ' . $v["patternName"] . '</td>
-                        </tr>
-                        <tr>
                             <td class="cellLabel"><label>Veneer Size</label></td>
                             <td class="cellDesc">'.($v["width"] + 1).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]+1).' '.$this->float2rat($v["lengthFraction"]).'"</td>
                         </tr>
@@ -2686,8 +2685,12 @@ class OrderController extends Controller {
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Species</label></td>
-                            <td class="cellDesc">' . $v["patternName"] . '</td>
+                            <td class="cellDesc">' . $v["SpecieName"] . ' - ' . $v["patternName"] . '</td>
                         </tr>
+                        <!--<tr>
+                            <td class="cellLabel"><label>Species</label></td>
+                            <td class="cellDesc">' . $v["patternName"] . '</td>
+                        </tr>-->
                         <tr>
                             <td class="cellLabel"><label>Face Grade</label></td>
                             <td class="cellDesc">' . $v["faceGradeName"] . '</td>
@@ -2793,26 +2796,38 @@ class OrderController extends Controller {
                         <td class="cellLabel"><label>Cut Size</label></td>
                         <td class="cellDesc">'.($v["width"] + 1).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]+1).' '.$this->float2rat($v["lengthFraction"]).'"</td>
                     </tr>
-                    <tr>
+                    <!--<tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
                         <td class="cellDesc">'.($v["width"] + 1).'" x '.($v["length"]+1).'"</td>
+                    </tr>-->
+                    <tr>
+                        <td class="cellLabel"><label>Core Thickness</label></td>
+                        <td class="cellDesc">'.$this->float2rat($v["panelThicknessName"]).'"</td>
                     </tr>
                     <tr>
-                        <td class="cellLabel"><label>Fln. Thickness</label></td>
-                        <td class="cellDesc">'.($v["pThicknessName"] ? $v["pThicknessName"] : '').' '.$this->float2rat($v["finThickFraction"]).'"</td>
+                        <td class="cellLabel"><label>Core</label></td>
+                        <td class="cellDesc">'.$v["coreType"].'"</td>
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Back</label></td>
                         <td class="cellDesc">'.$v["backerName"].'</td>
                     </tr>
                     <tr>
+                        <td class="cellLabel"><label></label></td>
+                        <td class="cellDesc"></td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label></label></td>
+                        <td class="cellDesc"></td>
+                    </tr>
+                    <!--<tr>
                         <td class="cellLabel"><label>Sequenced</label></td>
                         <td class="cellDesc">'.($v["isSequenced"] == 1 ? "Yes" : "No").'</td>
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Label</label></td>
                         <td class="cellDesc">'.($v["isLabels"] ? "Yes" : "No").'</td>
-                    </tr>
+                    </tr>-->
                     <tr>
                         <td class="cellLabel"><label>Notes:</label></td>
                         <td class="cellDesc"><strong>'.$v["comments"].'</strong></td>
@@ -2887,14 +2902,26 @@ class OrderController extends Controller {
                         <td class="cellDesc">' . $v["SpecieName"] . ' - ' . $v["patternName"] . '</td>
                     </tr>
                     <tr>
-                        <td class="cellLabel"><label>Finished Size</label></td>
+                        <td class="cellLabel"><label>Cut Size</label></td>
                         <td class="cellDesc">'.($v["width"] + 1).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]+1).' '.$this->float2rat($v["lengthFraction"]).'"</td>
                     </tr>
                     <tr>
-                        <td class="cellLabel"><label>Thickness</label></td>
-                        <td class="cellDesc">' . $v["thicknessName"] . '"</td>
+                        <td class="cellLabel"><label>Finished Size</label></td>
+                        <td class="cellDesc">'.($v["width"] + 1).'" x '.($v["length"]+1).'"</td>
                     </tr>
                     <tr>
+                        <td class="cellLabel"><label>Fin. Thickness</label></td>
+                        <td class="cellDesc">' . $v["pThicknessName"].' '.$this->float2rat($v["finThickFraction"]) . '"</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Back</label></td>
+                        <td class="cellDesc">' . $v["backerName"] . '</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Sequenced</label></td>
+                        <td class="cellDesc">'.($v["isSequenced"] == 1 ? "Yes" : "No").'</td>
+                    </tr>
+                    <!--<tr>
                         <td class="cellLabel"><label>Species</label></td>
                         <td class="cellDesc">' . $v["patternName"] . '</td>
                     </tr>
@@ -2907,25 +2934,17 @@ class OrderController extends Controller {
                         <td class="cellDesc">' . $v["grainDirectionName"] . '</td>
                     </tr>
                     <tr>
-                        <td class="cellLabel"><label>Back</label></td>
-                        <td class="cellDesc">' . $v["backerName"] . '</td>
-                    </tr>
-                    <tr>
-                        <td class="cellLabel"><label>Sequenced</label></td>
-                        <td class="cellDesc">'.($v["isSequenced"] == 1 ? "Yes" : "No").'</td>
-                    </tr>
-                    <tr>
                         <td class="cellLabel"><label>Pattern</label></td>
                         <td class="cellDesc">'.$v["patternMatch"].'</td>
-                    </tr>
+                    </tr>-->
                     <tr>
                         <td class="cellLabel"><label>Label</label></td>
                         <td class="cellDesc">'.($v["isLabels"] ? "Yes" : "No").'</td>
                     </tr>
-                    <tr>
+                    <!--<tr>
                         <td class="cellLabel"><label>Core</label></td>
                         <td class="cellDesc">'.$v["coreType"].' - '.$this->float2rat($v["panelThicknessName"]).'"</td>
-                    </tr>
+                    </tr>-->
                     <tr>
                         <td class="cellLabel"><label>Notes:</label></td>
                         <td class="cellDesc"><strong>'.$v["comments"].'</strong></td>
