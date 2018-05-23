@@ -253,7 +253,10 @@ class QuoteController extends Controller
                 } else {
                     $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
                 }
-                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
+//                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
+                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId);
+                $arrApi['data']['lineitems'] = $lineitems['lineItem'];
+                $arrApi['data']['calSqrft'] = $lineitems['calSqrft'];
             }
         }
         catch(Exception $e) {
@@ -2104,10 +2107,15 @@ class QuoteController extends Controller
         $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $qId, 'status'=> 1));
         $i=0;
 //        print_r($doorRecords);die;
+        $calSqrft=0;
+        $calSqrftP =$calSqrftV =$calSqrftD = 0;
         if (!empty($plywoodRecords) || !empty($doorRecords) || !empty($veneerRecords)) {
             if (!empty($plywoodRecords)) {
                 $html='';
                 foreach ($plywoodRecords as $p) {
+                    $calSqrftP += ((float)($p->getPlywoodWidth() + $p->getWidthFraction())*
+                            (float)($p->getPlywoodLength() +$p->getLengthFraction()))/144;
+//                    print_r($plywoodRecords);die;
                     if($p->getFinishThickType() == 'inch'){
                         if($p->getFinishThickId()>0){
                             $thickness=$p->getFinishThickId().($p->getFinThickFraction()!=0?' '.$this->float2rat($p->getFinThickFraction()):'').'"';
@@ -2167,6 +2175,7 @@ class QuoteController extends Controller
             
             if (!empty($veneerRecords)) {
                 foreach ($veneerRecords as $v) {
+                    $calSqrftV += ((float)($v->getWidth() + $v->getWidthFraction())*(float)($v->getLength() + $v->getLengthFraction()))/144;
                     $lineItem[$i]['id'] = $v->getId();
                     $lineItem[$i]['type'] = 'veneer';
                     $lineItem[$i]['url'] = 'line-item/edit-veneer';
@@ -2215,6 +2224,7 @@ class QuoteController extends Controller
             }
             if (!empty($doorRecords)) {
                 foreach ($doorRecords as $d) {
+                    $calSqrftD += ((float)($d->getWidth() + $d->getWidthFraction())*(float)( $d->getLength() + $d->getLengthFraction()))/144;
                     $doorCosts = $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->
                             findOneBy(['doorId' => $d->getId()]);
                     if(!empty($doorCosts)){
@@ -2286,7 +2296,10 @@ class QuoteController extends Controller
                     $i++;
                 }
             }
-            return $lineItem;
+//            return $lineItem;
+            $calSqrft = number_format($calSqrftP + $calSqrftV + $calSqrftD,2);
+            
+            return ['lineItem'=>$lineItem,'calSqrft'=>$calSqrft];
         }
     }
 
@@ -2861,7 +2874,9 @@ class QuoteController extends Controller
                 } else {
                     $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
                 }
-                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
+//                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
+                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId,$printType);
+                $arrApi['data']['lineitems'] = $lineitems['lineItem'];
             }
         }
         catch(Exception $e) {
@@ -2987,7 +3002,7 @@ class QuoteController extends Controller
                                             <td>".$qData['grade']."</td>
                                             <td>".$qData['pattern']."</td>
                                             <td>".$qData['back']."</td>
-                                            <td>".$qData['width']."-".$qData['widthFraction']." x ".$qData['length']."-".$qData['lengthFraction']." x ".$qData['thickness']."</td>
+                                            <td>".$qData['width']."x".$qData['widthFraction']." x ".$qData['length']."x".$qData['lengthFraction']." x ".$qData['thickness']."</td>
                                             <td>".$qData['core']."</td>";
             $html .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
             $html .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
