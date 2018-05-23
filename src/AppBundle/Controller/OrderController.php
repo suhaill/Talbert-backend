@@ -591,9 +591,15 @@ class OrderController extends Controller {
             $html .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
 
             if ($printType == 'ORDER') {
-                $html .= " <td>$".$qData['unitPrice']."</td>
-                           <td>$".$qData['totalPrice']."</td>
-                           </tr>";
+                if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
+                    $html .= "<td>$".$qData['unitPrice']."</td>
+                              <td>$".$qData['totalPrice']."</td>
+                              </tr>";
+                } else {
+                    $html .= "<td></td>
+                              <td>BACK ORDERED</td>
+                              </tr>";
+                }
             } elseif ($printType == 'INVOICE') {
                 if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
                     $html .= "<td>$".$qData['unitPrice']."</td>
