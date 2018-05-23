@@ -2936,7 +2936,7 @@ class QuoteController extends Controller
                                     <tr>
                                         <td>Customer Reference: PO-".$arrApi['data']['referenceNumber']."</td>
                                         <td>Job Name: ".$arrApi['data']['job']."</td>
-                                        <td>Delivery Date: ".$arrApi['data']['leadTime']."</td>
+                                        <td>Lead Time: ".$arrApi['data']['leadTime']."</td>
                                         <td>Ship Via: ".$arrApi['data']['shipMethod']."</td>
                                         <td>SqFt: ".number_format($calSqrft,2)."</td>
                                     </tr>
