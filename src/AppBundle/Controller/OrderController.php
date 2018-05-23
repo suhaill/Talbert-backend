@@ -2927,7 +2927,7 @@ class OrderController extends Controller {
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
-                        <td class="cellDesc">'.($v["width"] + 1).'" x '.($v["length"]+1).'"</td>
+                        <td class="cellDesc">'.($v["width"]).'" x '.($v["length"]).'"</td>
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Fin. Thickness</label></td>
