@@ -523,6 +523,12 @@ class QuoteController extends Controller
         $chkVal = $_DATA['chkVal'];
         //$html = $_DATA['html'];
         $html = $this->getQuoteHtmlByQuoteId($qId);
+
+        $quoteData = $this->getQuoteDataById($qId);
+        
+        $controlNumber = $quoteData->getControlNumber();
+        $version = $quoteData->getVersion();
+
         $datime = new \DateTime('now');
         if (empty($qId) || empty($currUserId) || empty($currUserEmail) || empty($custEmail) || empty($msg) || empty($html)) {
             $arrApi['status'] = 0;
@@ -537,7 +543,7 @@ class QuoteController extends Controller
             $message = \Swift_Message::newInstance()
                 ->setFrom($currUserEmail)
                 ->setTo($custEmail)
-                ->setSubject('Quote Email')
+                ->setSubject('Here\'s your quote from Talbert #'.$controlNumber.'-'.$version)
                 ->setBody($newMessage, 'text/plain');
             for ($i=0;$i<count($urls);$i++) {
                 $message->attach(\Swift_Attachment::fromPath($urls[$i]));
