@@ -2158,17 +2158,17 @@ class OrderController extends Controller {
         if (!empty($final)) {
             foreach ($final as $v) {
                 if (!empty($v['type']) && $v['type'] == 'Plywood') {
-                    for ($i=0;$i<$v['quantity'];$i++) {
+                    //for ($i=0;$i<$v['quantity'];$i++) {
                         $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLV($v, $images_destination);
                         $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLC($v, $images_destination);
                         $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLS($v, $images_destination);
-                    }
+                    //}
                 }
                 if (!empty($v['type']) && $v['type'] == 'Veneer') {
-                    for ($i=0;$i<$v['quantity'];$i++) {
+                    //for ($i=0;$i<$v['quantity'];$i++) {
                         $htmlBlocks[] = $this->getOrderTicketVeneerHTMLV($v, $images_destination);
                         $htmlBlocks[] = $this->getOrderTicketVeneerHTMLS($v, $images_destination);
-                    }
+                    //}
                 }
 //                if (!empty($v['type']) && $v['type'] == 'Door') {
 //                    $lineItemHTML .= $this->getOrderTicketOrderHTML($v, $images_destination);
@@ -2200,8 +2200,10 @@ class OrderController extends Controller {
             $result = $query->createQueryBuilder()
                     ->select(['v.id','v.quantity', 'v.plywoodWidth as width','v.widthFraction', 'v.plywoodLength as length','v.lengthFraction', 'v.comments', 'v.speciesId', 'v.topEdge', 'v.bottomEdge',
                         'v.rightEdge', 'v.leftEdge', "v.finishThickId as pThicknessName", 'v.finishThickType', "'Plywood' as type",
-                        "v.finThickFraction", "v.thickness as panelThicknessName", 'v.lineItemNum', 'v.isSequenced','v.isLabels'])
+                        "v.finThickFraction", "v.thickness as panelThicknessName", 'v.lineItemNum', 'v.isSequenced','v.isLabels','st.statusName'])
                     ->from('AppBundle:Plywood', 'v')
+                    ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
+                    ->leftJoin('AppBundle:Status', 'st', 'WITH', "st.id = lis.statusId")
                     ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
                     ->addSelect(['q.refNum', 'q.deliveryDate'])
                     ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
@@ -2248,7 +2250,7 @@ class OrderController extends Controller {
                     ->addSelect(['rs.name as rightSpeciesName'])
                     ->leftJoin('AppBundle:Species', 'ls', 'WITH', "v.ledgeFinishSpeciesId = ls.id")
                     ->addSelect(['ls.name as leftSpeciesName'])
-                    ->where('v.quoteId = ' . $quoteId)
+                    ->where("st.statusName != 'LineItemBackOrder' AND v.quoteId = " . $quoteId)
                     ->getQuery()
                     ->getResult();
 //                ->getSQL();            
@@ -2260,10 +2262,34 @@ class OrderController extends Controller {
 
     private function getVeneerDataByQuoteId($quoteId) {
         if (!empty($quoteId)) {
+            
             $query = $this->getDoctrine()->getManager();
+
+            /* $plywoodRecords = $query->createQueryBuilder()
+            ->select(['p.id, p.quantity, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName'])
+            ->from('AppBundle:Plywood', 'p')
+            ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
+            ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
+            ->leftJoin('AppBundle:GrainPattern', 'gp', 'WITH', "p.patternId = gp.id")
+            ->addSelect(['gp.name as grain'])
+            ->leftJoin('AppBundle:Thickness', 't', 'WITH', "p.thicknessId = t.id")
+            ->addSelect(['t.name as thicknessName'])
+            ->leftJoin('AppBundle:Pattern', 'pat', 'WITH', "pat.id = p.patternMatch")
+            ->addSelect(['pat.name as pattern'])
+            ->leftJoin('AppBundle:BackerGrade', 'bgrd', 'WITH', "p.backerId = bgrd.id")
+            ->addSelect(['bgrd.name as backerName'])
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId and p.isActive=1 AND s.statusName !='LineItemBackOrder'")
+            ->orderBy('p.id','ASC')
+            ->setParameter('quoteId', $qId)
+            ->setParameter('lineItemType', 'Plywood')
+            ->getQuery()
+            ->getResult(); */
+
             $result = $query->createQueryBuilder()
-                    ->select(['v.quantity', 'v.width','v.widthFraction', 'v.length','v.lengthFraction', 'v.comments', 'v.sequenced', 'v.lineItemNum', "'Veneer' as type"])
+                    ->select(['v.quantity', 'v.width','v.widthFraction', 'v.length','v.lengthFraction', 'v.comments', 'v.sequenced', 'v.lineItemNum', "'Veneer' as type,st.statusName"])
                     ->from('AppBundle:Veneer', 'v')
+                    ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
+                    ->leftJoin('AppBundle:Status', 'st', 'WITH', "st.id = lis.statusId")
                     ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
                     ->addSelect(['q.refNum', 'q.deliveryDate'])
                     ->leftJoin('AppBundle:User', 'u', 'WITH', "q.customerId = u.id and u.userType='customer' and u.roleId=11")
@@ -2284,7 +2310,7 @@ class OrderController extends Controller {
                     ->leftJoin('AppBundle:CoreType', 'ct', 'WITH', "ct.id = v.coreTypeId")
                     ->addSelect(['ct.name as coreType'])
                     ->addSelect(['o.orderDate as orderDate', 'o.estNumber as estNumber'])
-                    ->where('v.quoteId = ' . $quoteId)
+                    ->where("st.statusName != 'LineItemBackOrder' AND v.quoteId = " . $quoteId)
                     ->getQuery()
                     ->getResult();
         } else {
