@@ -2939,7 +2939,7 @@ class QuoteController extends Controller
                                     <td class='invCapt'>
                                         <div class='captBTxt'>Quote</div>
                                         <div class='subTxt'>Q-".$arrApi['data']['controlNumber']."-".$arrApi['data']['version']."</div>
-                                        <p>".$arrApi['data']['date']." &nbsp;|&nbsp; Net 30 days</p>
+                                        <p>".$arrApi['data']['termName']." &nbsp;|&nbsp; ".$arrApi['data']['termName']."</p>
                                         <p><em>At Talbert Architectural <br>Your Total Satisfaction <br>is Our Goal!</em></p>
                                     </td>
                                 </tr>
