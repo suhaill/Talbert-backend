@@ -2160,6 +2160,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['rightEdgeName'] = $this->getEdgeNameById($p->getRightEdge());
                     $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($p->getLeftEdge());
                     $lineItem[$i]['millingName'] = $this->getUnitNameById($p->getMilling());
+                    $lineItem[$i]['millingDescription'] = $p->getMillingDescription();
                     $i++;
                 }
             }
@@ -2208,6 +2209,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['rightEdgeName'] = '';
                     $lineItem[$i]['leftEdgeName'] = '';
                     $lineItem[$i]['millingName'] = '';
+                    $lineItem[$i]['millingDescription'] = '';
                     $i++;
                 }
             }
@@ -2280,6 +2282,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['rightEdgeName'] = $this->getEdgeNameById($d->getRightEdge());
                     $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($d->getLeftEdge());
                     $lineItem[$i]['millingName'] = $this->getUnitNameById($d->isMilling());
+                    $lineItem[$i]['millingDescription'] = $d->getMillingDescription();
                     $i++;
                 }
             }
@@ -2987,7 +2990,7 @@ class QuoteController extends Controller
                                             <td>".$qData['width']."-".$qData['widthFraction']." x ".$qData['length']."-".$qData['lengthFraction']." x ".$qData['thickness']."</td>
                                             <td>".$qData['core']."</td>";
             $html .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
-            $html .= ($qData['milling'] == 1) ? "Miling: ".$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
+            $html .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
             if ($qData['finish'] == 'UV') {
                 $html .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']." %-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
             } elseif ($qData['finish'] == 'Paint') {
