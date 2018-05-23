@@ -2008,6 +2008,7 @@ class OrderController extends Controller {
                 } else if (empty($startDate) && !empty($endDate)) {
                     $condition = $condition . $concat . " q.estimatedate <= :to ";
                 }
+                
                 $query = $this->getDoctrine()->getManager();
                 $query1 = $query->createQueryBuilder()
                         ->select(['o.id as orderId', 'q.controlNumber', 'q.version', 'q.customerId', 'q.estimatedate', 'q.id',
@@ -2027,15 +2028,15 @@ class OrderController extends Controller {
                     $query1->setParameter('searchVal', $keyword);
                 }
                 if (!empty($startDate) && !empty($endDate)) {
-                    $query1->setParameter('from', date('Y-m-d', strtotime($startDate)))
-                            ->setParameter('to', date('Y-m-d', strtotime($endDate)));
+                    $query1->setParameter('from', date('Y-m-d', strtotime($startDate)).'T00:00:00')
+                            ->setParameter('to', date('Y-m-d', strtotime($endDate)).'T23:59:59');
                 } else if (!empty($startDate) && empty($endDate) || ($startDate == $endDate && !empty($endDate) && !empty($startDate))) {
-                    $query1->setParameter('from', date('Y-m-d', strtotime($startDate)));
+                    $query1->setParameter('from', date('Y-m-d', strtotime($startDate)).'T00:00:00');
                 } else if (empty($startDate) && !empty($endDate)) {
-                    $query1->setParameter('to', date('Y-m-d', strtotime($endDate)));
+                    $query1->setParameter('to', date('Y-m-d', strtotime($endDate)).'T23:59:59');
                 }
                 $quotes = $query1->orderBy('q.estimatedate', 'DESC')->getQuery()->getResult();
-//                $quotes=$query1->getQuery()->getSQL();print_r($quotes);die;
+                //$quotes=$query1->getQuery()->getSQL();print_r($quotes);die;
                 if (empty($quotes)) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'There is no order.';
