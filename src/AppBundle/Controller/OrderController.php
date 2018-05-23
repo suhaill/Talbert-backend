@@ -224,6 +224,7 @@ class OrderController extends Controller {
             }
             $this->updateQuoteData($quoteId);
             $quoteData = $this->getOrderDataById($quoteId);//print_r($quoteData);die();
+            $orderData = $this->getOrderDetailsById($quoteId);
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'This order does not exists';
@@ -263,7 +264,11 @@ class OrderController extends Controller {
                 $arrApi['data']['shipCharge'] = !empty($quoteData->getShipCharge()) ? str_replace(',', '', number_format($quoteData->getShipCharge(), 2)) : '00.00';
                 $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax()) ? str_replace(',', '', number_format($quoteData->getSalesTax(), 2)) : '00.00';
                 $arrApi['data']['projectTot'] = ($quoteData->getProjectTot() != $quoteData->getShipCharge()) ? !empty($quoteData->getProjectTot()) ? str_replace(',', '', number_format($quoteData->getProjectTot(), 2)) : '00.00' : 0;
-                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
+                //$arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
+                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId);
+                $arrApi['data']['lineitems'] = $lineitems['lineItem'];
+                $arrApi['data']['calSqrft'] = $lineitems['calSqrft'];
+                $arrApi['data']['orderDate'] = date("d.m.y",strtotime($orderData->getOrderDate()))." | ".date("h:i:s a",strtotime($orderData->getOrderDate()));
             }
         } catch (Exception $e) {
             throw $e->getMessage();
@@ -453,7 +458,8 @@ class OrderController extends Controller {
                 } else {
                     $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
                 }
-                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId,$printType);
+                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId,$printType);
+                $arrApi['data']['lineitems'] = $lineitems['lineItem'];
             }
         }
         catch(Exception $e) {
@@ -1352,9 +1358,13 @@ class OrderController extends Controller {
         $lineItem = array();
         
         $i=0;
+        $calSqrft=0;
+        $calSqrftP =$calSqrftV =$calSqrftD = 0;
         if (!empty($plywoodRecords) || !empty($veneerRecords) || !empty($doorRecords)) {
             if (!empty($plywoodRecords)) {
                 foreach ($plywoodRecords as $p) {
+                    $calSqrftP += ((float)($p['plywoodWidth'] + $p['widthFraction'])*
+                            (float)($p['plywoodLength'] + $p['lengthFraction']))/144;
                     if($p['finishThickType'] == 'inch'){
                         if($p['finishThickId']>0){
                             $thickness=$p['finishThickId'].($p['finThickFraction']!=0?' '.$this->float2rat($p['finThickFraction']):'').'"';
@@ -1415,6 +1425,7 @@ class OrderController extends Controller {
             }
             if (!empty($veneerRecords)) {
                 foreach ($veneerRecords as $v) {
+                    $calSqrftV += ((float)($v['width'] + $v['widthFraction'])*(float)($v['length'] + $v['lengthFraction']))/144;
                     $lineItem[$i]['id'] = $v['id'];
                     $lineItem[$i]['type'] = 'veneer';
                     $lineItem[$i]['url'] = 'line-item/edit-veneer';
@@ -1466,6 +1477,7 @@ class OrderController extends Controller {
             }
             if (!empty($doorRecords)) {
                 foreach ($doorRecords as $d) {
+                    $calSqrftD += ((float)($d['width'] + $d['widthFraction'])*(float)($d['length'] + $d['lengthFraction']))/144;
                     $doorCosts = $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->
                             findOneBy(['doorId' => $d['id']]);
                     if(!empty($doorCosts)){
@@ -1538,7 +1550,10 @@ class OrderController extends Controller {
                     $i++;
                 }
             }
-            return $lineItem;
+            
+            $calSqrft = number_format($calSqrftP + $calSqrftV + $calSqrftD,2);
+            
+            return ['lineItem'=>$lineItem,'calSqrft'=>$calSqrft];
         }
     }
     
