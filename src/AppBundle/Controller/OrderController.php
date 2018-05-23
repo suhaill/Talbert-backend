@@ -47,12 +47,16 @@ class OrderController extends Controller {
                 $arrApi['message'] = 'Successfully retreived the orders list';
                 $i = 0;
                 foreach ($orders as $orDat) {
+
                     $arrApi['data']['orders'][$i]['id'] = $orDat->getId();
+
+                    $quoteData = $this->getOrderDataById( $orDat->getQuoteId() );
+                        
                     $arrApi['data']['orders'][$i]['estNumber'] = $orDat->getEstNumber();
-                    $arrApi['data']['orders'][$i]['orderDate'] = $orDat->getOrderDate()->format('m/d/y');
-                    $arrApi['data']['orders'][$i]['productname'] = $orDat->getProductName();
-                    $arrApi['data']['orders'][$i]['poNumber'] = $orDat->getPoNumber();
-                    $arrApi['data']['orders'][$i]['shipDate'] = $orDat->getShipDate()->format('m/d/y');
+                    $arrApi['data']['orders'][$i]['orderDate'] = $orDat->getOrderDate()?date('m-d-Y',strtotime($orDat->getOrderDate())):'-';//$orDat->getOrderDate();
+                    $arrApi['data']['orders'][$i]['productname'] = $quoteData->getJobName();
+                    $arrApi['data']['orders'][$i]['poNumber'] = $quoteData->getRefNum();
+                    $arrApi['data']['orders'][$i]['shipDate'] = $orDat->getShipDate()?date('m-d-Y',strtotime($orDat->getShipDate())):'-';
                     $i++;
                 }
             }
