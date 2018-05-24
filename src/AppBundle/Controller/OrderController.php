@@ -269,13 +269,18 @@ class OrderController extends Controller {
 //                $arrApi['data']['lineitems'] = $lineitems['lineItem'];
 //                $arrApi['data']['calSqrft'] = $lineitems['calSqrft'];
                 $arrApi['data']['orderDate'] = date("d.m.y",strtotime($orderData->getOrderDate()))." | ".date("h:i:s a",strtotime($orderData->getOrderDate()));
-                
                 $calSqrft = 0;
                 foreach($arrApi['data']['lineitems'] as $key=>$qData){
                     $calSqrft += ((float)($qData['width'] + $qData['widthFraction'])*(float)($qData['length'] + $qData['lengthFraction']))/144;
                 }
                 $arrApi['data']['calSqrft']= number_format($calSqrft,2);
-                
+                if(count($arrApi['data']['lineitems'])==1){
+                    if($arrApi['data']['lineitems'][0]['type']=='door'){
+                        $arrApi['data']['ticketFlag']=false;
+                    }
+                } else {
+                    $arrApi['data']['ticketFlag']=true;
+                }               
             }
         } catch (Exception $e) {
             throw $e->getMessage();
@@ -2196,7 +2201,7 @@ class OrderController extends Controller {
         $doorData= $this->getDoorDataByQuoteId($quoteId);
         $arr = array_merge($veneerData, $plywoodData, $doorData);
         $final = $this->arraySortByColumn($arr, 'lineItemNum');
-//        print_r($final);die;
+        
         $images_destination = $this->container->getParameter('images_destination');
         $lineItemHTML = '';
         $plyHtmlV ='';
@@ -2228,8 +2233,8 @@ class OrderController extends Controller {
         }
 
         $html = $this->getOrderTicketHTML($lineItemHTML);
-
-        return new Response(
+        if(!empty($html)){
+            return new Response(
             $this->get('knp_snappy.pdf')
                 ->getOutputFromHtml(
                     $htmlBlocks, [
@@ -2243,6 +2248,9 @@ class OrderController extends Controller {
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'attachment; filename="Test.pdf"'
             ]);
+        } else {
+            return  new JsonResponse(0, 200);
+        }        
     }
 
     private function getPlywoodDataByQuoteId($quoteId) {
