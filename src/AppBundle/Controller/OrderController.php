@@ -2953,7 +2953,7 @@ class OrderController extends Controller {
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
-                        <td class="cellDesc">'.($v["width"]).'" x '.($v["length"]).'"</td>
+                        <td class="cellDesc">'.($v["width"]).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]).' '.$this->float2rat($v["lengthFraction"]).'"</td>
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Fin. Thickness</label></td>
