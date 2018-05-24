@@ -2875,7 +2875,7 @@ class QuoteController extends Controller
                     $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
                 }
 //                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
-                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId,$printType);
+                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId);
                 $arrApi['data']['lineitems'] = $lineitems['lineItem'];
             }
         }

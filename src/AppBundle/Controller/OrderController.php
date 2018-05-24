@@ -264,11 +264,18 @@ class OrderController extends Controller {
                 $arrApi['data']['shipCharge'] = !empty($quoteData->getShipCharge()) ? str_replace(',', '', number_format($quoteData->getShipCharge(), 2)) : '00.00';
                 $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax()) ? str_replace(',', '', number_format($quoteData->getSalesTax(), 2)) : '00.00';
                 $arrApi['data']['projectTot'] = ($quoteData->getProjectTot() != $quoteData->getShipCharge()) ? !empty($quoteData->getProjectTot()) ? str_replace(',', '', number_format($quoteData->getProjectTot(), 2)) : '00.00' : 0;
-                //$arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
-                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId);
-                $arrApi['data']['lineitems'] = $lineitems['lineItem'];
-                $arrApi['data']['calSqrft'] = $lineitems['calSqrft'];
+                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
+//                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId);
+//                $arrApi['data']['lineitems'] = $lineitems['lineItem'];
+//                $arrApi['data']['calSqrft'] = $lineitems['calSqrft'];
                 $arrApi['data']['orderDate'] = date("d.m.y",strtotime($orderData->getOrderDate()))." | ".date("h:i:s a",strtotime($orderData->getOrderDate()));
+                
+                $calSqrft = 0;
+                foreach($arrApi['data']['lineitems'] as $key=>$qData){
+                    $calSqrft += ((float)($qData['width'] + $qData['widthFraction'])*(float)($qData['length'] + $qData['lengthFraction']))/144;
+                }
+                $arrApi['data']['calSqrft']= number_format($calSqrft,2);
+                
             }
         } catch (Exception $e) {
             throw $e->getMessage();
@@ -458,8 +465,8 @@ class OrderController extends Controller {
                 } else {
                     $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
                 }
-                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId,$printType);
-                $arrApi['data']['lineitems'] = $lineitems['lineItem'];
+//                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId,$printType);
+                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId,$printType);;
             }
         }
         catch(Exception $e) {
@@ -1358,13 +1365,13 @@ class OrderController extends Controller {
         $lineItem = array();
         
         $i=0;
-        $calSqrft=0;
-        $calSqrftP =$calSqrftV =$calSqrftD = 0;
+//        $calSqrft=0;
+//        $calSqrftP =$calSqrftV =$calSqrftD = 0;
         if (!empty($plywoodRecords) || !empty($veneerRecords) || !empty($doorRecords)) {
             if (!empty($plywoodRecords)) {
                 foreach ($plywoodRecords as $p) {
-                    $calSqrftP += ((float)($p['plywoodWidth'] + $p['widthFraction'])*
-                            (float)($p['plywoodLength'] + $p['lengthFraction']))/144;
+//                    $calSqrftP += ((float)($p['plywoodWidth'] + $p['widthFraction'])*
+//                            (float)($p['plywoodLength'] + $p['lengthFraction']));
                     if($p['finishThickType'] == 'inch'){
                         if($p['finishThickId']>0){
                             $thickness=$p['finishThickId'].($p['finThickFraction']!=0?' '.$this->float2rat($p['finThickFraction']):'').'"';
@@ -1425,7 +1432,7 @@ class OrderController extends Controller {
             }
             if (!empty($veneerRecords)) {
                 foreach ($veneerRecords as $v) {
-                    $calSqrftV += ((float)($v['width'] + $v['widthFraction'])*(float)($v['length'] + $v['lengthFraction']))/144;
+//                    $calSqrftV += ((float)($v['width'] + $v['widthFraction'])*(float)($v['length'] + $v['lengthFraction']));
                     $lineItem[$i]['id'] = $v['id'];
                     $lineItem[$i]['type'] = 'veneer';
                     $lineItem[$i]['url'] = 'line-item/edit-veneer';
@@ -1477,7 +1484,7 @@ class OrderController extends Controller {
             }
             if (!empty($doorRecords)) {
                 foreach ($doorRecords as $d) {
-                    $calSqrftD += ((float)($d['width'] + $d['widthFraction'])*(float)($d['length'] + $d['lengthFraction']))/144;
+//                    $calSqrftD += ((float)($d['width'] + $d['widthFraction'])*(float)($d['length'] + $d['lengthFraction']));
                     $doorCosts = $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->
                             findOneBy(['doorId' => $d['id']]);
                     if(!empty($doorCosts)){
@@ -1551,9 +1558,9 @@ class OrderController extends Controller {
                 }
             }
             
-            $calSqrft = number_format($calSqrftP + $calSqrftV + $calSqrftD,2);
+//            $calSqrft = number_format(($calSqrftP + $calSqrftV + $calSqrftD)/144,2);
             
-            return ['lineItem'=>$lineItem,'calSqrft'=>$calSqrft];
+            return $lineItem;
         }
     }
     
