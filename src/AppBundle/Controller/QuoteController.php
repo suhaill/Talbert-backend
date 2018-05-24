@@ -2169,6 +2169,12 @@ class QuoteController extends Controller
                     $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($p->getLeftEdge());
                     $lineItem[$i]['millingName'] = $this->getUnitNameById($p->getMilling());
                     $lineItem[$i]['millingDescription'] = $p->getMillingDescription();
+                    $lineItem[$i]['dimensions']= $p->getPlywoodWidth().'"'
+                            .($p->getWidthFraction()!=0?' x '.$this->float2rat($p->getWidthFraction()).'" x ':' x ')
+                            .$p->getPlywoodLength().'"'
+                            .($p->getLengthFraction()!=0?' x '.$this->float2rat($p->getLengthFraction()).'"':'')
+                            .($thickness!=0?' x '.$thickness:'')
+                    ;
                     $i++;
                 }
             }
@@ -2219,6 +2225,12 @@ class QuoteController extends Controller
                     $lineItem[$i]['leftEdgeName'] = '';
                     $lineItem[$i]['millingName'] = '';
                     $lineItem[$i]['millingDescription'] = '';
+                    $lineItem[$i]['dimensions']= $v->getWidth().'"'
+                            .($v->getWidthFraction()!=0?' x '.$this->float2rat($v->getWidthFraction()).'" x ':' x ')
+                            .$v->getLength().'"'
+                            .($v->getLengthFraction()!=0?' x '.$this->float2rat($v->getLengthFraction()).'"':'')
+                            .($v->getThicknessId()!=0?' x '.$this->getThicknessNameById($v->getThicknessId()):'')
+                    ;
                     $i++;
                 }
             }
@@ -2293,6 +2305,13 @@ class QuoteController extends Controller
                     $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($d->getLeftEdge());
                     $lineItem[$i]['millingName'] = $this->getUnitNameById($d->isMilling());
                     $lineItem[$i]['millingDescription'] = $d->getMillingDescription();
+                    $lineItem[$i]['dimensions']= $d->getWidth().'"'
+                            .($d->getWidthFraction()!=0?' x '.$this->float2rat($d->getWidthFraction()).'" x ':' x ')
+                            .$d->getLength().'"'
+                            .($d->getLengthFraction()!=0?' x '.$this->float2rat($d->getLengthFraction()).'"':'')
+                            .($thickness!=0?' x '.$thickness:'')
+                    ;
+                    
                     $i++;
                 }
             }
@@ -3002,7 +3021,8 @@ class QuoteController extends Controller
                                             <td>".$qData['grade']."</td>
                                             <td>".$qData['pattern']."</td>
                                             <td>".$qData['back']."</td>
-                                            <td>".$qData['width']."x".$qData['widthFraction']." x ".$qData['length']."x".$qData['lengthFraction']." x ".$qData['thickness']."</td>
+                                            <!--<td>".$qData['width']."x".$qData['widthFraction']." x ".$qData['length']."x".$qData['lengthFraction']." x ".$qData['thickness']."</td>-->
+                                                <td>".$qData['dimensions']."</td>
                                             <td>".$qData['core']."</td>";
             $html .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
             $html .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
