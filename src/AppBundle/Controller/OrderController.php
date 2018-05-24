@@ -2235,8 +2235,7 @@ class OrderController extends Controller {
         }
 
         $html = $this->getOrderTicketHTML($lineItemHTML);
-        if(!empty($html)){
-            return new Response(
+        return new Response(
             $this->get('knp_snappy.pdf')
                 ->getOutputFromHtml(
                     $htmlBlocks, [
@@ -2249,10 +2248,7 @@ class OrderController extends Controller {
             200, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'attachment; filename="Test.pdf"'
-            ]);
-        } else {
-            return  new JsonResponse(0, 200);
-        }        
+            ]);        
     }
 
     private function getPlywoodDataByQuoteId($quoteId) {
