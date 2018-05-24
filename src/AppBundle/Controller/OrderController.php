@@ -277,7 +277,9 @@ class OrderController extends Controller {
                 if(count($arrApi['data']['lineitems'])==1){
                     if($arrApi['data']['lineitems'][0]['type']=='door'){
                         $arrApi['data']['ticketFlag']=false;
-                    }
+                    } else {
+                        $arrApi['data']['ticketFlag']=true;
+                    } 
                 } else {
                     $arrApi['data']['ticketFlag']=true;
                 }               
