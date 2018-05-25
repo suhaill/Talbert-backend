@@ -2307,7 +2307,7 @@ class QuoteController extends Controller
                     $lineItem[$i]['millingDescription'] = $d->getMillingDescription();
                     $lineItem[$i]['dimensions']= $d->getWidth().'"'
                             .($d->getWidthFraction()!=0?' x '.$this->float2rat($d->getWidthFraction()).'" x ':' x ')
-                            .$d->getLength().'"'
+                            .$d->getLength().'" x '
                             .($d->getLengthFraction()!=0?' x '.$this->float2rat($d->getLengthFraction()).'"':'')
                             .($thickness!=0?' x '.$thickness:'')
                     ;
@@ -2896,6 +2896,7 @@ class QuoteController extends Controller
 //                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
                 $lineitems =  $this->getVeneerslistbyQuoteId($quoteId);
                 $arrApi['data']['lineitems'] = $lineitems['lineItem'];
+                $arrApi['data']['calSqrft'] = $lineitems['calSqrft'];
             }
         }
         catch(Exception $e) {
@@ -2904,11 +2905,11 @@ class QuoteController extends Controller
 
         //print_R($arrApi['data']);
 
-        $calSqrft = 0;
-
-        foreach($arrApi['data']['lineitems'] as $key=>$qData){
-            $calSqrft += ((float)($qData['width'] + $qData['widthFraction'])*(float)($qData['length'] + $qData['lengthFraction']))/144;
-        }
+//        $calSqrft = 0;
+        $calSqrft = $arrApi['data']['calSqrft'];
+//        foreach($arrApi['data']['lineitems'] as $key=>$qData){
+//            $calSqrft += ((float)($qData['width'] + $qData['widthFraction'])*(float)($qData['length'] + $qData['lengthFraction']))/144;
+//        }
 
         $html = "<!DOCTYPE html>
                 <html>

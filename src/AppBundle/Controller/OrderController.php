@@ -271,7 +271,9 @@ class OrderController extends Controller {
                 $arrApi['data']['orderDate'] = date("d.m.y",strtotime($orderData->getOrderDate()))." | ".date("h:i:s a",strtotime($orderData->getOrderDate()));
                 $calSqrft = 0;
                 foreach($arrApi['data']['lineitems'] as $key=>$qData){
-                    $calSqrft += ((float)($qData['width'] + $qData['widthFraction'])*(float)($qData['length'] + $qData['lengthFraction']))/144;
+                    $a = ($qData['width'] + $qData['originalWidthFraction']);
+                    $b = ($qData['length'] + $qData['originalLengthFraction']);
+                    $calSqrft += ($a*$b)/144;
                 }
                 $arrApi['data']['calSqrft']= number_format($calSqrft,2);
                 if(count($arrApi['data']['lineitems'])==1){
@@ -482,7 +484,9 @@ class OrderController extends Controller {
 
         $calSqrft = 0;
         foreach($arrApi['data']['lineitems'] as $key=>$qData){
-            $calSqrft += ((float)($qData['width'] + $qData['widthFraction'])*(float)($qData['length'] + $qData['lengthFraction']))/144;
+            $a = ($qData['width'] + $qData['originalWidthFraction']);
+            $b = ($qData['length'] + $qData['originalLengthFraction']);
+            $calSqrft += ($a*$b)/144;
         }
 
         $html = "<!DOCTYPE html>
@@ -1406,6 +1410,8 @@ class OrderController extends Controller {
                     $lineItem[$i]['totalPrice'] = $p['totalCost'];
                     $lineItem[$i]['widthFraction'] = $this->float2rat($p['widthFraction']);
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($p['lengthFraction']);
+                    $lineItem[$i]['originalWidthFraction'] = ($p['widthFraction']);
+                    $lineItem[$i]['originalLengthFraction'] = ($p['lengthFraction']);                    
                     $lineItem[$i]['grain'] = $this->getGrainNameById($p['patternId']);
                     $lineItem[$i]['edgeDetail'] = ($p['edgeDetail']) ? 1 : 0;
                     $lineItem[$i]['topEdge'] = $p['topEdge'];
@@ -1464,6 +1470,8 @@ class OrderController extends Controller {
                     $lineItem[$i]['totalPrice'] = $v['totalCost'];
                     $lineItem[$i]['widthFraction'] = $this->float2rat($v['widthFraction']);
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($v['lengthFraction']);
+                    $lineItem[$i]['originalWidthFraction'] = ($v['widthFraction']);
+                    $lineItem[$i]['originalLengthFraction'] = ($v['lengthFraction']);
                     $lineItem[$i]['grain'] = $this->getGrainNameById($v['patternId']);
                     $lineItem[$i]['edgeDetail'] = 0;
                     $lineItem[$i]['topEdge'] = 1;
@@ -1546,6 +1554,8 @@ class OrderController extends Controller {
                     $lineItem[$i]['totalPrice'] = $totalCost;
                     $lineItem[$i]['widthFraction'] = $this->float2rat($d['widthFraction']);
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($d['lengthFraction']);
+                    $lineItem[$i]['originalWidthFraction'] = ($d['widthFraction']);
+                    $lineItem[$i]['originalLengthFraction'] = ($d['lengthFraction']);
                     $lineItem[$i]['edgeDetail'] = ($d['edgeFinish']) ? '1' : 0;
                     $lineItem[$i]['topEdge'] = $d['topEdge'];
                     $lineItem[$i]['bottomEdge'] = $d['bottomEdge'];
