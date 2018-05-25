@@ -1441,10 +1441,10 @@ class OrderController extends Controller {
                     $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($p['leftEdge']);
                     $lineItem[$i]['millingName'] = $this->getUnitNameById($p['milling']);
                     $lineItem[$i]['millingDescription'] = $p['millingDescription'];
-                    $lineItem[$i]['dimensions']= $p['plywoodWidth'].'"'
-                            .($p['widthFraction']!=0?' x '.$this->float2rat($p['widthFraction']).'" x ':' x ')
-                            .$p['plywoodLength'].'"'
-                            .($p['lengthFraction']!=0?' x '.$this->float2rat($p['lengthFraction']).'"':'')
+                    $lineItem[$i]['dimensions']= $p['plywoodWidth']
+                            .($p['widthFraction']!=0?' '.$this->float2rat($p['widthFraction']).'" x ':'" x ')
+                            .$p['plywoodLength']
+                            .($p['lengthFraction']!=0?' '.$this->float2rat($p['lengthFraction']).'"':'"')
                             .($thickness!=0?' x '.$thickness:'')
                     ;
                     $i++;
@@ -1501,10 +1501,10 @@ class OrderController extends Controller {
                     $lineItem[$i]['leftEdgeName'] = '';
                     $lineItem[$i]['millingName'] = '';
                     $lineItem[$i]['millingDescription'] = $v['millingDescription'];
-                    $lineItem[$i]['dimensions']= $v['width'].'"'
-                            .($v['widthFraction']!=0?' x '.$this->float2rat($v['widthFraction']).'" x ':' x ')
-                            .$v['length'].'"'
-                            .($v['lengthFraction']!=0?' x '.$this->float2rat($v['lengthFraction']).'"':'')
+                    $lineItem[$i]['dimensions']= $v['width']
+                            .($v['widthFraction']!=0?' '.$this->float2rat($v['widthFraction']).'" x ':'" x ')
+                            .$v['length']
+                            .($v['lengthFraction']!=0?' '.$this->float2rat($v['lengthFraction']).'"':'"')
                             .($v['thicknessId']!=0?' x '.$this->getThicknessNameById($v['thicknessId']):'')
                     ;
                     $i++;
@@ -1584,10 +1584,10 @@ class OrderController extends Controller {
                     $lineItem[$i]['leftEdgeName'] = $this->getEdgeNameById($d['leftEdge']);
                     $lineItem[$i]['millingName'] = $this->getUnitNameById($d['milling']);
                     $lineItem[$i]['millingDescription'] = $d['millingDescription'];
-                    $lineItem[$i]['dimensions']=$d['width'].'"'
-                            .($d['widthFraction']!=0?' x '.$this->float2rat($d['widthFraction']).'" x ':' x ')
-                            .$d['length'].'"'
-                            .($d['lengthFraction']!=0?' x '.$this->float2rat($d['lengthFraction']).'"':'')
+                    $lineItem[$i]['dimensions']=$d['width']
+                            .($d['widthFraction']!=0?' '.$this->float2rat($d['widthFraction']).'" x ':'" x ')
+                            .$d['length']
+                            .($d['lengthFraction']!=0?' '.$this->float2rat($d['lengthFraction']).'"':'"')
                             .($thickness!=0?' x '.$thickness:'')
                     ;
                     $i++;
