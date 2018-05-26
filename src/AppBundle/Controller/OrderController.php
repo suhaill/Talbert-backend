@@ -566,8 +566,8 @@ class OrderController extends Controller {
                                             <th>Qty</th>
                                             <th>Grain</th>
                                             <th>Species</th>
-                                            <th>Grd</th>
                                             <th>PTRN</th>
+                                            <th>Grd</th>
                                             <th>Back</th>
                                             <th>Dimensions</th>
                                             <th>Core</th>
@@ -598,8 +598,8 @@ class OrderController extends Controller {
                         <td>".$qData['quantity']."</td>
                         <td>".$qData['grain']."</td>
                         <td>".$qData['species']."</td>
-                        <td>".$qData['grade']."</td>
                         <td>".$qData['pattern']."</td>
+                        <td>".$qData['grade']."</td>
                         <td>".$qData['back']."</td>
                         <!--<td>".$qData['width']."-".$qData['widthFraction']." x ".$qData['length']."-".$qData['lengthFraction']." x ".$qData['thickness']."</td>-->
                         <td>".$qData['dimensions']."</td>
@@ -2222,7 +2222,6 @@ class OrderController extends Controller {
         $venHTMLV ='';
         $venHTMLS ='';
         $htmlBlocks = [];
-
         if (!empty($final)) {
             foreach ($final as $v) {
                 if (!empty($v['type']) && $v['type'] == 'Plywood') {
@@ -2269,7 +2268,7 @@ class OrderController extends Controller {
                         'v.rightEdge', 'v.leftEdge', "v.finishThickId as pThicknessName", 'v.finishThickType', "'Plywood' as type",
                         "v.finThickFraction", "v.thickness as panelThicknessName", 'v.lineItemNum', 'v.isSequenced','v.isLabels','st.statusName'])
                     ->from('AppBundle:Plywood', 'v')
-                    ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
+                    ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id AND lis.lineItemType = 'Plywood'")
                     ->leftJoin('AppBundle:Status', 'st', 'WITH', "st.id = lis.statusId")
                     ->leftJoin('AppBundle:Quotes', 'q', 'WITH', 'v.quoteId = q.id')
                     ->addSelect(['q.refNum', 'q.deliveryDate'])
@@ -2320,7 +2319,7 @@ class OrderController extends Controller {
                     ->where("st.statusName != 'LineItemBackOrder' AND v.quoteId = " . $quoteId)
                     ->getQuery()
                     ->getResult();
-//                ->getSQL();            
+//                ->getSQL();   
         } else {
             $result = [];
         }
@@ -2473,6 +2472,10 @@ class OrderController extends Controller {
                     <td class="cellDesc">'.($v['width'] + 1).' '.$this->float2rat($v['widthFraction']).'" x '.($v['length']+1).' '.$this->float2rat($v['lengthFraction']).'"</td>
                 </tr>
                 <tr>
+                    <td class="cellLabel"><label>Finished Size</label></td>
+                    <td class="cellDesc">'.($v["width"]).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]).' '.$this->float2rat($v["lengthFraction"]).'"</td>
+                </tr>
+                <tr>
                     <td class="cellLabel"><label>Thickness</label></td>
                     <td class="cellDesc">'.$v['thicknessName'].'</td>
                 </tr>
@@ -2588,6 +2591,10 @@ class OrderController extends Controller {
                     <td class="cellDesc">'.($v['width'] + 1).' '.$this->float2rat($v['widthFraction']).'" x '.($v['length']+1).' '.$this->float2rat($v['lengthFraction']).'"</td>
                 </tr>
                 <tr>
+                    <td class="cellLabel"><label>Finished Size</label></td>
+                    <td class="cellDesc">'.($v["width"]).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]).' '.$this->float2rat($v["lengthFraction"]).'"</td>
+                </tr>
+                <tr>
                     <td class="cellLabel"><label>Thickness</label></td>
                     <td class="cellDesc">'.$v['thicknessName'].'</td>
                 </tr>
@@ -2671,40 +2678,40 @@ class OrderController extends Controller {
     }
 
     private function getOrderTicketPlywoodHTMLV($v, $images_destination) {
-//        $topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
-//        $bottomEdgeName = !empty($v['bottomEdgeName']) ? $v['bottomEdgeName'] : 'N/A';
-//        $rightEdgeName = !empty($v['rightEdgeName']) ? $v['rightEdgeName'] : 'N/A';
-//        $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
-//        $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
-//        $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
-//        $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
-//        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
-//        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
-//        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
-//        $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
-//        $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
-//
-//
-//        $edge = '';
-//        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
-//                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
-//                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
-//                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
-//            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
-//                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
-//            }
-//            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
-//                $edge .= 'TE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
-//            }
-//            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
-//                $edge .= 'TE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
-//            }
-//            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
-//                $edge .= 'TE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
-//            }
-//        } else {
-//            $edge = 'No';
-//        }
+        /*$topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $bottomEdgeName = !empty($v['bottomEdgeName']) ? $v['bottomEdgeName'] : 'N/A';
+        $rightEdgeName = !empty($v['rightEdgeName']) ? $v['rightEdgeName'] : 'N/A';
+        $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
+        $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
+        $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
+        $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
+        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
+        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
+        $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
+        $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
+
+
+        $edge = '';
+        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
+                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
+                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
+                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
+            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
+                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
+            }
+            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
+                $edge .= 'TE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
+            }
+            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
+                $edge .= 'TE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
+            }
+            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
+                $edge .= 'TE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+            }
+        } else {
+            $edge = 'No';
+        }*/
 
         //print_r($v['quantity']);die;
                 $plywoodHtml = '';
@@ -2738,6 +2745,10 @@ class OrderController extends Controller {
                         <tr>
                             <td class="cellLabel"><label>Veneer Size</label></td>
                             <td class="cellDesc">'.($v["width"] + 1).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]+1).' '.$this->float2rat($v["lengthFraction"]).'"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Finished Size</label></td>
+                            <td class="cellDesc">'.($v["width"]).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]).' '.$this->float2rat($v["lengthFraction"]).'"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Thickness</label></td>
@@ -2821,6 +2832,40 @@ class OrderController extends Controller {
     }
 
     private function getOrderTicketPlywoodHTMLC($v, $images_destination) {
+        $topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $bottomEdgeName = !empty($v['bottomEdgeName']) ? $v['bottomEdgeName'] : 'N/A';
+        $rightEdgeName = !empty($v['rightEdgeName']) ? $v['rightEdgeName'] : 'N/A';
+        $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
+        $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
+        $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
+        $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
+        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
+        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
+        $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
+        $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
+
+
+        $edge = '';
+        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
+                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
+                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
+                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
+            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
+                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
+            }
+            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
+                $edge .= 'TE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
+            }
+            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
+                $edge .= 'TE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
+            }
+            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
+                $edge .= 'TE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+            }
+        } else {
+            $edge = 'No';
+        }
         $plywoodHtml = '';
         $plywoodHtml .= '<div class="ticketWrap">
             <div class="ticketScreen core">
@@ -2857,6 +2902,10 @@ class OrderController extends Controller {
                         <td class="cellLabel"><label>Cut Size</label></td>
                         <td class="cellDesc">'.($v["width"] + 1).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]+1).' '.$this->float2rat($v["lengthFraction"]).'"</td>
                     </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Finished Size</label></td>
+                        <td class="cellDesc">'.($v["width"]).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]).' '.$this->float2rat($v["lengthFraction"]).'"</td>
+                    </tr>
                     <!--<tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
                         <td class="cellDesc">'.($v["width"] + 1).'" x '.($v["length"]+1).'"</td>
@@ -2872,6 +2921,10 @@ class OrderController extends Controller {
                     <tr>
                         <td class="cellLabel"><label>Back</label></td>
                         <td class="cellDesc">'.$v["backerName"].'</td>
+                    </tr>
+                    <tr>
+                        <td class="cellLabel"><label>Edge</label></td>
+                        <td class="cellDesc">'.$edge.'</td>
                     </tr>
                     <tr>
                         <td class="cellLabel"><label></label></td>
@@ -2931,6 +2984,40 @@ class OrderController extends Controller {
     }
 
     private function getOrderTicketPlywoodHTMLS($v, $images_destination) {
+        $topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $bottomEdgeName = !empty($v['bottomEdgeName']) ? $v['bottomEdgeName'] : 'N/A';
+        $rightEdgeName = !empty($v['rightEdgeName']) ? $v['rightEdgeName'] : 'N/A';
+        $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
+        $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
+        $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
+        $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
+        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
+        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
+        $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
+        $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
+
+
+        $edge = '';
+        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
+                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
+                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
+                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
+            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
+                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
+            }
+            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
+                $edge .= 'TE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
+            }
+            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
+                $edge .= 'TE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
+            }
+            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
+                $edge .= 'TE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+            }
+        } else {
+            $edge = 'No';
+        }
         $plywoodHtml = '';
         $plywoodHtml .= '<div class="ticketWrap">
             <div class="ticketScreen sanding">
@@ -2978,6 +3065,10 @@ class OrderController extends Controller {
                     <tr>
                         <td class="cellLabel"><label>Back</label></td>
                         <td class="cellDesc">' . $v["backerName"] . '</td>
+                    </tr>                    
+                    <tr>
+                        <td class="cellLabel"><label>Edge</label></td>
+                        <td class="cellDesc">'.$edge.'</td>
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Sequenced</label></td>
@@ -3074,7 +3165,12 @@ class OrderController extends Controller {
 
 
     private function getFirstLabel($labels) {
-        return explode(',', $labels)[0];
+        $array = explode(',', $labels);
+        $first= current($array);
+        $last= end($array);
+        $lastArray=explode('-',$last);
+        $final = $first.' > '.end($lastArray);
+        return $final;
     }
 
     private function getUVCuredNameById($id) {

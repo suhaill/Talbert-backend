@@ -1039,7 +1039,7 @@ class QuoteController extends Controller
         return str_replace('E', 'O' , $estNo);
     }
 
-    private function updateOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $datime, $custPO, $deliveryDate) {
+    private function updateOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $datime, $custPO, $deliveryDate,$type='') {
         $em = $this->getDoctrine()->getManager();
         $order = $em->getRepository(Orders::class)->findOneBy(array('quoteId'=> $qId));
         $em->getConnection()->beginTransaction();
@@ -1066,7 +1066,12 @@ class QuoteController extends Controller
                 
                 $newOrderStatus = new OrderStatus();
                 $newOrderStatus->setOrderId($order->getId());
-                $newOrderStatus->setStatusId(1);
+                if($type=='backOrder'){
+                    $newOrderStatus->setStatusId(4);
+                } else {
+                    $newOrderStatus->setStatusId(5);
+                }
+                
                 $newOrderStatus->setCreatedAt($currentdatime);
                 $newOrderStatus->setUpdatedAt($currentdatime);
                 $newOrderStatus->setIsActive(1);
@@ -1105,9 +1110,10 @@ class QuoteController extends Controller
         }
     }
 
-    private function saveOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $datime, $custPO, $deliveryDate) {
+    private function saveOrderData($qId, $estNo, $orderNum, $approveBy, $via, $other, $datime, $custPO, $deliveryDate,$type='') {
         $em = $this->getDoctrine()->getManager();
         $em->getConnection()->beginTransaction();
+        
         try {
             $currentdatime = new \DateTime('now');
             $orders = new Orders();
@@ -1125,7 +1131,12 @@ class QuoteController extends Controller
             $em->flush();
             $newOrderStatus = new OrderStatus();
             $newOrderStatus->setOrderId($orders->getId());
-            $newOrderStatus->setStatusId(5);
+            if($type == 'backOrder'){
+                $newOrderStatus->setStatusId(4);
+            } else {
+                $newOrderStatus->setStatusId(5);
+            }
+            
             $newOrderStatus->setCreatedAt($currentdatime);
             $newOrderStatus->setUpdatedAt($currentdatime);
             $newOrderStatus->setIsActive(1);
@@ -2079,7 +2090,12 @@ class QuoteController extends Controller
     }
 
     private function getFirstLabel($labels) {
-        return explode(',', $labels)[0];
+        $array = explode(',', $labels);
+        $first= current($array);
+        $last= end($array);
+        $lastArray=explode('-',$last);
+        $final = $first.' > '.end($lastArray);
+        return $final;
     }
 
     private function getUVCuredNameById($id) {
@@ -2916,8 +2932,9 @@ class QuoteController extends Controller
                 <head>
                         <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
                         <style>
-                            body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',Arial,sans-serif;font-weight:700;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
-                            .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;margin-bottom:18px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}.itemListTablHldr{min-height:300px;}table.prodItmLst th,table.prodItmLst td{font-size:14px;text-align:center;padding:3px 6px;vertical-align:top;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;font-weight:700;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                            body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:8pt; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
+                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;margin-bottom:18px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                        table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}
                         </style>
                     </head>
                 <body>
@@ -2987,8 +3004,8 @@ class QuoteController extends Controller
                                             <th>Qty</th>
                                             <th>Grain</th>
                                             <th>Species</th>
-                                            <th>Grd</th>
                                             <th>PTRN</th>
+                                            <th>Grd</th>
                                             <th>Back</th>
                                             <th>Dimensions</th>
                                             <th>Core</th>
@@ -3019,8 +3036,8 @@ class QuoteController extends Controller
                                             <td>".$qData['quantity']."</td>
                                             <td>".$qData['grain']."</td>
                                             <td>".$qData['species']."</td>
-                                            <td>".$qData['grade']."</td>
                                             <td>".$qData['pattern']."</td>
+                                            <td>".$qData['grade']."</td>
                                             <td>".$qData['back']."</td>
                                             <!--<td>".$qData['width']."x".$qData['widthFraction']." x ".$qData['length']."x".$qData['lengthFraction']." x ".$qData['thickness']."</td>-->
                                                 <td>".$qData['dimensions']."</td>
@@ -3124,9 +3141,9 @@ class QuoteController extends Controller
         $orderDate = $this->getOrderDate($qId);
         $orderExists = $this->checkIfOrderAlreadyExists($qId);
         if ($orderExists) {
-            $this->updateOrderData($qId, $estNo, $estNo, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate);
+            $this->updateOrderData($qId, $estNo, $estNo, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate,'backOrder');
         } else {
-            $this->saveOrderData($qId, $estNo, $estNo, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate);
+            $this->saveOrderData($qId, $estNo, $estNo, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate,'backOrder');
         }
         $this->updateQuoteStatus($qId, 'Approved', $deliveryDate, $datime);
     }

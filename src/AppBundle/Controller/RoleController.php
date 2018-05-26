@@ -9,6 +9,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Doctrine\Common\Collections\Criteria;
 
 class RoleController extends Controller
 {
@@ -22,7 +23,10 @@ class RoleController extends Controller
     {
         if ($request->getMethod() == 'GET') {
             $arrApi = array();
-            $roles = $this->getDoctrine()->getRepository('AppBundle:Role')->findAll();
+            $criteria = Criteria::create();
+            $criteria->where($criteria->expr()->neq('id', 4));
+            $result = $this->getDoctrine()->getRepository('AppBundle:Role');
+            $roles = $result->matching($criteria);
             if (empty($roles) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no role.';
