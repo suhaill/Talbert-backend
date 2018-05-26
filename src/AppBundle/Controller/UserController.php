@@ -133,11 +133,11 @@ class UserController extends Controller
                     $arrApi['message'] = 'Required parameters missing or invalid';
                 } else {
                     //$company = $_DATA['company'];
-                    $fname = $_DATA['fname'];
-                    $lname = $_DATA['lname'];
-                    $email = $_DATA['email'];
-                    $phone = $_DATA['phone'];
-                    $usrname = $_DATA['username'];
+                    $fname = trim($_DATA['fname']);
+                    $lname = trim($_DATA['lname']);
+                    $email = trim($_DATA['email']);
+                    $phone = trim($_DATA['phone']);
+                    $usrname = trim($_DATA['username']);
                     $roleId = $_DATA['role_id'];
                     $isAct = $_DATA['is_active'];
                     $passwd = password_hash($_DATA['password'], PASSWORD_DEFAULT);
@@ -145,6 +145,7 @@ class UserController extends Controller
                     $cntId = $_DATA['country_id'];
                     $stId = $_DATA['state_id'];
                     $city = $_DATA['city'];
+                    $is_salesman = $_DATA['is_salesman'];
                     $datime = new \DateTime('now');
                     $emailCount = $this->checkIfEmailExists($email);
                     if ($emailCount) {
@@ -169,6 +170,7 @@ class UserController extends Controller
                                 $user->setIsActive($isAct);
                                 $user->setCreatedAt($datime);
                                 $user->setUpdatedAt($datime);
+                                $user->setIsSalesman($is_salesman);
                                 $em->persist($user);
                                 $em->flush();
                                 $lastInsertId = $user->getId();
@@ -277,6 +279,7 @@ class UserController extends Controller
                             $arrApi['data']['user']['username'] = $user->getUsername();
                             $arrApi['data']['user']['role_id'] = $user->getRoleId();
                             $arrApi['data']['user']['is_active'] = $user->getIsActive();
+                            $arrApi['data']['user']['is_salesman'] = $user->getIsSalesman();
                             //$arrApi['data']['user']['company'] = $profileObj->getCompany();
                             if (!empty($profileObj)) {
                                 $arrApi['data']['user']['fname'] = $profileObj->getFname();
@@ -302,13 +305,14 @@ class UserController extends Controller
                             $profileObj = $this->getProfileDataOfUser($userId);
                             $user = $this->getDoctrine()->getRepository('AppBundle:User')->findOneById($userId);
                             //$company = $_DATA['company'];
-                            $fname = $_DATA['fname'];
-                            $lname = $_DATA['lname'];
-                            $email = $_DATA['email'];
-                            $phone = $_DATA['phone'];
-                            $usrname = $_DATA['username'];
+                            $fname = trim($_DATA['fname']);
+                            $lname = trim($_DATA['lname']);
+                            $email = trim($_DATA['email']);
+                            $phone = trim($_DATA['phone']);
+                            $usrname = trim($_DATA['username']);
                             $roleId = $_DATA['role_id'];
                             $isAct = $_DATA['is_active'];
+                            $isSalesman = $_DATA['is_salesman'];
                             if(isset($_DATA['password'])){
                              $passwd = password_hash($_DATA['password'], PASSWORD_DEFAULT);
                             }
@@ -353,6 +357,7 @@ class UserController extends Controller
                                         }
                                         $user->setRoleId($roleId);
                                         $user->setIsActive($isAct);
+                                        $user->setIsSalesman($isSalesman);
                                         $user->setUpdatedAt($datime);
                                         // Update profile table record
                                         $profileId = $this->getProfileIdByUserId($userId);

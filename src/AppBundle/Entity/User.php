@@ -67,7 +67,10 @@ class User implements UserInterface
      */
     private $userType;
 
-
+    /**
+     * @ORM\Column(type="boolean", nullable=false, name="is_salesman")
+     */
+    private $isSalesman=true;
   
 
     /**
@@ -272,6 +275,22 @@ class User implements UserInterface
     public function setUserType($userType)
     {
         $this->userType = $userType;
+    }
+    
+    /**
+     * @return mixed
+     */
+    public function getIsSalesman()
+    {
+        return $this->isSalesman;
+    }
+
+    /**
+     * @param mixed $isActive
+     */
+    public function setIsSalesman($isSalesman)
+    {
+        $this->isSalesman = $isSalesman;
     }
 
 
