@@ -2093,8 +2093,13 @@ class QuoteController extends Controller
         $array = explode(',', $labels);
         $first= current($array);
         $last= end($array);
-        $lastArray=explode('-',$last);
-        $final = $first.' > '.end($lastArray);
+        if(!empty($last)){
+            $lastArray=explode('-',$last);
+            $final = $first.' > '.end($lastArray);
+        } else {
+            $final = $first;
+        }
+        
         return $final;
     }
 
