@@ -216,6 +216,7 @@ class DoorController extends Controller
                     $arrApi['data']['thickness'] = $skinData->getThickness();
                     $arrApi['data']['frontSkinThicknessDrop'] = $skinData->getFrontSkinThickDrop();
                     $arrApi['data']['frontSkinCoreThick'] = $skinData->getFrontSkinCoreThick();
+                    $arrApi['data']['frontSkinSequence'] = $skinData->getSequence();
                     $arrApi['data']['skinTypeBack'] = $skinData->getSkinTypeBack();
                     $arrApi['data']['backSpecies'] = $skinData->getBackSpecies();
                     $arrApi['data']['backGrain'] = $skinData->getBackGrain();
@@ -229,6 +230,7 @@ class DoorController extends Controller
                     $arrApi['data']['backThickness'] = $skinData->getBackThickness();
                     $arrApi['data']['backSkinThicknessDrop'] = $skinData->getBackSkinThickDrop();
                     $arrApi['data']['backSkinCoreThick'] = $skinData->getBackSkinCoreThick();
+                    $arrApi['data']['backSkinSequence'] = $skinData->getBackSkinSequence();
                 }
                 $allfiles = $this->getAttachmentsByDoorId($doorId);
                 $filestring = '';
@@ -671,6 +673,8 @@ class DoorController extends Controller
         $color = trim($data->get('color'));
         $edge = trim($data->get('edge'));
         $skinFrontthickness = trim($data->get('skinFrontthickness'));
+        $sequesnce = trim( ($data->get('sequesnce')) ? $data->get('sequesnce') : 'narrow');
+        $backSkinSequesnce = trim( ($data->get('backSkinSequesnce')) ? $data->get('backSkinSequesnce') : 'narrow');
         $frontSkinThicknessDrop = trim($data->get('frontSkinThicknessDrop'));
         $frontSkinCoreThick = trim($data->get('frontSkinCoreThick'));
         $skinTypeBack = trim($data->get('skinTypeBack'));
@@ -704,6 +708,8 @@ class DoorController extends Controller
         $skin->setThickness($skinFrontthickness);
         $skin->setFrontSkinThickDrop($frontSkinThicknessDrop);
         $skin->setFrontSkinCoreThick($frontSkinCoreThick);
+        $skin->setSequence($sequesnce);
+        $skin->setBackSkinSequence($backSkinSequesnce);
         $skin->setSkinTypeBack($skinTypeBack);
         $skin->setBackSpecies($backSpecies);
         $skin->setBackGrain($backGrainPattern);
