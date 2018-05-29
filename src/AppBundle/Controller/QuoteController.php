@@ -218,7 +218,7 @@ class QuoteController extends Controller
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived quote details';
                 $arrApi['data']['id'] = $quoteData->getId();
-                $arrApi['data']['date'] = $quoteData->getEstimateDate();
+                $arrApi['data']['date'] = date("M d, Y",strtotime($quoteData->getEstimateDate()));
                 $arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
                 $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
                 $arrApi['data']['version'] = $quoteData->getVersion();
