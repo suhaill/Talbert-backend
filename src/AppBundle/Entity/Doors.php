@@ -59,6 +59,13 @@ class Doors
     /**
      * @var string
      *
+     * @ORM\Column(name="pairSwing", type="string", length=5)
+     */
+    private $pairSwing;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="width", type="string", length=10)
      */
     private $width;
@@ -69,6 +76,20 @@ class Doors
      * @ORM\Column(name="widthFraction", type="float")
      */
     private $widthFraction;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="pairWidth", type="string", length=10)
+     */
+    private $pairWidth;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pairWidthFraction", type="float")
+     */
+    private $pairWidthFraction;
 
     /**
      * @var bool
@@ -90,6 +111,20 @@ class Doors
      * @ORM\Column(name="lengthFraction", type="float")
      */
     private $lengthFraction;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="pairLength", type="string", length=10)
+     */
+    private $pairLength;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pairLengthFraction", type="float")
+     */
+    private $pairLengthFraction;
 
     /**
      * @var string
@@ -855,6 +890,22 @@ class Doors
     }
 
     /**
+     * @return string
+     */
+    public function getPairSwing()
+    {
+        return $this->pairSwing;
+    }
+
+    /**
+     * @param string $pairSwing
+     */
+    public function setPairSwing($pairSwing)
+    {
+        $this->pairSwing = $pairSwing;
+    }
+
+    /**
      * Set width
      *
      * @param string $width
@@ -892,6 +943,38 @@ class Doors
     public function setWidthFraction($widthFraction)
     {
         $this->widthFraction = $widthFraction;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPairWidth()
+    {
+        return $this->pairWidth;
+    }
+
+    /**
+     * @param string $pairWidth
+     */
+    public function setPairWidth($pairWidth)
+    {
+        $this->pairWidth = $pairWidth;
+    }
+
+    /**
+     * @return float
+     */
+    public function getPairWidthFraction()
+    {
+        return $this->pairWidthFraction;
+    }
+
+    /**
+     * @param float $pairWidthFraction
+     */
+    public function setPairWidthFraction($pairWidthFraction)
+    {
+        $this->pairWidthFraction = $pairWidthFraction;
     }
 
     /**
@@ -948,6 +1031,38 @@ class Doors
     public function setLengthFraction($lengthFraction)
     {
         $this->lengthFraction = $lengthFraction;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPairLength()
+    {
+        return $this->pairLength;
+    }
+
+    /**
+     * @param string $pairLength
+     */
+    public function setPairLength($pairLength)
+    {
+        $this->pairLength = $pairLength;
+    }
+
+    /**
+     * @return float
+     */
+    public function getPairLengthFraction()
+    {
+        return $this->pairLengthFraction;
+    }
+
+    /**
+     * @param float $pairLengthFraction
+     */
+    public function setPairLengthFraction($pairLengthFraction)
+    {
+        $this->pairLengthFraction = $pairLengthFraction;
     }
 
     /**
