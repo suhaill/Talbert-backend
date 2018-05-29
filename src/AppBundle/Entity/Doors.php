@@ -640,7 +640,7 @@ class Doors
     /**
      * @var string
      *
-     * @ORM\Column(name="auto_number", type="string", length=255)
+     * @ORM\Column(name="auto_number", type="text")
      */
     private $autoNumber;
 
