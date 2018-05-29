@@ -273,9 +273,9 @@ class OrderController extends Controller {
                 foreach($arrApi['data']['lineitems'] as $key=>$qData){
                     $a = ($qData['width'] + $qData['originalWidthFraction']);
                     $b = ($qData['length'] + $qData['originalLengthFraction']);
-                    $calSqrft += ($a*$b)/144;
+                    $calSqrft += ($a*$b * $qData['quantity'])/144;
                 }
-                $arrApi['data']['calSqrft']= number_format($calSqrft,2);
+                $arrApi['data']['calSqrft']= $calSqrft;
                 if(count($arrApi['data']['lineitems'])==1){
                     if($arrApi['data']['lineitems'][0]['type']=='door'){
                         $arrApi['data']['ticketFlag']=false;
@@ -486,7 +486,7 @@ class OrderController extends Controller {
         foreach($arrApi['data']['lineitems'] as $key=>$qData){
             $a = ($qData['width'] + $qData['originalWidthFraction']);
             $b = ($qData['length'] + $qData['originalLengthFraction']);
-            $calSqrft += ($a*$b)/144;
+            $calSqrft += ($a*$b * $qData['quantity'])/144;
         }
 
         $html = "<!DOCTYPE html>
@@ -552,7 +552,7 @@ class OrderController extends Controller {
                                         <td>Job Name: ".$arrApi['data']['job']."</td>
                                         <td>Delivery Date: ".$arrApi['data']['deliveryDate']."</td>
                                         <td>Ship Via: ".$arrApi['data']['shipMethod']."</td>
-                                        <td>SqFt: ".number_format($calSqrft,2)."</td>
+                                        <td>SqFt: ". round($calSqrft)."</td>
                                     </tr>
                                 </table>
                             </div>

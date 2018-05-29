@@ -2135,7 +2135,7 @@ class QuoteController extends Controller
                 $html='';
                 foreach ($plywoodRecords as $p) {
                     $calSqrftP += ((float)($p->getPlywoodWidth() + $p->getWidthFraction())*
-                            (float)($p->getPlywoodLength() +$p->getLengthFraction()))/144;
+                            (float)($p->getPlywoodLength() +$p->getLengthFraction()) * $p->getQuantity())/144;
 //                    print_r($plywoodRecords);die;
                     if($p->getFinishThickType() == 'inch'){
                         if($p->getFinishThickId()>0){
@@ -2202,7 +2202,7 @@ class QuoteController extends Controller
             
             if (!empty($veneerRecords)) {
                 foreach ($veneerRecords as $v) {
-                    $calSqrftV += ((float)($v->getWidth() + $v->getWidthFraction())*(float)($v->getLength() + $v->getLengthFraction()))/144;
+                    $calSqrftV += ((float)($v->getWidth() + $v->getWidthFraction())*(float)($v->getLength() + $v->getLengthFraction()) * $v->getQuantity())/144;
                     $lineItem[$i]['id'] = $v->getId();
                     $lineItem[$i]['type'] = 'veneer';
                     $lineItem[$i]['url'] = 'line-item/edit-veneer';
@@ -2257,7 +2257,7 @@ class QuoteController extends Controller
             }
             if (!empty($doorRecords)) {
                 foreach ($doorRecords as $d) {
-                    $calSqrftD += ((float)($d->getWidth() + $d->getWidthFraction())*(float)( $d->getLength() + $d->getLengthFraction()))/144;
+                    $calSqrftD += ((float)($d->getWidth() + $d->getWidthFraction())*(float)( $d->getLength() + $d->getLengthFraction()) * $d->getQty())/144;
                     $doorCosts = $this->getDoctrine()->getRepository('AppBundle:DoorCalculator')->
                             findOneBy(['doorId' => $d->getId()]);
                     if(!empty($doorCosts)){
@@ -2337,7 +2337,7 @@ class QuoteController extends Controller
                 }
             }
 //            return $lineItem;
-            $calSqrft = number_format($calSqrftP + $calSqrftV + $calSqrftD,2);
+            $calSqrft = round($calSqrftP + $calSqrftV + $calSqrftD);
             
             return ['lineItem'=>$lineItem,'calSqrft'=>$calSqrft];
         }
@@ -2995,7 +2995,7 @@ class QuoteController extends Controller
                                         <td>Job Name: ".$arrApi['data']['job']."</td>
                                         <td>Lead Time: ".$arrApi['data']['leadTime']."</td>
                                         <td>Ship Via: ".$arrApi['data']['shipMethod']."</td>
-                                        <td>SqFt: ".number_format($calSqrft,2)."</td>
+                                        <td>SqFt: ".$calSqrft."</td>
                                     </tr>
                                 </table>
                             </div>
