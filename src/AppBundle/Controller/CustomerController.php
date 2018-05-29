@@ -54,6 +54,8 @@ class CustomerController extends Controller
             $bZip = trim($data->get('billingZip'));
             $prdArr = $data->get('products');
             $shipArr = $data->get('shipp');
+            $is_checked = $data->get('is_checked');
+            
             $datime = new \DateTime('now');
             $isValidShipAdd = $this->validateShippingAddress($shipArr);
             if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
@@ -93,7 +95,7 @@ class CustomerController extends Controller
                                         if (empty($lstPrfId)) {
                                             $arrApi['profileMessage'] = 'Profile Data not saved.';
                                         } else {
-                                            $this->saveCustomerProfile($trmId, $comment, $lastUserId);
+                                            $this->saveCustomerProfile($trmId, $comment, $lastUserId,$is_checked);
                                             $this->saveBillingAddress($bStreet, $bCity, $bState, $bZip, $lastUserId, $datime);
                                             $this->saveShippingAddress($shipArr, $lastUserId, $datime);
                                             $this->saveDiscountData($prdArr, $lastUserId);
@@ -261,6 +263,7 @@ class CustomerController extends Controller
                 $prdArr = $data->get('products');
                 $shipArr = $data->get('shipp');
                 $datime = new \DateTime('now');
+                $is_checked = $data->get('is_checked');
                 $isValidShipAdd = $this->validateShippingAddress($shipArr);
                 if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
                     $arrApi['status'] = 0;
@@ -287,7 +290,7 @@ class CustomerController extends Controller
                                 $this->updateBillingAddress($bStreet, $bCity, $bState, $bZip, $datime, $userId);
                                 $this->updateShippingAddress($shipArr, $userId, $datime);
                                 $this->updateDiscountData($prdArr, $userId);
-                                $this->updateCustomerprofileData($trmId, $comment, $userId);
+                                $this->updateCustomerprofileData($trmId, $comment, $userId,$is_checked);
                             }
                         }
                     }
@@ -398,7 +401,7 @@ class CustomerController extends Controller
                         $comment = (empty($data[$i]['Note'])) ? '' : $data[$i]['Note'];
                         $lastUserId = $this->saveCustomerData($data[$i]['Contact'], $passwd, 11, 1, $datime, 'customer');
                         $lstPrfId = $this->saveProfileData($lastUserId, $data[$i]['Customer'], $data[$i]['Contact'], $data[$i]['Email'], $data[$i]['Phone']);
-                        $this->saveCustomerProfile($data[$i]['Term'], $comment, $lastUserId);
+                        $this->saveCustomerProfile($data[$i]['Term'], $comment, $lastUserId,0);
                         $this->saveBillingAddress($data[$i]['Street1'], $data[$i]['City'], $data[$i]['State'], $data[$i]['Zip'], $lastUserId, $datime);
                         $this->saveShipAdd($data[$i]['Nickname'], $data[$i]['StreetShip'], $data[$i]['CityShip'], $data[$i]['StateShip'], $data[$i]['ZipShip'], $data[$i]['DelChrgShip'], $data[$i]['SlsTxRtShip'], $lastUserId, $datime);
                         $this->saveDisDataImp($data[$i]['Dis'], $lastUserId);
@@ -551,19 +554,21 @@ class CustomerController extends Controller
         }
     }
 
-    private function updateCustomerprofileData($trmId, $comment, $userId) {
+    private function updateCustomerprofileData($trmId, $comment, $userId,$is_checked) {
         $em = $this->getDoctrine()->getManager();
         $custProfileId = $this->getCustProfIdByUserId($userId);
         if (!empty($custProfileId)) {
             $custProfile = $em->getRepository(CustomerProfiles::class)->find($custProfileId);
             $custProfile->setTermId($trmId);
             $custProfile->setComment($comment);
+            $custProfile->setIsChecked($is_checked);
             $em->persist($custProfile);
         } else {
             $customerProfile = new CustomerProfiles();
             $customerProfile->setTermId($trmId);
             $customerProfile->setComment($comment);
             $customerProfile->setUserId($userId);
+            $custProfile->setIsChecked($is_checked);
             $em->persist($customerProfile);
         }
         $em->flush();
@@ -696,12 +701,13 @@ class CustomerController extends Controller
         return $profile->getId();
     }
 
-    private function saveCustomerProfile($trmId, $comment, $lastUserId) {
+    private function saveCustomerProfile($trmId, $comment, $lastUserId,$is_checked) {
         $em = $this->getDoctrine()->getManager();
         $custProf = new CustomerProfiles();
         $custProf->setTermId($trmId);
         $custProf->setComment($comment);
         $custProf->setUserId($lastUserId);
+        $custProf->setIsChecked($is_checked);
         $em->persist($custProf);
         $em->flush();
     }
@@ -799,6 +805,7 @@ class CustomerController extends Controller
                 if (!empty($customerProfileData)) {
                     $user['term'] = $customerProfileData->getTermId();
                     $user['comment'] = $customerProfileData->getComment();
+                    $user['is_checked'] = $customerProfileData->getIsChecked();
                 }
                 $bAdd = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findOneBy(array('userId' => $userId,'addressType'=>'billing'));
                 if (!empty($bAdd)) {
