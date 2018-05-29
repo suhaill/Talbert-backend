@@ -129,6 +129,13 @@ class Skins
     /**
      * @var string
      *
+     * @ORM\Column(name="sequence", type="string", length=10)
+     */
+    private $sequence;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="skin_type_back", type="string", length=15)
      */
     private $skinTypeBack;
@@ -216,6 +223,13 @@ class Skins
      * @ORM\Column(name="backSkinCoreThick", type="string", length=100, nullable=true)
      */
     private $backSkinCoreThick;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="backSkinSequence", type="string", length=10)
+     */
+    private $backSkinSequence;
 
     /**
      * Get id
@@ -558,6 +572,22 @@ class Skins
     /**
      * @return string
      */
+    public function getSequence()
+    {
+        return $this->sequence;
+    }
+
+    /**
+     * @param string $sequence
+     */
+    public function setSequence($sequence)
+    {
+        $this->sequence = $sequence;
+    }
+
+    /**
+     * @return string
+     */
     public function getFrontSkinCoreThick()
     {
         return $this->frontSkinCoreThick;
@@ -777,6 +807,22 @@ class Skins
     public function setBackSkinCoreThick($backSkinCoreThick)
     {
         $this->backSkinCoreThick = $backSkinCoreThick;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackSkinSequence()
+    {
+        return $this->backSkinSequence;
+    }
+
+    /**
+     * @param string $backSkinSequence
+     */
+    public function setBackSkinSequence($backSkinSequence)
+    {
+        $this->backSkinSequence = $backSkinSequence;
     }
 }
 
