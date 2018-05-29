@@ -40,7 +40,11 @@ class CustomerProfiles
      * @ORM\Column(name="comment", type="string", length=500, nullable=true)
      */
     private $comment;
-
+    
+    /**
+     * @ORM\Column(type="boolean", nullable=false, name="is_checked")
+     */
+    private $isChecked=true;
 
     /**
      * Get id
@@ -114,6 +118,22 @@ class CustomerProfiles
     public function setUserId($userId)
     {
         $this->userId = $userId;
+    }
+    
+    /**
+     * @return mixed
+     */
+    public function getIsChecked()
+    {
+        return $this->isChecked;
+    }
+
+    /**
+     * @param mixed $isChecked
+     */
+    public function setIsChecked($isChecked)
+    {
+        $this->isChecked = $isChecked;
     }
 
 }
