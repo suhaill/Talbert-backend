@@ -2902,7 +2902,7 @@ class QuoteController extends Controller
                 $arrApi['data']['status'] = $quoteData->getStatus();
                 $arrApi['data']['comment'] = $quoteData->getComment();
                 $arrApi['data']['deliveryDate'] = $quoteData->getDeliveryDate();
-                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot())?str_replace(',','',number_format($quoteData->getQuoteTot(),0)):'00.00';
+                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot())?str_replace(',','',number_format($quoteData->getQuoteTot(),2)):'00.00';
                 $arrApi['data']['expFee'] = !empty($quoteData->getExpFee())?str_replace(',','',number_format($quoteData->getExpFee(),2)):'00.00';
                 $arrApi['data']['discount'] = !empty($quoteData->getDiscount())?str_replace(',','',number_format($quoteData->getDiscount(),2)):'00.00';
                 $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee())?str_replace(',','',number_format($quoteData->getLumFee(),2)):'00.00';
@@ -2981,7 +2981,7 @@ class QuoteController extends Controller
                                     <td class='invCapt'>
                                         <div class='captBTxt'>Quote</div>
                                         <div class='subTxt'>Q-".$arrApi['data']['controlNumber']."-".$arrApi['data']['version']."</div>
-                                        <p>".$arrApi['data']['termName']." &nbsp;|&nbsp; ".$arrApi['data']['termName']."</p>
+                                        <p>".$arrApi['data']['date']." &nbsp;|&nbsp; ".$arrApi['data']['termName']."</p>
                                         <p><em>At Talbert Architectural <br>Your Total Satisfaction <br>is Our Goal!</em></p>
                                     </td>
                                 </tr>
