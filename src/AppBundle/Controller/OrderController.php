@@ -2038,27 +2038,31 @@ class OrderController extends Controller {
             $statusCode = 422;
         } else {
             try {
-                $searchType = $this->checkIfSearchValIsEstOrCompany($searchVal);
+//                $searchType = $this->checkIfSearchValIsEstOrCompany($searchVal);
+//                print_r($searchType);die;
                 $condition = "o.isActive = :active and q.status= :status and os.statusId!='' and os.isActive=1 ";
                 $concat = ' and ';
-                if ($searchType == 'estNo') {
-                    $estimate = explode('-', $searchVal);
-                    $condition .= $concat . "q.controlNumber= :searchVal ";
-                    $keyword = $estimate[1];
-//                    $concat = " AND ";
-                } else if ($searchType == 'company') {
+//                if ($searchType == 'estNo') {
+//                    $estimate = explode('-', $searchVal);
+//                    $condition .= $concat . "q.controlNumber= :searchVal ";
+//                    $keyword = $estimate[1];
+////                    $concat = " AND ";
+//                } else 
+//                if ($searchType == 'company') {
                     if ($type == 'status') {
                         if ($searchVal != 'all') {
                             $keyword = $searchVal;
                             $condition .= $concat . "os.statusId = :searchVal ";
 //                            $concat = " AND ";
                         }
+                        $keywordLike='';
                     } else {
-                        $keyword = '%' . $searchVal . '%';
-                        $condition .= $concat . "u.company Like :searchVal ";
+                        $keywordLike = '%' . $searchVal . '%';
+                        $keyword =  $searchVal ;
+                        $condition .= $concat . "(u.company Like :searchValLike Or q.controlNumber= :searchVal)";
 //                        $concat = " AND ";
                     }
-                }
+//                }
                 if (!empty($startDate) && !empty($endDate)) {
                     $condition = $condition . $concat . " q.estimatedate >= :from AND q.estimatedate <= :to ";
                 } else if (!empty($startDate) && empty($endDate) || ($startDate == $endDate && !empty($endDate) && !empty($startDate))) {
@@ -2084,6 +2088,9 @@ class OrderController extends Controller {
                         ->setParameter('status', 'Approved');
                 if ($searchVal != 'all') {
                     $query1->setParameter('searchVal', $keyword);
+                }
+                if ($keywordLike != '') {
+                    $query1->setParameter('searchValLike', $keywordLike);
                 }
                 if (!empty($startDate) && !empty($endDate)) {
                     $query1->setParameter('from', date('Y-m-d', strtotime($startDate)).'T00:00:00')
@@ -2293,13 +2300,13 @@ class OrderController extends Controller {
                     ->leftJoin('AppBundle:Orders', 'o', 'WITH', "q.id = o.quoteId")
                     ->addSelect(['o.orderDate as orderDate', 'o.estNumber as estNumber'])
                     ->leftJoin('AppBundle:EdgeFinish', 'tef', 'WITH', "v.topEdge = tef.id")
-                    ->addSelect(['tef.name as topEdgeName'])
+                    ->addSelect(['tef.abbr as topEdgeName'])
                     ->leftJoin('AppBundle:EdgeFinish', 'bef', 'WITH', "v.bottomEdge = bef.id")
-                    ->addSelect(['bef.name as bottomEdgeName'])
+                    ->addSelect(['bef.abbr as bottomEdgeName'])
                     ->leftJoin('AppBundle:EdgeFinish', 'ref', 'WITH', "v.rightEdge = ref.id")
-                    ->addSelect(['ref.name as rightEdgeName'])
+                    ->addSelect(['ref.abbr as rightEdgeName'])
                     ->leftJoin('AppBundle:EdgeFinish', 'lef', 'WITH', "v.leftEdge = lef.id")
-                    ->addSelect(['lef.name as leftEdgeName'])
+                    ->addSelect(['lef.abbr as leftEdgeName'])
                     ->leftJoin('AppBundle:SizeEdgeMaterial', 'tem', 'WITH', "v.edgeMaterialId = tem.id")
                     ->addSelect(['tem.name as topEdgeMaterialName'])
                     ->leftJoin('AppBundle:SizeEdgeMaterial', 'bem', 'WITH', "v.bedgeMaterialId = bem.id")
@@ -2678,7 +2685,7 @@ class OrderController extends Controller {
     }
 
     private function getOrderTicketPlywoodHTMLV($v, $images_destination) {
-        /*$topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
         $bottomEdgeName = !empty($v['bottomEdgeName']) ? $v['bottomEdgeName'] : 'N/A';
         $rightEdgeName = !empty($v['rightEdgeName']) ? $v['rightEdgeName'] : 'N/A';
         $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
@@ -2711,7 +2718,7 @@ class OrderController extends Controller {
             }
         } else {
             $edge = 'No';
-        }*/
+        }
 
         //print_r($v['quantity']);die;
                 $plywoodHtml = '';
@@ -2763,6 +2770,10 @@ class OrderController extends Controller {
                             <td class="cellDesc">' . $v["patternName"] . '</td>
                         </tr>-->
                         <tr>
+                            <td class="cellLabel"><label>Pattern</label></td>
+                            <td class="cellDesc">'.$v['patternMatch'].'</td>
+                        </tr>
+                        <tr>
                             <td class="cellLabel"><label>Face Grade</label></td>
                             <td class="cellDesc">' . $v["faceGradeName"] . '</td>
                         </tr>
@@ -2771,16 +2782,16 @@ class OrderController extends Controller {
                             <td class="cellDesc">' . $v["grainDirectionName"] . '</td>
                         </tr>
                         <tr>
-                            <td class="cellLabel"><label>Back</label></td>
-                            <td class="cellDesc">' . $v["backerName"] . '</td>
-                        </tr>
-                        <tr>
                             <td class="cellLabel"><label>Sequenced</label></td>
                             <td class="cellDesc">'.($v["isSequenced"] == 1 ? "Yes" : "No").'</td>
                         </tr>
                         <tr>
-                            <td class="cellLabel"><label>Pattern</label></td>
-                            <td class="cellDesc">'.$v['patternMatch'].'</td>
+                            <td class="cellLabel"><label>Back</label></td>
+                            <td class="cellDesc">' . $v["backerName"] . '</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Edge Details</label></td>
+                            <td class="cellDesc">' . $edge . '</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Label</label></td>
@@ -3170,7 +3181,7 @@ class OrderController extends Controller {
         $last= end($array);
         if(!empty($last)){
             $lastArray=explode('-',$last);
-            $final = $first.' > '.end($lastArray);
+            $final = $first.' > '.count($array);
         } else {
             $final = $first;
         }
