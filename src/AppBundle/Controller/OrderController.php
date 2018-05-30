@@ -2323,7 +2323,7 @@ class OrderController extends Controller {
                     ->addSelect(['rs.name as rightSpeciesName'])
                     ->leftJoin('AppBundle:Species', 'ls', 'WITH', "v.ledgeFinishSpeciesId = ls.id")
                     ->addSelect(['ls.name as leftSpeciesName'])
-                    ->where("st.statusName != 'LineItemBackOrder' AND v.quoteId = " . $quoteId)
+                    ->where("st.statusName != 'LineItemBackOrder' AND v.quoteId = " . $quoteId." AND lis.lineItemType='Plywood'")
                     ->getQuery()
                     ->getResult();
 //                ->getSQL();   
@@ -2383,7 +2383,7 @@ class OrderController extends Controller {
                     ->leftJoin('AppBundle:CoreType', 'ct', 'WITH', "ct.id = v.coreTypeId")
                     ->addSelect(['ct.name as coreType'])
                     ->addSelect(['o.orderDate as orderDate', 'o.estNumber as estNumber'])
-                    ->where("st.statusName != 'LineItemBackOrder' AND v.quoteId = " . $quoteId)
+                    ->where("st.statusName != 'LineItemBackOrder' AND v.quoteId = " . $quoteId." AND lis.lineItemType='Veneer'")
                     ->getQuery()
                     ->getResult();
         } else {
