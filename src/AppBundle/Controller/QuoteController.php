@@ -599,24 +599,26 @@ class QuoteController extends Controller
                 $searchType = $this->checkIfSearchValIsEstOrCompany($searchVal);
                 $condition="q.status != :status and qs.statusId!='' and qs.isActive=1 ";
                 $concat = ' and ';
-                if ($searchType == 'estNo') {
-                    $estimate = explode('-',$searchVal);
-                    $condition.=$concat."q.controlNumber= :searchVal ";
-                    $keyword = $estimate[1];
-                //                    $concat = " AND ";
-                } else if ($searchType == 'company'){
+//                if ($searchType == 'estNo') {
+//                    $estimate = explode('-',$searchVal);
+//                    $condition.=$concat."q.controlNumber= :searchVal ";
+//                    $keyword = $estimate[1];
+//                //                    $concat = " AND ";
+//                } else if ($searchType == 'company'){
                     if($type=='status'){
                         if($searchVal!='all'){
                             $keyword=$searchVal;                  
                             $condition.=$concat."qs.statusId = :searchVal ";
                 //                            $concat = " AND ";
-                        }                        
+                        } 
+                        $keywordLike='';
                     } else {
-                        $keyword='%'.$searchVal.'%';                  
-                        $condition.=$concat."u.company Like :searchVal ";
+                        $keywordLike = '%' . $searchVal . '%';
+                        $keyword =  $searchVal ;
+                        $condition .= $concat . "(u.company Like :searchValLike Or q.controlNumber= :searchVal)";
                 //                        $concat = " AND ";
                     }                    
-                }
+//                }
                 if(!empty($startDate) && !empty($endDate)){
                     $condition = $condition.$concat." q.estimatedate >= :from AND q.estimatedate <= :to ";
                 } else if(!empty($startDate) && empty($endDate) || ($startDate == $endDate && !empty($endDate) && !empty($startDate))){
@@ -641,6 +643,9 @@ class QuoteController extends Controller
                     ->setParameter('status', 'Approved');
                 if($searchVal!='all'){
                     $query1->setParameter('searchVal', $keyword);
+                }
+                if ($keywordLike != '') {
+                    $query1->setParameter('searchValLike', $keywordLike);
                 }
                 if(!empty($startDate) && !empty($endDate)){
                     $query1->setParameter('from', date('Y-m-d',strtotime($startDate)).'T00:00:00')
@@ -2097,7 +2102,7 @@ class QuoteController extends Controller
         $last= end($array);
         if(!empty($last)){
             $lastArray=explode('-',$last);
-            $final = $first.' > '.end($lastArray);
+            $final = $first.' > '.count($array);
         } else {
             $final = $first;
         }
