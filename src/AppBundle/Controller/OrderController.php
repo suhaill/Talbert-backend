@@ -154,7 +154,7 @@ class OrderController extends Controller {
                 ->innerJoin('AppBundle:OrderStatus', 'os', 'WITH', "o.id = os.orderId")
                 ->leftJoin('AppBundle:Status', 's', 'WITH', "os.statusId=s.id ")
                 ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
-                ->where("o.isActive = 1 and q.status='Approved' and os.isActive=1")
+                ->where("o.isActive = 1 and q.status='Approved' and os.isActive=1 and s.id=5")
                 ->orderBy($columnName, $orderBy)
                 ->getQuery()
                 ->getResult()
