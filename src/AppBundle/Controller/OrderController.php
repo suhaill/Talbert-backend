@@ -2708,13 +2708,13 @@ class OrderController extends Controller {
                 $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
             }
             if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
-                $edge .= 'TE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
+                $edge .= 'BE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
             }
             if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
-                $edge .= 'TE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
+                $edge .= 'RE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
             }
             if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
-                $edge .= 'TE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+                $edge .= 'LE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
             }
         } else {
             $edge = 'No';
@@ -2866,13 +2866,13 @@ class OrderController extends Controller {
                 $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
             }
             if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
-                $edge .= 'TE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
+                $edge .= 'BE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
             }
             if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
-                $edge .= 'TE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
+                $edge .= 'RE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
             }
             if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
-                $edge .= 'TE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+                $edge .= 'LE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
             }
         } else {
             $edge = 'No';
@@ -3018,13 +3018,13 @@ class OrderController extends Controller {
                 $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
             }
             if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
-                $edge .= 'TE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
+                $edge .= 'BE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
             }
             if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
-                $edge .= 'TE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
+                $edge .= 'RE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
             }
             if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
-                $edge .= 'TE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+                $edge .= 'LE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
             }
         } else {
             $edge = 'No';
