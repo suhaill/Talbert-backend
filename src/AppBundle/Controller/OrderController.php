@@ -282,9 +282,14 @@ class OrderController extends Controller {
                         $arrApi['data']['ticketFlag']=false;
                     } else {
                         $arrApi['data']['ticketFlag']=true;
-                    } 
+                    }
                 } else {
                     $arrApi['data']['ticketFlag']=true;
+                }
+                if($arrApi['data']['lineitems'][0]['type']=='plywood'){
+                    $arrApi['data']['labelFlag']=true;
+                } else {
+                    $arrApi['data']['labelFlag']=false;
                 }               
             }
         } catch (Exception $e) {
@@ -2923,7 +2928,7 @@ class OrderController extends Controller {
                         </tr>
                     </table></div></div></body></html>';
         $htmlArr['footer'] = '<!DOCTYPE html>
-        <html>
+        <html> 
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -3366,5 +3371,86 @@ class OrderController extends Controller {
     private function getGrainPatternOfDoor($id) {
         $skin= $this->getDoctrine()->getRepository('AppBundle:Skins')->findOneBy(['doorId'=>$id]);
         return $this->getGrainNameById($skin->getGrain());
+    }
+    
+    /**
+     * @Route("/api/order/printOrderLabel")
+     * @Method("POST")
+     * params: None
+     */
+    public function printOrderLabelAction(Request $request) {
+
+        
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $quoteId = !empty($data->get('quote_id')) ? trim($data->get('quote_id')) : '';
+        $query = $this->getDoctrine()->getManager();
+        $plywoodRecords = $query->createQueryBuilder()
+            ->select(['p.autoNumber'])
+            ->from('AppBundle:Plywood', 'p')
+            ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
+            ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")            
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId and p.isActive=1")
+            ->orderBy('p.id','ASC')
+            ->setParameter('quoteId', $quoteId)
+            ->setParameter('lineItemType', 'Plywood')
+            ->getQuery()
+            ->getResult();
+        $labels=[];
+        if(!empty($plywoodRecords)){
+            foreach ($plywoodRecords as $v) {
+                if(!empty($v['autoNumber'])){
+                    $a=explode(',',$v['autoNumber']);
+                    $labels= array_merge($labels,$a);
+                }
+            }
+        }
+        $labels= array_values(array_filter($labels));
+        $images_destination = $this->container->getParameter('images_destination');
+        $htmlBlocks=[];
+        for($i=0;$i<count($labels);$i++){
+            $a = explode('-',$labels[$i]);
+            $final=$a[0].(!empty($a[1])?'-'.$a[1].(!empty($a[2])?'-<span>'.$a[2].'</span>':''):'');
+        $htmlBlocks[]='
+            <!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:700" rel="stylesheet">
+        <style>
+            .tlbLabel{
+            padding:9px;width:248px;height:56px;display:block;margin:auto;-webkit-box-sizing:border-box;
+            -moz-box-sizing:border-box;box-sizing:border-box;font-size:28px;font-family:"Roboto Condensed",sans-serif;}
+            .tlbLabel>img{float:left;margin:0 10px 0 0;}
+            .tlbLabel label{display:inline-block;font-weight:700;color:#818285;line-height:38px;}
+            .tlbLabel label span{color:#231f20;}
+        </style>
+    </head>
+    <body>
+        <div class="tlbLabel">
+            <img src="'.$images_destination.'bw-logo.jpg" alt="">
+            <label>'.$final.'</label>
+        </div>
+    </body>
+</html>';
+        }   
+        return new Response(
+            $this->get('knp_snappy.pdf')
+                ->getOutputFromHtml(
+                    $htmlBlocks, [
+                        'orientation' => 'portrait',
+                        'default-header' => false,
+                        'page-height' => 15,
+                        'page-width'  => 60,
+                        'margin-top' => '0mm',
+                        'margin-bottom' => '0mm',
+                        'margin-left' => '0mm',
+                        'margin-right' => '0mm'
+                    ]
+                ),
+            200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="Test.pdf"'
+            ]);        
     }
 }
