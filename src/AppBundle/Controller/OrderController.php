@@ -2550,11 +2550,11 @@ class OrderController extends Controller {
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Veneer Size</label></td>
-                    <td class="cellDesc">'.($v['width'] + 1).' '.$this->float2rat($v['widthFraction']).'" x '.($v['length']+1).' '.$this->float2rat($v['lengthFraction']).'"</td>
+                    <td class="cellDesc">'.($v['width'] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v['length']+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Finished Size</label></td>
-                    <td class="cellDesc">'.($v["width"]).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]).' '.$this->float2rat($v["lengthFraction"]).'"</td>
+                    <td class="cellDesc">'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Thickness</label></td>
@@ -2692,11 +2692,11 @@ class OrderController extends Controller {
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Veneer Size</label></td>
-                    <td class="cellDesc">'.($v['width'] + 1).' '.$this->float2rat($v['widthFraction']).'" x '.($v['length']+1).' '.$this->float2rat($v['lengthFraction']).'"</td>
+                    <td class="cellDesc">'.($v['width'] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v['length']+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Finished Size</label></td>
-                    <td class="cellDesc">'.($v["width"]).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]).' '.$this->float2rat($v["lengthFraction"]).'"</td>
+                    <td class="cellDesc">'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Thickness</label></td>
@@ -2872,11 +2872,11 @@ class OrderController extends Controller {
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Veneer Size</label></td>
-                            <td class="cellDesc">'.($v["width"] + 1).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]+1).' '.$this->float2rat($v["lengthFraction"]).'"</td>
+                            <td class="cellDesc">'.($v["width"] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Finished Size</label></td>
-                            <td class="cellDesc">'.($v["width"]).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]).' '.$this->float2rat($v["lengthFraction"]).'"</td>
+                            <td class="cellDesc">'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Thickness</label></td>
@@ -3054,11 +3054,11 @@ class OrderController extends Controller {
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Cut Size</label></td>
-                        <td class="cellDesc">'.($v["width"] + 1).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]+1).' '.$this->float2rat($v["lengthFraction"]).'"</td>
+                        <td class="cellDesc">'.($v["width"] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
-                        <td class="cellDesc">'.($v["width"]).' '.$this->float2rat($v["widthFraction"]).'" x '.($v["length"]).' '.$this->float2rat($v["lengthFraction"]).'"</td>
+                        <td class="cellDesc">'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
                     </tr>
                     <!--<tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
@@ -3229,11 +3229,11 @@ class OrderController extends Controller {
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Cut Size</label></td>
-                        <td class="cellDesc">' . ($v["width"] + 1) . ' ' . $this->float2rat($v["widthFraction"]) . '" x ' . ($v["length"] + 1) . ' ' . $this->float2rat($v["lengthFraction"]) . '"</td>
+                        <td class="cellDesc">' . ($v["width"] + 1) .($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'') . '" x ' . ($v["length"] + 1) . ($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'') . '"</td>
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
-                        <td class="cellDesc">' . ($v["width"]) . ' ' . $this->float2rat($v["widthFraction"]) . '" x ' . ($v["length"]) . ' ' . $this->float2rat($v["lengthFraction"]) . '"</td>
+                        <td class="cellDesc">' . ($v["width"]) . ($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'') . '" x ' . ($v["length"]) . ($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'') . '"</td>
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Fin. Thickness</label></td>
