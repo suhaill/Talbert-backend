@@ -25,6 +25,7 @@ use AppBundle\Entity\Doors;
 use Knp\Snappy\Pdf;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use AppBundle\Entity\ShippedQuantity;
 
 use PDFMerger;
 
@@ -1357,7 +1358,7 @@ class OrderController extends Controller {
 
 
             $plywoodRecords = $query->createQueryBuilder()
-            ->select(['p.id, p.quantity, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName,p.millingDescription'])
+            ->select(['p.id, p.quantity, p.quantityRemaining, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName,p.millingDescription'])
             ->from('AppBundle:Plywood', 'p')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1376,7 +1377,7 @@ class OrderController extends Controller {
             ->getQuery()
             ->getResult();
         $veneerRecords = $query->createQueryBuilder()
-            ->select(['v.id, v.quantity, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName',"'' as millingDescription"])
+            ->select(['v.id, v.quantity, v.quantityRemaining, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName',"'' as millingDescription"])
             ->from('AppBundle:Veneer', 'v')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1397,7 +1398,7 @@ class OrderController extends Controller {
             ->getQuery()
             ->getResult();
         $doorRecords = $query->createQueryBuilder()
-            ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType,d.millingDescription'])
+            ->select(['d.id, d.qty, d.quantityRemaining, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType,d.millingDescription'])
             ->from('AppBundle:Doors', 'd')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1433,6 +1434,7 @@ class OrderController extends Controller {
                     $lineItem[$i]['type'] = 'plywood';
                     $lineItem[$i]['url'] = 'line-item/edit-plywood';
                     $lineItem[$i]['quantity'] = $p['quantity'];
+                    $lineItem[$i]['quantityRemaining'] = $p['quantityRemaining'];
                     $lineItem[$i]['species'] = $this->getSpeciesNameById($p['speciesId']);
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($p['patternMatch']);
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($p['gradeId']))[0];
@@ -1493,6 +1495,7 @@ class OrderController extends Controller {
                     $lineItem[$i]['type'] = 'veneer';
                     $lineItem[$i]['url'] = 'line-item/edit-veneer';
                     $lineItem[$i]['quantity'] = $v['quantity'];
+                    $lineItem[$i]['quantityRemaining'] = $v['quantityRemaining'];
                     $lineItem[$i]['species'] = $this->getSpeciesNameById($v['speciesId']);
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($v['patternId']);
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($v['gradeId']))[0];
@@ -1571,6 +1574,7 @@ class OrderController extends Controller {
                     $lineItem[$i]['type'] = 'door';
                     $lineItem[$i]['url'] = 'door/edit-door';
                     $lineItem[$i]['quantity'] = $d['qty'];
+                    $lineItem[$i]['quantityRemaining'] = $d['quantityRemaining'];
                     if ($this->getSpeciesNameById($this->getSpeciesIdByDoorId($d['id'])) == null) {
                         $lineItem[$i]['grain'] = 'Other';
                         $lineItem[$i]['species'] = 'Other';
@@ -2310,6 +2314,93 @@ class OrderController extends Controller {
         $binaryContent = $pdf->merge('string', "mergedpdf.pdf");
         $response = new Response($binaryContent);
         return $response;
+    }
+
+    /**
+     * @Route("/api/order/addShippedQty")
+     * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
+     */
+    public function addShipQtyAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $orderId = $data->get('orderId');
+        $lineItemArr = explode('-', $data->get('lineItemIdArr'));
+        $lineItemId = $lineItemArr[0];
+        $lineItemType = ( ($lineItemArr[1] == 'V') ? "Veneer" : (($lineItemArr[1] == 'P') ? "Plywood" : "Door") );
+        $qtyToBeShipped = $lineItemArr[2];
+        $loggedinUserId = $data->get('loggedInUser');
+        $createdDate = new \DateTime('now');
+        $currentQty = $this->getCurrQtyOfLineItem($orderId, $lineItemId, $lineItemType);
+        if ($qtyToBeShipped <= $currentQty) {
+            $remainingQty = $currentQty - $qtyToBeShipped;
+            $saved = $this->insertShippedQty($orderId, $lineItemId, $lineItemType, $qtyToBeShipped, $loggedinUserId, $currentQty, $createdDate);
+            if ($saved) {
+                $this->updateRemQty($orderId, $lineItemId, $lineItemType, $remainingQty);
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully added shipped quantity';
+            } else {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'There is some error';
+            }
+        } else {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'You can not ship this quantity';
+        }
+        return new JsonResponse($arrApi);
+    }
+
+    /**
+     * @Route("/api/order/getShippedlineitemData")
+     * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
+     */
+    public function getShippedlineitemAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $lineitemType = ( ($data->get('lineitemType') == 'plywood') ? 'Plywood' : ( ($data->get('lineitemType') == 'door') ? 'Door' : 'Veneer'));
+        $shippedData = $this->getShippedLineitemDataByParams($data, $lineitemType);
+        //print_r($shippedData);die;
+        if (empty($shippedData)) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'There is no shipped quantity for this line item';
+        } else {
+            $arrApi['status'] = 1;
+            $arrApi['message'] = 'Success';
+            $i = 0;
+            foreach ($shippedData as $d) {
+                $arrApi['data'][$i]['id'] = $d['id'];
+                $arrApi['data'][$i]['fname'] = strtoupper($d['fname']);
+                $arrApi['data'][$i]['lname'] = strtoupper($d['lname']);
+                $arrApi['data'][$i]['orderId'] = $d['orderId'];
+                $arrApi['data'][$i]['lineitemId'] = $d['lineitemId'];
+                $arrApi['data'][$i]['lineitemType'] = $d['lineitemType'];
+                $arrApi['data'][$i]['qtyShipped'] = $d['qtyShipped'];
+                $arrApi['data'][$i]['createdAt'] = date_format($d['createdAt'],"l").' '.date_format($d['createdAt'],"M d, Y");
+                $i++;
+            }
+        }
+        return new JsonResponse($arrApi);
+    }
+
+    private function getShippedLineitemDataByParams($data, $lineitemType) {
+        $query = $this->getDoctrine()->getManager();
+        $result = $query->createQueryBuilder()
+            ->select(['sq.id','sq.orderId', 'sq.lineitemId', 'sq.lineitemType','sq.qtyShipped','sq.createdAt'])
+            ->from('AppBundle:ShippedQuantity', 'sq')
+            ->leftJoin('AppBundle:Profile', 'p', 'WITH', 'sq.loggedinUserId = p.userId')
+            ->addSelect(['p.fname', 'p.lname'])
+            ->where("sq.orderId = :orderId AND sq.lineitemId = :lineitemId AND sq.lineitemType=:lineitemtype")
+            ->setParameter(':orderId', $data->get('orderId'))
+            ->setParameter(':lineitemId', $data->get('lineitemId'))
+            ->setParameter(':lineitemtype', $lineitemType)
+            ->getQuery()
+            ->getResult();
+        return $result;
     }
 
     private function getPlywoodDataByQuoteId($quoteId) {
@@ -3452,5 +3543,59 @@ class OrderController extends Controller {
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'attachment; filename="Test.pdf"'
             ]);        
+    }
+
+    private function getCurrQtyOfLineItem($orderId, $lineItemId, $lineItemType) {
+        $qty = 0;
+        if ($lineItemType == 'Veneer') {
+            $veneer = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findOneBy([ 'id' => $lineItemId, 'quoteId' => $orderId]);
+            $qty = $veneer->getQuantityRemaining();
+        } elseif ($lineItemType == 'Plywood') {
+            $plywood = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findOneBy([ 'id' => $lineItemId, 'quoteId' => $orderId]);
+            $qty = $plywood->getQuantityRemaining();
+        } else {
+            $door = $this->getDoctrine()->getRepository('AppBundle:Doors')->findOneBy([ 'id' => $lineItemId, 'quoteId' => $orderId]);
+            $qty = $door->getQuantityRemaining();
+        }
+        return $qty;
+    }
+
+    private function insertShippedQty($orderId, $lineItemId, $lineItemType, $qtyToBeShipped, $loggedinUserId, $currentQty, $createdDate) {
+        $em = $this->getDoctrine()->getManager();
+        $em->getConnection()->beginTransaction();
+        try {
+            $shippedQuantity = new ShippedQuantity();
+            $shippedQuantity->setOrderId($orderId);
+            $shippedQuantity->setLineitemId($lineItemId);
+            $shippedQuantity->setLineitemType($lineItemType);
+            $shippedQuantity->setQtyShipped($qtyToBeShipped);
+            $shippedQuantity->setLoggedinUserId($loggedinUserId);
+            $shippedQuantity->setCreatedAt($createdDate);
+            $em->persist($shippedQuantity);
+            $em->flush();
+            $em->getConnection()->commit();
+        } catch (Exception $ex) {
+            $em->getConnection()->rollback();
+        }
+        return true;
+    }
+
+    private function updateRemQty($orderId, $lineItemId, $lineItemType, $remainingQty) {
+        $em = $this->getDoctrine()->getManager();
+        if ($lineItemType == 'Veneer') {
+            $veneer = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findOneBy([ 'id' => $lineItemId, 'quoteId' => $orderId]);
+            $veneer->setQuantityRemaining($remainingQty);
+            $em->persist($veneer);
+
+        } elseif ($lineItemType == 'Plywood') {
+            $plywood = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findOneBy([ 'id' => $lineItemId, 'quoteId' => $orderId]);
+            $plywood->setQuantityRemaining($remainingQty);
+            $em->persist($plywood);
+        } else {
+            $door = $this->getDoctrine()->getRepository('AppBundle:Doors')->findOneBy([ 'id' => $lineItemId, 'quoteId' => $orderId]);
+            $door->setQuantityRemaining($remainingQty);
+            $em->persist($door);
+        }
+        $em->flush();
     }
 }

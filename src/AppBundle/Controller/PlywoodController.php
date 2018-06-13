@@ -230,6 +230,7 @@ class PlywoodController extends Controller
         $em = $this->getDoctrine()->getManager();
         $plywood = new Plywood();
         $plywood->setQuantity($quantity);
+        $plywood->setQuantityRemaining($quantity);
         $plywood->setLineItemNum($lineItemNumberToBeUsed);
         $plywood->setSpeciesId($speciesId);
         $plywood->setGrainPatternId('');
