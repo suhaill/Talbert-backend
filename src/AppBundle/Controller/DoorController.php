@@ -556,6 +556,7 @@ class DoorController extends Controller
         $door = new Doors();
         $door->setQuoteId($qid);
         $door->setQty($qty);
+        $door->setQuantityRemaining($qty);
         $door->setLineItemNum($lineItemNumberToBeUsed);
         $door->setPair($pair);
         $door->setSwing($swing);

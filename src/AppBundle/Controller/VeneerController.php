@@ -117,6 +117,7 @@ class VeneerController extends Controller
         $em = $this->getDoctrine()->getManager();
         $veneer = new Veneer();
         $veneer->setQuantity($quantity);
+        $veneer->setQuantityRemaining($quantity);
         $veneer->setSpeciesId($speciesId);
         $veneer->setGrainPatternId('');
         $veneer->setFlakexFiguredId('');
