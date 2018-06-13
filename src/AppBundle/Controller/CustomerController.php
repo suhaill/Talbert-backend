@@ -18,6 +18,7 @@ use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use AppBundle\Entity\User;
 use AppBundle\Entity\Profile;
+use AppBundle\Entity\CustomerContacts;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -37,14 +38,15 @@ class CustomerController extends Controller
             $data = $jsontoarraygenerator->getJson($request);
             $currLoggedInUserId = $data->get('current_user_id');
             $currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
+            $contactInfo = $data->get('contacts');
             $company = trim($data->get('company'));
-            $fName = trim($data->get('fname'));
+            $fName = !empty(trim($contactInfo[0]['fname']))?trim($contactInfo[0]['fname']):'';
             $passwd = password_hash('123456', PASSWORD_DEFAULT);
             $roleId = '11';
             $isActive = $data->get('is_active');
             $usrType = 'customer';
-            $phone = trim($data->get('phone'));
-            $email = trim($data->get('email'));
+            $phone = !empty(trim($contactInfo[0]['phone']))?trim($contactInfo[0]['phone']):'';
+            $email = !empty(trim($contactInfo[0]['email']))?trim($contactInfo[0]['email']):'';
             $usrname = $email;
             $trmId = $data->get('term');
             $comment = trim($data->get('comment'));
@@ -55,6 +57,22 @@ class CustomerController extends Controller
             $prdArr = $data->get('products');
             $shipArr = $data->get('shipp');
             $is_checked = $data->get('is_checked');
+            $isName=false;
+            $isPhone=false;
+            $isEmail=false;
+            if(count($contactInfo)>1){
+                for($i=1;$i<count($contactInfo);$i++){
+                    if(empty(trim($contactInfo[$i]['fname']))){
+                        $isName=true;
+                    }
+                    if(is_numeric(trim($contactInfo[$i]['phone'])) && strlen(trim($contactInfo[$i]['phone'])) > 10){
+                        $isPhone=true;
+                    }
+                    if(!filter_var(trim($contactInfo[$i]['email']),FILTER_VALIDATE_EMAIL )){
+                        $isEmail=true;
+                    }
+                }
+            }
             
             $datime = new \DateTime('now');
             $isValidShipAdd = $this->validateShippingAddress($shipArr);
@@ -62,15 +80,21 @@ class CustomerController extends Controller
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'You are not allowed to add customers';
             } else {
-                if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($email) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip)  || empty ($shipArr) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) || empty($isValidShipAdd)) {
+                if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($email) || empty ($trmId) ||
+                        empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip)  || empty ($shipArr) || 
+                        empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || 
+                        empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || 
+                        empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || 
+                        empty (trim($shipArr[0]['salesTaxRate'])) || empty($isValidShipAdd) || $isName==true 
+                ) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'Please fill all required fields';
                 } else {
-                    if ( is_numeric($phone) && strlen($phone) > 10 ) {
+                    if ( is_numeric($phone) && strlen($phone) > 10 || $isPhone==true) {
                         $arrApi['status'] = 0;
                         $arrApi['message'] = 'Please enter correct phone number';
                     } else {
-                        if ( !filter_var($email,FILTER_VALIDATE_EMAIL )) {
+                        if ( !filter_var($email,FILTER_VALIDATE_EMAIL ) || $isEmail==true) {
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Invalid email address';
                         } else {
@@ -99,6 +123,7 @@ class CustomerController extends Controller
                                             $this->saveBillingAddress($bStreet, $bCity, $bState, $bZip, $lastUserId, $datime);
                                             $this->saveShippingAddress($shipArr, $lastUserId, $datime);
                                             $this->saveDiscountData($prdArr, $lastUserId);
+                                            $this->saveCustomerContact($contactInfo,$lastUserId);
                                         }
                                     }
                                 }
@@ -247,13 +272,14 @@ class CustomerController extends Controller
             try {
                 $jsontoarraygenerator = new JsonToArrayGenerator();
                 $data = $jsontoarraygenerator->getJson($request);
+                $contactInfo = $data->get('contacts');
                 $userId = $data->get('customer_id');
                 $currLoggedInUserId = $data->get('current_user_id');
                 $currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
                 $company = trim($data->get('company'));
-                $fName = trim($data->get('fname'));
+                $fName = !empty(trim($contactInfo[0]['fname']))?trim($contactInfo[0]['fname']):'';
                 $isActive = $data->get('is_active');
-                $phone = trim($data->get('phone'));
+                $phone = !empty(trim($contactInfo[0]['phone']))?trim($contactInfo[0]['phone']):'';
                 $trmId = $data->get('term');
                 $comment = trim($data->get('comment'));
                 $bStreet = trim($data->get('billingStreet'));
@@ -265,16 +291,39 @@ class CustomerController extends Controller
                 $datime = new \DateTime('now');
                 $is_checked = $data->get('is_checked');
                 $isValidShipAdd = $this->validateShippingAddress($shipArr);
+                $isName=false;
+                $isPhone=false;
+                $isEmail=false;
+                if(count($contactInfo)>1){
+                    for($i=1;$i<count($contactInfo);$i++){
+                        if(empty(trim($contactInfo[$i]['fname']))){
+                            $isName=true;
+                        }
+                        if(is_numeric(trim($contactInfo[$i]['phone'])) && strlen(trim($contactInfo[$i]['phone'])) > 10){
+                            $isPhone=true;
+                        }
+                        if(!filter_var(trim($contactInfo[$i]['email']),FILTER_VALIDATE_EMAIL )){
+                            $isEmail=true;
+                        }
+                    }
+                }
+                
                 if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'You are not allowed to update customers';
                     $statusCode = 422;
                 } else {
-                    if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty($isValidShipAdd) ) {
+                    if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($trmId) || 
+                            empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty($isValidShipAdd) 
+                            || $isName==true 
+                    ) {
                         $arrApi['status'] = 0;
                         $arrApi['message'] = 'Please fill all required fields';
                     } else {
-                        if ( is_numeric($phone) && strlen($phone) > 10 ) {
+                        if ($isEmail==true) {
+                            $arrApi['status'] = 0;
+                            $arrApi['message'] = 'Invalid email address';
+                        } else if ( is_numeric($phone) && strlen($phone) > 10 || $isPhone==true) {
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Please enter correct phone number';
                         } else {
@@ -291,6 +340,7 @@ class CustomerController extends Controller
                                 $this->updateShippingAddress($shipArr, $userId, $datime);
                                 $this->updateDiscountData($prdArr, $userId);
                                 $this->updateCustomerprofileData($trmId, $comment, $userId,$is_checked);
+                                $this->saveCustomerContact($contactInfo,$userId,'edit');
                             }
                         }
                     }
@@ -840,6 +890,19 @@ class CustomerController extends Controller
                         //$user['discount'][$i]['status'] = $discounts[$i]->getStatus();
                     }
                 }
+                $contact = $this->getDoctrine()->getRepository('AppBundle:CustomerContacts')->findBy(['userId' => $userId]);
+                $user['contacts'][0]['fname'] = $profileData->getFname();
+                $user['contacts'][0]['email'] = $profileData->getEmail();
+                $user['contacts'][0]['phone'] = $profileData->getPhone();
+                if(!empty($contact)){
+                    $j=1;
+                    foreach ($contact as $v) {
+                        $user['contacts'][$j]['fname'] = $v->getContactName();
+                        $user['contacts'][$j]['email'] = $v->getEmail();
+                        $user['contacts'][$j]['phone'] = $v->getPhone();
+                        $j++;
+                    }
+                }                
                 return $user;
             }
         }
@@ -943,5 +1006,29 @@ class CustomerController extends Controller
             }
         }
         return $res;
+    }
+    
+    private function saveCustomerContact($contactInfo,$lastUserId,$type=''){
+        if(count($contactInfo)>1){
+            $em = $this->getDoctrine()->getManager();
+            if(!empty($type) && $type == 'edit'){
+                $conn = $this->getDoctrine()->getConnection('default');
+                $SQL="delete from customer_contacts WHERE user_id = :userid";
+                $stmt=$conn->prepare($SQL);
+                $stmt->bindParam(':userid',$lastUserId,PDO::PARAM_INT);
+                $stmt->execute();
+            }
+            $a = new CustomerContacts();
+            for ($i=1;$i<count($contactInfo);$i++){
+                $a->setContactName($contactInfo[$i]['fname']);
+                //if(empty($type)){
+                    $a->setEmail($contactInfo[$i]['email']);
+                //}
+                $a->setPhone($contactInfo[$i]['phone']);
+                $a->setUserId($lastUserId);
+                $em->persist($a);
+            }
+            $em->flush();
+        }
     }
 }
