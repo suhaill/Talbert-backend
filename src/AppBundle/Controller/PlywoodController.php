@@ -110,27 +110,27 @@ class PlywoodController extends Controller
             $panelWaste = trim($getJson->get('panelWaste') ? $getJson->get('panelWaste') : 1);
             $subTotPanel = trim($getJson->get('subTotPanel') ? $getJson->get('subTotPanel') : 0);
             
-            $finishCost = trim($getJson->get('finishCost') ? $getJson->get('finishCost') : 0);
+            $finishCost = trim($getJson->get('finishCost') ? $getJson->get('finishCost') : 1);
             $finishWaste = trim($getJson->get('finishWaste') ? $getJson->get('finishWaste') : 1);
             $subTotalWaste = trim($getJson->get('subTotalWaste') ? $getJson->get('subTotalWaste') : 0);
             
-            $edgeIntCost = trim($getJson->get('edgeIntCost') ? $getJson->get('edgeIntCost') : 0);
+            $edgeIntCost = trim($getJson->get('edgeIntCost') ? $getJson->get('edgeIntCost') : 1);
             $edgeIntWaste = trim($getJson->get('edgeIntWaste') ? $getJson->get('edgeIntWaste') : 1);
             $subTotalEdgeint = trim($getJson->get('subTotalEdgeint') ? $getJson->get('subTotalEdgeint') : 0);
             
-            $edgeVCost = trim($getJson->get('edgeVCost') ? $getJson->get('edgeVCost') : 0);
+            $edgeVCost = trim($getJson->get('edgeVCost') ? $getJson->get('edgeVCost') : 1);
             $edgeVWaste = trim($getJson->get('edgeVWaste') ? $getJson->get('edgeVWaste') : 1);
             $subTotalEdgev = trim($getJson->get('subTotalEdgev') ? $getJson->get('subTotalEdgev') : 0);
 
-            $finishEdgeCost = trim($getJson->get('finishEdgeCost') ? $getJson->get('finishEdgeCost') : 0);
+            $finishEdgeCost = trim($getJson->get('finishEdgeCost') ? $getJson->get('finishEdgeCost') : 1);
             $finishEdgeWaste = trim($getJson->get('finishEdgeWaste') ? $getJson->get('finishEdgeWaste') : 1);
             $subTotalFinishEdge = trim($getJson->get('subTotalFinishEdge') ? $getJson->get('subTotalFinishEdge') : 0);
             
-            $millingCost = trim($getJson->get('millingCost') ? $getJson->get('millingCost') : 0);
+            $millingCost = trim($getJson->get('millingCost') ? $getJson->get('millingCost') : 1);
             $millingWaste = trim($getJson->get('millingWaste') ? $getJson->get('millingWaste') : 1);
             $subTotalmilling = trim($getJson->get('subTotalmilling') ? $getJson->get('subTotalmilling') : 0);
 
-            $rfCostP = trim($getJson->get('rfCostP') ? $getJson->get('rfCostP') : 0);
+            $rfCostP = trim($getJson->get('rfCostP') ? $getJson->get('rfCostP') : 1);
             $rfWasteP = trim($getJson->get('rfWasteP') ? $getJson->get('rfWasteP') : 1);
             $subTotRfP = trim($getJson->get('subTotRfP') ? $getJson->get('subTotRfP') : 0);
             
