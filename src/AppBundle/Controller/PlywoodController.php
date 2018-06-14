@@ -106,7 +106,7 @@ class PlywoodController extends Controller
             $backrWaste = trim($getJson->get('backrWaste') ? $getJson->get('backrWaste') : 1);
             $subTotalBackr = trim($getJson->get('subTotalBackr') ? $getJson->get('subTotalBackr') : 0);
             
-            $panelCost = trim($getJson->get('panelCost') ? $getJson->get('panelCost') : 0);
+            $panelCost = trim($getJson->get('panelCost') ? $getJson->get('panelCost') : 1);
             $panelWaste = trim($getJson->get('panelWaste') ? $getJson->get('panelWaste') : 1);
             $subTotPanel = trim($getJson->get('subTotPanel') ? $getJson->get('subTotPanel') : 0);
             
