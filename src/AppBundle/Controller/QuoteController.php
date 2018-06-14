@@ -3088,8 +3088,8 @@ class QuoteController extends Controller
                                             </table>
                                             <table class='totalPrice'>
                                                 <tr>
-                                                    <td>Special Tooling - Description</td>
-                                                    <td class='price'>$350.00</td>
+                                                      <td>&nbsp;</td>  
+                                                      <td class='price'>&nbsp;</td>  
                                                 </tr>
                                             </table>
                                         </div></div></div></body></html>";
