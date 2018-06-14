@@ -656,7 +656,7 @@ class OrderController extends Controller {
                 }
             } else {
                 if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
-                    $htmlArr['body'] .= " <td>".$qData['quantity']."</td>
+                    $htmlArr['body'] .= " <td>".($qData['quantity'] - $qData['quantityRemaining'])."</td>
                            </tr>";
                 } else {
                     $htmlArr['body'] .= " <td>BACK ORDERED</td>
@@ -670,7 +670,7 @@ class OrderController extends Controller {
                                 <table class='totalPrice'>
                                     <tr>";
         if ($printType == 'ORDER' || $printType == 'INVOICE') {
-            $htmlArr['body'] .= "<td>Special Tooling - Description</td><td class='price'>$350.00</td>";
+            $htmlArr['body'] .= "<td></td><td class='price'></td>";
         } else {
             $htmlArr['body'] .= "<td></td><td class='price'></td>";
         }
@@ -1302,7 +1302,7 @@ class OrderController extends Controller {
         if($printType == 'SHIPPER'){
            
             $plywoodRecords = $query->createQueryBuilder()
-            ->select(['p.id, p.quantity, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName','p.millingDescription'])
+            ->select(['p.id, p.quantity, p.quantityRemaining, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName','p.millingDescription'])
             ->from('AppBundle:Plywood', 'p')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1322,7 +1322,7 @@ class OrderController extends Controller {
             ->getResult();
 
             $veneerRecords = $query->createQueryBuilder()
-            ->select(['v.id, v.quantity, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName',"'' as millingDescription"])
+            ->select(['v.id, v.quantity, v.quantityRemaining, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName',"'' as millingDescription"])
             ->from('AppBundle:Veneer', 'v')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1343,7 +1343,7 @@ class OrderController extends Controller {
             ->getQuery()
             ->getResult();
             $doorRecords = $query->createQueryBuilder()
-                ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType,d.millingDescription'])
+                ->select(['d.id, d.qty, d.quantityRemaining, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType,d.millingDescription'])
                 ->from('AppBundle:Doors', 'd')
                 ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
                 ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
