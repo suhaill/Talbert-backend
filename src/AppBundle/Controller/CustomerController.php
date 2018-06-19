@@ -40,12 +40,12 @@ class CustomerController extends Controller
             $currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
             $contactInfo = $data->get('contacts');
             $company = trim($data->get('company'));
-            $fName = !empty(trim($contactInfo[0]['fname']))?trim($contactInfo[0]['fname']):'';
+//            $fName = !empty(trim($contactInfo[0]['fname']))?trim($contactInfo[0]['fname']):'';
             $passwd = password_hash('123456', PASSWORD_DEFAULT);
             $roleId = '11';
             $isActive = $data->get('is_active');
             $usrType = 'customer';
-            $phone = !empty(trim($contactInfo[0]['phone']))?trim($contactInfo[0]['phone']):'';
+//            $phone = !empty(trim($contactInfo[0]['phone']))?trim($contactInfo[0]['phone']):'';
             $email = !empty(trim($contactInfo[0]['email']))?trim($contactInfo[0]['email']):'';
             $usrname = $email;
             $trmId = $data->get('term');
@@ -60,27 +60,36 @@ class CustomerController extends Controller
             $isName=false;
             $isPhone=false;
             $isEmail=false;
-            if(count($contactInfo)>1){
-                for($i=1;$i<count($contactInfo);$i++){
+            $isPhoneExist=false;
+            $isEmailExist=false;
+            if(!empty($contactInfo)){
+                for($i=0;$i<count($contactInfo);$i++){
                     if(empty(trim($contactInfo[$i]['fname']))){
                         $isName=true;
                     }
                     if(is_numeric(trim($contactInfo[$i]['phone'])) && strlen(trim($contactInfo[$i]['phone'])) > 10){
                         $isPhone=true;
+                    } else {
+                        if($this->checkIfPhoneExists($contactInfo[$i]['phone'])==true){
+                            $isPhoneExist=true;
+                        }
                     }
                     if(!filter_var(trim($contactInfo[$i]['email']),FILTER_VALIDATE_EMAIL )){
                         $isEmail=true;
+                    } else {
+                        if($this->checkIfEmailExists($contactInfo[$i]['email'])==true){
+                            $isEmailExist=true;
+                        }
                     }
                 }
             }
-            
             $datime = new \DateTime('now');
             $isValidShipAdd = $this->validateShippingAddress($shipArr);
             if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'You are not allowed to add customers';
             } else {
-                if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($email) || empty ($trmId) ||
+                if ( empty($company) || $isActive > 1 || empty ($trmId) ||
                         empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip)  || empty ($shipArr) || 
                         empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || 
                         empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || 
@@ -90,32 +99,33 @@ class CustomerController extends Controller
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'Please fill all required fields';
                 } else {
-                    if ( is_numeric($phone) && strlen($phone) > 10 || $isPhone==true) {
+                    if ( $isPhone==true) {
                         $arrApi['status'] = 0;
                         $arrApi['message'] = 'Please enter correct phone number';
                     } else {
-                        if ( !filter_var($email,FILTER_VALIDATE_EMAIL ) || $isEmail==true) {
+                        if ( $isEmail==true) {
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Invalid email address';
                         } else {
-                            $phoneCount = $this->checkIfPhoneExists($phone);
-                            if ($phoneCount) {
+//                            $phoneCount = $this->checkIfPhoneExists($phone);
+                            if ($isPhoneExist) {
                                 $arrApi['status'] = 0;
                                 $arrApi['message'] = 'Entered Phone number already exists.';
                             } else {
-                                $emailCount = $this->checkIfEmailExists($email);
-                                if ($emailCount) {
+//                                $emailCount = $this->checkIfEmailExists($email);
+                                if ($isEmailExist) {
                                     $arrApi['status'] = 0;
                                     $arrApi['message'] = 'Entered Email already exists.';
                                 } else {
-                                    $lastUserId = $this->saveCustomerData($usrname, $passwd, $roleId, $isActive, $datime, $usrType);
+                                    $lastUserId = $this->saveCustomerData($usrname, $passwd, $roleId, $isActive, $datime, 
+                                            $usrType);
                                     if (empty($lastUserId)) {
                                         $arrApi['status'] = 0;
                                         $arrApi['message'] = 'Error while adding customer.';
                                     } else {
                                         $arrApi['status'] = 1;
                                         $arrApi['message'] = 'Customer Added Successfully.';
-                                        $lstPrfId = $this->saveProfileData($lastUserId, $company, $fName, $email, $phone);
+                                        $lstPrfId = $this->saveProfileData($lastUserId, $company);
                                         if (empty($lstPrfId)) {
                                             $arrApi['profileMessage'] = 'Profile Data not saved.';
                                         } else {
@@ -145,22 +155,41 @@ class CustomerController extends Controller
     public function getCustomersAction(Request $request){
         if ($request->getMethod() == 'GET') {
             $arrApi = array();
-            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'),5);
+//            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'),5);
+            $query = $this->getDoctrine()->getManager();
+            $users = $query->createQueryBuilder()
+                ->select(['u.id','p.company','u.createdAt','c.contactName as fname'])
+                ->from('AppBundle:User', 'u')
+                ->innerJoin('AppBundle:CustomerContacts', 'c', 'WITH', 'c.userId=u.id')
+                ->innerJoin('AppBundle:Profile', 'p', 'WITH', 'p.userId=u.id')
+                ->where("u.userType = 'customer'")
+                ->orderBy('u.id', 'DESC')
+                ->groupBy('c.userId')
+                ->getQuery()
+                ->getResult();
             if ( empty($users) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no user.';
             } else {
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived the customers list.';
-                for ($i=0; $i<count($users); $i++) {
-                    $userId = $users[$i]->getId();
-                    if (!empty($userId)) {
-                        $arrApi['data']['customers'][$i]['id'] = $users[$i]->getId();
-                        $arrApi['data']['customers'][$i]['fname'] = $this->getFnameById($userId);
-                        $arrApi['data']['customers'][$i]['comapny'] = $this->getCompanyById($userId);
-                        $arrApi['data']['customers'][$i]['createdDate'] = $this->getCreatedDateById($userId);
-                    }
+                foreach ($users as $v) {
+                    $arrApi['data']['customers'][]=[
+                        'id'=>$v['id'],
+                        'fname'=>$v['fname'],
+                        'comapny'=>$v['company'],
+                        'createdDate'=>$v['createdAt']->format('m/d/Y')
+                    ];
                 }
+//                for ($i=0; $i<count($users); $i++) {
+//                    $userId = $users[$i]->getId();
+//                    if (!empty($userId)) {
+//                        $arrApi['data']['customers'][$i]['id'] = $users[$i]->getId();
+//                        $arrApi['data']['customers'][$i]['fname'] = $this->getFnameById($userId);
+//                        $arrApi['data']['customers'][$i]['comapny'] = $this->getCompanyById($userId);
+//                        $arrApi['data']['customers'][$i]['createdDate'] = $this->getCreatedDateById($userId);
+//                    }
+//                }
             }
             return new JsonResponse($arrApi);
         }
@@ -272,14 +301,15 @@ class CustomerController extends Controller
             try {
                 $jsontoarraygenerator = new JsonToArrayGenerator();
                 $data = $jsontoarraygenerator->getJson($request);
+                
                 $contactInfo = $data->get('contacts');
                 $userId = $data->get('customer_id');
                 $currLoggedInUserId = $data->get('current_user_id');
                 $currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
                 $company = trim($data->get('company'));
-                $fName = !empty(trim($contactInfo[0]['fname']))?trim($contactInfo[0]['fname']):'';
+//                $fName = !empty(trim($contactInfo[0]['fname']))?trim($contactInfo[0]['fname']):'';
                 $isActive = $data->get('is_active');
-                $phone = !empty(trim($contactInfo[0]['phone']))?trim($contactInfo[0]['phone']):'';
+//                $phone = !empty(trim($contactInfo[0]['phone']))?trim($contactInfo[0]['phone']):'';
                 $trmId = $data->get('term');
                 $comment = trim($data->get('comment'));
                 $bStreet = trim($data->get('billingStreet'));
@@ -294,16 +324,26 @@ class CustomerController extends Controller
                 $isName=false;
                 $isPhone=false;
                 $isEmail=false;
-                if(count($contactInfo)>1){
-                    for($i=1;$i<count($contactInfo);$i++){
+                $isPhoneExist=false;
+                $isEmailExist=false;
+                if(!empty($contactInfo)){
+                    for($i=0;$i<count($contactInfo);$i++){
                         if(empty(trim($contactInfo[$i]['fname']))){
                             $isName=true;
                         }
                         if(is_numeric(trim($contactInfo[$i]['phone'])) && strlen(trim($contactInfo[$i]['phone'])) > 10){
                             $isPhone=true;
+                        } else {
+                            if($this->checkIfOthrUsrHasThisPhone($contactInfo[$i]['phone'], $userId)==true){
+                                $isPhoneExist=true;
+                            }
                         }
                         if(!filter_var(trim($contactInfo[$i]['email']),FILTER_VALIDATE_EMAIL )){
                             $isEmail=true;
+                        } else {
+                            if($this->checkIfOthrUsrHasThisEmail($contactInfo[$i]['email'], $userId)==true){
+                                $isEmailExist=true;
+                            }
                         }
                     }
                 }
@@ -313,7 +353,7 @@ class CustomerController extends Controller
                     $arrApi['message'] = 'You are not allowed to update customers';
                     $statusCode = 422;
                 } else {
-                    if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($trmId) || 
+                    if ( empty($company) || $isActive > 1 || empty ($trmId) || 
                             empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty($isValidShipAdd) 
                             || $isName==true 
                     ) {
@@ -323,19 +363,22 @@ class CustomerController extends Controller
                         if ($isEmail==true) {
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Invalid email address';
-                        } else if ( is_numeric($phone) && strlen($phone) > 10 || $isPhone==true) {
+                        } else if ($isEmailExist) {
+                            $arrApi['status'] = 0;
+                            $arrApi['message'] = 'Entered Email already exists.';
+                        } else if ($isPhone==true) {
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Please enter correct phone number';
                         } else {
-                            $phoneCount = $this->checkIfOthrUsrHasThisPhone($phone, $userId);
-                            if ($phoneCount) {
+//                            $phoneCount = $this->checkIfOthrUsrHasThisPhone($phone, $userId);
+                            if ($isPhoneExist) {
                                 $arrApi['status'] = 0;
                                 $arrApi['message'] = 'Entered phone number already exists.';
 
                             } else {
                                 $arrApi['status'] = 1;
                                 $arrApi['message'] = 'Successfully updated customer data.';
-                                $this->updateUserRecord($isActive, $company, $fName, $phone, $datime, $userId);
+                                $this->updateUserRecord($isActive, $company, $datime, $userId);
                                 $this->updateBillingAddress($bStreet, $bCity, $bState, $bZip, $datime, $userId);
                                 $this->updateShippingAddress($shipArr, $userId, $datime);
                                 $this->updateDiscountData($prdArr, $userId);
@@ -530,7 +573,7 @@ class CustomerController extends Controller
         $em->flush();
     }
 
-    private function updateUserRecord($isActive, $company, $fName, $phone, $datime, $userId) {
+    private function updateUserRecord($isActive, $company, $datime, $userId) {
         $em = $this->getDoctrine()->getManager();
         $user = $em->getRepository(User::class)->find($userId);
         $user->setIsActive($isActive);
@@ -540,8 +583,8 @@ class CustomerController extends Controller
         $profileId = $this->getProfileIdByUserId($userId);
         $profile = $em->getRepository(Profile::class)->find($profileId);
         $profile->setCompany($company);
-        $profile->setFname($fName);
-        $profile->setPhone($phone);
+//        $profile->setFname($fName);
+//        $profile->setPhone($phone);
         $em->persist($profile);
         $em->flush();
     }
@@ -733,19 +776,20 @@ class CustomerController extends Controller
         $user->setCreatedAt($datime);
         $user->setUpdatedAt($datime);
         $user->setUserType($usrType);
+        $user->setIsSalesman(0);
         $em->persist($user);
         $em->flush();
         return $user->getId();
     }
 
-    private function saveProfileData($lastUserId, $company, $fName, $email, $phone) {
+    private function saveProfileData($lastUserId, $company) {
         $em = $this->getDoctrine()->getManager();
         $profile = new Profile();
         $profile->setUserId($lastUserId);
         $profile->setCompany($company);
-        $profile->setFname($fName);
-        $profile->setEmail($email);
-        $profile->setPhone($phone);
+//        $profile->setFname($fName);
+//        $profile->setEmail($email);
+//        $profile->setPhone($phone);
         $em->persist($profile);
         $em->flush();
         return $profile->getId();
@@ -789,7 +833,7 @@ class CustomerController extends Controller
 
     private function checkIfEmailExists($email) {
         $emailData = $this->getDoctrine()
-            ->getRepository('AppBundle:Profile')
+            ->getRepository('AppBundle:CustomerContacts')
             ->findOneBy(array('email' => $email));
         if (count($emailData) > 0 ) {
             return true;
@@ -800,7 +844,7 @@ class CustomerController extends Controller
 
     private function checkIfPhoneExists($phone) {
         $phoneData = $this->getDoctrine()
-            ->getRepository('AppBundle:Profile')
+            ->getRepository('AppBundle:CustomerContacts')
             ->findOneBy(array('phone' => $phone));
         if (count($phoneData) > 0 ) {
             return true;
@@ -847,9 +891,9 @@ class CustomerController extends Controller
                 $profileData = $this->getDoctrine()->getRepository('AppBundle:Profile')->findOneBy(array('userId' => $userId));
                 if (!empty($profileData)) {
                     $user['company'] = $profileData->getCompany();
-                    $user['fName'] = $profileData->getFname();
-                    $user['email'] = $profileData->getEmail();
-                    $user['phone'] = $profileData->getPhone();
+//                    $user['fName'] = $profileData->getFname();
+//                    $user['email'] = $profileData->getEmail();
+//                    $user['phone'] = $profileData->getPhone();
                 }
                 $customerProfileData = $this->getDoctrine()->getRepository('AppBundle:CustomerProfiles')->findOneBy(array('userId' => $userId));
                 if (!empty($customerProfileData)) {
@@ -891,11 +935,11 @@ class CustomerController extends Controller
                     }
                 }
                 $contact = $this->getDoctrine()->getRepository('AppBundle:CustomerContacts')->findBy(['userId' => $userId]);
-                $user['contacts'][0]['fname'] = $profileData->getFname();
-                $user['contacts'][0]['email'] = $profileData->getEmail();
-                $user['contacts'][0]['phone'] = $profileData->getPhone();
+                $user['fname'] = $contact[0]->getContactName();
+                $user['email'] = $contact[0]->getEmail();
+                $user['phone'] = $contact[0]->getPhone();
                 if(!empty($contact)){
-                    $j=1;
+                    $j=0;
                     foreach ($contact as $v) {
                         $user['contacts'][$j]['fname'] = $v->getContactName();
                         $user['contacts'][$j]['email'] = $v->getEmail();
@@ -910,10 +954,25 @@ class CustomerController extends Controller
 
     private function checkIfOthrUsrHasThisPhone($phone,$userId){
         $conn = $this->getDoctrine()->getConnection('default');
-        $SQL="select * from profiles WHERE user_id != :userid AND phone = :phone";
+        $SQL="select * from customer_contacts WHERE user_id != :userid AND phone = :phone";
         $stmt=$conn->prepare($SQL);
         $stmt->bindParam(':userid',$userId,PDO::PARAM_INT);
         $stmt->bindParam(':phone',$phone,PDO::PARAM_STR);
+        $stmt->execute();
+        $result = $stmt->fetchAll();
+        if (count($result) > 0 ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    private function checkIfOthrUsrHasThisEmail($email,$userId){
+        $conn = $this->getDoctrine()->getConnection('default');
+        $SQL="select * from customer_contacts WHERE user_id != :userid AND email = :email";
+        $stmt=$conn->prepare($SQL);
+        $stmt->bindParam(':userid',$userId,PDO::PARAM_INT);
+        $stmt->bindParam(':email',$email,PDO::PARAM_STR);
         $stmt->execute();
         $result = $stmt->fetchAll();
         if (count($result) > 0 ) {
@@ -1009,7 +1068,7 @@ class CustomerController extends Controller
     }
     
     private function saveCustomerContact($contactInfo,$lastUserId,$type=''){
-        if(count($contactInfo)>1){
+        if(!empty($contactInfo)){
             $em = $this->getDoctrine()->getManager();
             if(!empty($type) && $type == 'edit'){
                 $conn = $this->getDoctrine()->getConnection('default');
@@ -1018,17 +1077,15 @@ class CustomerController extends Controller
                 $stmt->bindParam(':userid',$lastUserId,PDO::PARAM_INT);
                 $stmt->execute();
             }
-            $a = new CustomerContacts();
-            for ($i=1;$i<count($contactInfo);$i++){
+            for ($i=0;$i<count($contactInfo);$i++){
+                $a = new CustomerContacts();
                 $a->setContactName($contactInfo[$i]['fname']);
-                //if(empty($type)){
-                    $a->setEmail($contactInfo[$i]['email']);
-                //}
+                $a->setEmail($contactInfo[$i]['email']);
                 $a->setPhone($contactInfo[$i]['phone']);
                 $a->setUserId($lastUserId);
                 $em->persist($a);
+                $em->flush();
             }
-            $em->flush();
         }
     }
 }
