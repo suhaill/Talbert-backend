@@ -2553,11 +2553,11 @@ class QuoteController extends Controller
         if (!empty($quote)) {
             if(!empty($quoteSubTotal)){
                 $quote->setSalesTax($salesTaxAmount);
-                $quote->setShipCharge($shipCharge);
+                //$quote->setShipCharge($shipCharge);
                 $quote->setLumFee($lumFee);
             } else {
                 $quote->setSalesTax(0);
-                $quote->setShipCharge(0);
+                //$quote->setShipCharge(0);
                 $quote->setLumFee(0);
                 $quote->setExpFee(0);
                 $quote->setDiscount(0);
