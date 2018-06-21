@@ -203,7 +203,6 @@ class QuoteController extends Controller
             $quoteId = $request->query->get('id');
             if (empty($quoteId)) {
                 $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold','Dead')),array('id'=>'desc'));
-                //print_R($quotes);
                 if (!empty($quotes)) {
                     $quoteId = $quotes[0]->getId();
                 }
@@ -226,6 +225,7 @@ class QuoteController extends Controller
                 $arrApi['data']['company'] = $this->getCustomerCompanyById($quoteData->getCustomerId());
                 $arrApi['data']['userEmail'] = $this->getCustomerEmailById($quoteData->getEstimatorId());
                 $arrApi['data']['customerEmail'] = $this->getCustomerEmailById($quoteData->getCustomerId());
+                $arrApi['data']['customerEmails'] = $this->getCustomerEmailByIdForEmailQuote($quoteData->getCustomerId());
                 $arrApi['data']['customerId'] = $quoteData->getCustomerId();
                 $arrApi['data']['referenceNumber'] = $quoteData->getRefNum();
                 $arrApi['data']['salesman'] = $this->getSalesmanNameById($quoteData->getSalesmanId());
@@ -3182,5 +3182,20 @@ class QuoteController extends Controller
             $this->saveOrderData($qId, $estNo, $estNo, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate,'backOrder');
         }
         $this->updateQuoteStatus($qId, 'Approved', $deliveryDate, $datime);
+    }
+
+    private function getCustomerEmailByIdForEmailQuote($customer_id) {
+        $emails = array();
+        if (!empty($customer_id)) {
+            $custCont = $this->getDoctrine()
+                ->getRepository('AppBundle:CustomerContacts')
+                ->findBy(array('userId' => $customer_id));
+            if (!empty($custCont)) {
+                foreach ($custCont as $e) {
+                    $emails[] = $e->getEmail();
+                }
+            }
+        }
+        return $emails;
     }
 }
