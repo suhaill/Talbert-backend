@@ -419,39 +419,176 @@ class CustomerController extends Controller
                 $statusCode = 422;
             } else {
                 if (empty($custName) && empty($sortBy) && empty($order)) {
-                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'), $limit, $offset);
+//                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'), $limit, $offset);
+//                    $query = $this->getDoctrine()->getManager();
+//                    $custData = $query->createQueryBuilder()
+//                            ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+//                            ->from('AppBundle:CustomerContacts', 'cc')
+//                            ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+//                            ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+//                            ->where("u.userType='customer'")
+//                            ->orderBy('cc.userId', 'DESC')
+//                            ->groupBy('u.id')
+//                            ->setFirstResult($offset)
+//                            ->setMaxResults($limit)
+//                            ->getQuery()
+//                            ->getResult()
+//                    ;
+//                    print_r($custData);die;
+                    $where="u.userType='customer'";
+                    $sort='cc.contactName';   
+                    $orderBy='ASC';
                 } else if (!empty($custName) && empty($sortBy) && empty($order)) {
-                    $custIds = $this->getCustomerIdsByNameLike($custName);
-                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds),array('id' => 'DESC'), $limit, $offset);
+                    
+//                    $custIds = $this->getCustomerIdsByNameLike($custName);
+//                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds),array('id' => 'DESC'), $limit, $offset);
+                    
+//                    $query = $this->getDoctrine()->getManager();
+//                    $custData = $query->createQueryBuilder()
+//                            ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+//                            ->from('AppBundle:CustomerContacts', 'cc')
+//                            ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+//                            ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+//                            ->where("u.userType='customer' and cc.contactName Like '".$custName."%'")
+//                            ->orderBy('cc.userId', 'DESC')
+//                            ->groupBy('u.id')
+//                            ->setFirstResult($offset)
+//                            ->setMaxResults($limit)
+//                            ->getQuery()
+//                            ->getResult()
+//                    ;
+//                    print_r($custData);die;
+                    $where="u.userType='customer' and cc.contactName Like '".$custName."%'";
+                    $sort='cc.userId';   
+                    $orderBy='DESC';
                 } else if (empty($custName) && !empty($sortBy) && !empty($order)) {
                     if ($sortBy == 'id' || $sortBy == 'createdAt') {
-                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array($sortBy => $order), $limit, $offset);
+//                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(
+//                        array('userType' => 'customer'),array($sortBy => $order), $limit, $offset);
+//                        print_r($custData);
+//                        $query = $this->getDoctrine()->getManager();
+//                        $custData = $query->createQueryBuilder()
+//                                ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+//                                ->from('AppBundle:CustomerContacts', 'cc')
+//                                ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+//                                ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+//                                ->where("u.userType='customer' and cc.contactName Like '".$custName."%'")
+//                                ->orderBy('u.'.$sortBy, $order)
+//                                ->groupBy('u.id')
+//                                ->setFirstResult($offset)
+//                                ->setMaxResults($limit)
+//                                ->getQuery()
+//                                ->getResult()
+//                        ;
+                        $where="u.userType='customer' and cc.contactName Like '".$custName."%'";
+                        $sort='u.'.$sortBy;   
+                        $orderBy=$order;
                     } else {
-                        $arrApi['data']['customers'] =  $this->getCustomersIdsOnSortedData($sortBy, $order);
-                        return new JsonResponse($arrApi, $statusCode);
-                        die;
+//                        $arrApi['data']['customers'] =  $this->getCustomersIdsOnSortedData($sortBy, $order);
+                        if($sortBy=='company'){
+                            $sort='p.company';
+                        } else if($sortBy=='fname'){
+                            $sort='cc.contactName';
+                        }
+                        $where="u.userType='customer' and cc.contactName Like '".$custName."%'";
+//                        $sort='u.'.$sortBy;   
+                        $orderBy=$order;
+//                        $query = $this->getDoctrine()->getManager();
+//                        $custData = $query->createQueryBuilder()
+//                                ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+//                                ->from('AppBundle:CustomerContacts', 'cc')
+//                                ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+//                                ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+//                                ->where("u.userType='customer' and cc.contactName Like '".$custName."%'")
+//                                ->orderBy($sortBy, $order)
+//                                ->groupBy('u.id')
+//                                ->setFirstResult($offset)
+//                                ->setMaxResults($limit)
+//                                ->getQuery()
+//                                ->getResult()
+//                        ;
+//                        print_r($custData);die;
+//                        die();
+//                        return new JsonResponse($arrApi, $statusCode);
+//                        die;
                         //$custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds));
                     }
                 } else if (!empty($custName) && !empty($sortBy) && !empty($order)) {
                     if ($sortBy == 'id' || $sortBy == 'createdAt') {
-                        $custIds = $this->getCustomerIdsByNameLike($custName);
-                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), array($sortBy => $order), $limit, $offset);
+//                        $custIds = $this->getCustomerIdsByNameLike($custName);
+//                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), array($sortBy => $order), $limit, $offset);
+//                        $query = $this->getDoctrine()->getManager();
+//                        $custData = $query->createQueryBuilder()
+//                                ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+//                                ->from('AppBundle:CustomerContacts', 'cc')
+//                                ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+//                                ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+//                                ->where("u.userType='customer' and cc.contactName Like '".$custName."%'")
+//                                ->orderBy('u.'.$sortBy, $order)
+//                                ->groupBy('u.id')
+//                                ->setFirstResult($offset)
+//                                ->setMaxResults($limit)
+//                                ->getQuery()
+//                                ->getResult()
+//                        ;
+                        $where="u.userType='customer' and cc.contactName Like '".$custName."%'";
+                        $sort='u.'.$sortBy;   
+                        $orderBy=$order;
                     } else {
-                        $custIds = $this->getSortedCustomerIds($custName, $sortBy, $order);
-                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), $limit, $offset);
+//                        $custIds = $this->getSortedCustomerIds($custName, $sortBy, $order);
+//                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), $limit, $offset);
+                        if($sortBy=='company'){
+                            $sort='p.company';
+                        } else if($sortBy=='fname'){
+                            $sort='cc.contactName';
+                        }
+                        $where = "u.userType='customer' and cc.contactName Like '".$custName."%'"; 
+                        $orderBy=$order;
                     }
                 } else {
-                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'), $limit, $offset);
+                    //$custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'), $limit, $offset);
+//                    $query = $this->getDoctrine()->getManager();
+//                    $custData = $query->createQueryBuilder()
+//                            ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+//                            ->from('AppBundle:CustomerContacts', 'cc')
+//                            ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+//                            ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+//                            ->where("u.userType='customer'")
+//                            ->orderBy('cc.userId', 'DESC')
+//                            ->groupBy('u.id')
+//                            ->setFirstResult($offset)
+//                            ->setMaxResults($limit)
+//                            ->getQuery()
+//                            ->getResult()
+//                    ;
+                    $sort='cc.contactName';   
+                    $orderBy='ASC';
+                    $where = "u.userType='customer'";
                 }
+                $query = $this->getDoctrine()->getManager();
+                $custData = $query->createQueryBuilder()
+                        ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+                        ->from('AppBundle:CustomerContacts', 'cc')
+                        ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+                        ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+                        ->where("u.userType='customer' and cc.contactName Like '".$custName."%'")
+                        ->orderBy($sort, $orderBy)
+                        ->groupBy('u.id')
+                        ->setFirstResult($offset)
+                        ->setMaxResults($limit)
+                        ->getQuery()
+                        ->getResult()
+                ;
+                //print_r($custData);die;
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived customers list';
                 for ($i=0; $i<count($custData); $i++) {
-                    $userId = $custData[$i]->getId();
-                    if (!empty($userId)) {
-                        $arrApi['data']['customers'][$i]['id'] = $custData[$i]->getId();
-                        $arrApi['data']['customers'][$i]['fname'] = $this->getFnameById($userId);
-                        $arrApi['data']['customers'][$i]['comapny'] = $this->getCompanyById($userId);
-                        $arrApi['data']['customers'][$i]['createdDate'] = $this->getCreatedDateById($userId);
+//                    $userId = $custData[$i]->getId();
+                    if (!empty($custData[$i]['id'])) {
+                        $arrApi['data']['customers'][$i]['id'] = $custData[$i]['id'];
+                        $arrApi['data']['customers'][$i]['fname'] = $custData[$i]['fname'];
+                        $arrApi['data']['customers'][$i]['comapny'] = $custData[$i]['company'];
+                        $arrApi['data']['customers'][$i]['createdDate'] = $custData[$i]['createdAt']->format('m/d/Y');
                     }
                 }
             }
