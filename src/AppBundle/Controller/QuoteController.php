@@ -2120,12 +2120,12 @@ class QuoteController extends Controller
     }
 
     private function getSheenById($id) {
-        return ($id == 1) ? '3' : ($id == 2) ? '5' : ($id == 3) ? '10' : ($id == 4) ? '20' : ($id == 5) ? '30' : ($id == 6) ? '40' : ($id == 7) ? '50' : ($id == 8) ? '60' : ($id == 9) ? '70' : ($id == 10) ? '80' : ($id == 11) ? '90' : ($id == 12) ? '100' : '0';
+        return ($id == 1) ? '3' : (($id == 2) ? '5' : (($id == 3) ? '10' : (($id == 4) ? '20' : (($id == 5) ? '30' : (($id == 6) ? '40' : (($id == 7) ? '50' : (($id == 8) ? '60' : (($id == 9) ? '70' : (($id == 10) ? '80' : (($id == 11) ? '90' : (($id == 12) ? '100' : '0')))))))))));
     }
 
     private function getFacPaintById($id) {
         //return ($id == 1) ? 'Prime Only' : ($id == 2) ? 'White / Light Color' : 'Dark Color';
-        return ($id == 1) ? 'PO' : ($id == 2) ? 'WLC' : 'DCL';
+        return ($id == 1) ? 'PO' : (($id == 2) ? 'WLC' : 'DCL');
     }
 
     private function getVeneerslistbyQuoteId($qId) {
@@ -2183,10 +2183,10 @@ class QuoteController extends Controller
                     $lineItem[$i]['uvCuredId'] = $this->getUVCuredNameById($p->getUvCuredId());
                     $lineItem[$i]['sheenId'] = $this->getSheenById($p->getSheenId());
                     $lineItem[$i]['shameOnId'] = ($p->getShameOnId()) ? 'BS' : '';
-                    $lineItem[$i]['coreSameOnbe'] = ($p->getCoreSameOnbe()) ? ',BE' : '';
-                    $lineItem[$i]['coreSameOnte'] = ($p->getCoreSameOnte()) ? ',TE' : '';
-                    $lineItem[$i]['coreSameOnre'] = ($p->getCoreSameOnre()) ? ',RE' : '';
-                    $lineItem[$i]['coreSameOnle'] = ($p->getCoreSameOnle()) ? ',LE' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($p->getCoreSameOnbe()) ? 'BE,' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($p->getCoreSameOnte()) ? 'TE,' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($p->getCoreSameOnre()) ? 'RE,' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($p->getCoreSameOnle()) ? 'LE' : '';
                     $lineItem[$i]['facPaint'] = $this->getFacPaintById($p->getFacPaint());
                     $lineItem[$i]['isLabels'] = $p->getIsLabels();
                     $lineItem[$i]['autoNumber'] = $this->getFirstLabel($p->getAutoNumber());
@@ -3071,9 +3071,9 @@ class QuoteController extends Controller
             $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
             $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
             if ($qData['finish'] == 'UV') {
-                $htmlArr['body'] .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']." %-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                $htmlArr['body'] .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']."%-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
             } elseif ($qData['finish'] == 'Paint') {
-                $htmlArr['body'] .= "Finish: Paint-".$qData['facPaint']."-".$qData['uvCuredId']."-".$qData['sheenId']." %".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                $htmlArr['body'] .= "Finish: Paint-".$qData['facPaint']."-".$qData['uvCuredId']."-".$qData['sheenId']."%".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
             }
             $htmlArr['body'] .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
             $htmlArr['body'] .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
@@ -3106,13 +3106,13 @@ class QuoteController extends Controller
                     </head>
                 <body>
                     <div class=''><div class='invoiceFooter'>
-                                <!--<div class='custOdrDtls'>
+                                <div class='custOdrDtls'>
                                     <table>
                                         <tr>
                                             <td><strong>Special Instructions:</strong> **".$arrApi['data']['comment']."**</td>
                                         </tr>
                                     </table>
-                                </div> -->
+                                </div>
                                 <table class='invoiceFootBtm'>
                                     <tr>
                                         <td class='sideBox note'>
