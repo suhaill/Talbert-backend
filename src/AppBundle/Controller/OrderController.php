@@ -627,7 +627,7 @@ class OrderController extends Controller {
             $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
             $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
             if ($qData['finish'] == 'UV') {
-                $htmlArr['body'] .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']." %-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                $htmlArr['body'] .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']."%-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
             } elseif ($qData['finish'] == 'Paint') {
                 $htmlArr['body'] .= "Finish: Paint-".$qData['facPaint']."-".$qData['uvCuredId']."-".$qData['sheenId']." %".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
             }
@@ -691,13 +691,13 @@ class OrderController extends Controller {
                     <div class=''>
                         <div class='invoiceCtnr'>
                                 <div class='invoiceFooter'>
-                                <!--<div class='custOdrDtls'>
+                                <div class='custOdrDtls'>
                                     <table>
                                         <tr>
                                             <td><strong>Special Instructions:</strong> **".$arrApi['data']['comment']."**</td>
                                         </tr>
                                     </table>
-                                </div> -->
+                                </div>
                                 <table class='invoiceFootBtm'>
                                     <tr>
                                         <td class='sideBox note'>
@@ -2883,7 +2883,6 @@ class OrderController extends Controller {
         $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
         $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
 
-
         $edge = '';
         if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
                 ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
@@ -3161,7 +3160,7 @@ class OrderController extends Controller {
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Core</label></td>
-                        <td class="cellDesc">'.$v["coreType"].'"</td>
+                        <td class="cellDesc">'.$v["coreType"].'</td>
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Back</label></td>
@@ -3239,6 +3238,9 @@ class OrderController extends Controller {
         $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
         $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
 
+        if($v["pThicknessName"] == 0){
+            $v["pThicknessName"] = '';
+        }
 
         $edge = '';
         if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
@@ -3452,11 +3454,11 @@ class OrderController extends Controller {
     }
 
     private function getSheenById($id) {
-        return ($id == 1) ? '3' : ($id == 2) ? '5' : ($id == 3) ? '10' : ($id == 4) ? '20' : ($id == 5) ? '30' : ($id == 6) ? '40' : ($id == 7) ? '50' : ($id == 8) ? '60' : ($id == 9) ? '70' : ($id == 10) ? '80' : ($id == 11) ? '90' : ($id == 12) ? '100' : '0';
+        return ($id == 1) ? '3' : (($id == 2) ? '5' : (($id == 3) ? '10' : (($id == 4) ? '20' : (($id == 5) ? '30' : (($id == 6) ? '40' : (($id == 7) ? '50' : (($id == 8) ? '60' : (($id == 9) ? '70' : (($id == 10) ? '80' : (($id == 11) ? '90' : (($id == 12) ? '100' : '0')))))))))));
     }
 
     private function getFacPaintById($id) {
-        return ($id == 1) ? 'Prime Only' : ($id == 2) ? 'White / Light Color' : 'Dark Color';
+        return ($id == 1) ? 'Prime Only' : (($id == 2) ? 'White / Light Color' : 'Dark Color');
     }
 
     private function getGrainPatternOfDoor($id) {
