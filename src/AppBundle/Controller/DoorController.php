@@ -1010,6 +1010,9 @@ class DoorController extends Controller
         $doorCalculator->setFinishEdgeCost($doorCalCData->getFinishEdgeCost());
         $doorCalculator->setFinishEdgeWaste($doorCalCData->getFinishEdgeWaste());
         $doorCalculator->setSubTotalFinishEdge($doorCalCData->getSubTotalFinishEdge());
+        $doorCalculator->setMillingCost($doorCalCData->getMillingCost());
+        $doorCalculator->setMillingWaste($doorCalCData->getMillingWaste());
+        $doorCalculator->setSubTotalMilling($doorCalCData->getSubTotalMilling());
         $doorCalculator->setRunningCost($doorCalCData->getRunningCost());
         $doorCalculator->setRunningWaste($doorCalCData->getRunningWaste());
         $doorCalculator->setSubTotalrunning($doorCalCData->getSubTotalrunning());
