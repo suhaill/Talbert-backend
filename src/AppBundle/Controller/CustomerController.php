@@ -165,6 +165,8 @@ class CustomerController extends Controller
                 ->where("u.userType = 'customer'")
                 ->orderBy('u.id', 'DESC')
                 ->groupBy('c.userId')
+                ->setFirstResult(0)
+                ->setMaxResults(5)
                 ->getQuery()
                 ->getResult();
             if ( empty($users) ) {
@@ -566,7 +568,21 @@ class CustomerController extends Controller
                     $where = "u.userType='customer'";
                 }
                 $query = $this->getDoctrine()->getManager();
-                $custData = $query->createQueryBuilder()
+                if (empty($custName) && empty($sortBy) && empty($order)) {
+                    $custData = $query->createQueryBuilder()
+                        ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+                        ->from('AppBundle:CustomerContacts', 'cc')
+                        ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+                        ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+                        ->where("u.userType='customer' and cc.contactName Like '".$custName."%'")
+                        ->orderBy('u.id', 'DESC')
+                        ->groupBy('u.id')
+                        ->setFirstResult($offset)
+                        ->setMaxResults($limit)
+                        ->getQuery()
+                        ->getResult();
+                } else {
+                    $custData = $query->createQueryBuilder()
                         ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
                         ->from('AppBundle:CustomerContacts', 'cc')
                         ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
@@ -577,8 +593,8 @@ class CustomerController extends Controller
                         ->setFirstResult($offset)
                         ->setMaxResults($limit)
                         ->getQuery()
-                        ->getResult()
-                ;
+                        ->getResult();
+                }
                 //print_r($custData);die;
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived customers list';
