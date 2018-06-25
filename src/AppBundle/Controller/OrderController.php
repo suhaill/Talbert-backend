@@ -2876,7 +2876,7 @@ class OrderController extends Controller {
         $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
         $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
         $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
-        $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $topSpeciesName = !empty($v['topSpeciesName']) ? $v['topSpeciesName'] : 'N/A';
         $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
         $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
         $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
@@ -2888,6 +2888,7 @@ class OrderController extends Controller {
                 ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
                 ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
                 ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
+
             if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
                 $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
             }
