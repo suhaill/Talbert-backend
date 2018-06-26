@@ -749,6 +749,7 @@ class DoorController extends Controller
         $door = $em->getRepository(Doors::class)->find($data->get('doorId'));
         $datime = new \DateTime('now');
         $door->setQty($data->get('qty'));
+        $door->setQuantityRemaining($data->get('qty'));
         $door->setLineItemNum($data->get('editLineItemNumber'));
         $door->setPair($data->get('pair'));
         $door->setSwing($data->get('swing'));

@@ -419,6 +419,7 @@ class VeneerController extends Controller
         $veneer->setLumberFee($lumberFee);
         $veneer->setComments($comments);
         $veneer->setFileId(0);
+        $veneer->setQuantityRemaining($quantity);
         //$veneer->setQuoteId('1');
         //$veneer->setCreatedAt($createdAt);
         $veneer->setUpdatedAt($createdAt);

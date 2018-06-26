@@ -895,6 +895,7 @@ class PlywoodController extends Controller
         //$plywood->setQuoteId('1');
         $plywood->setComments($comments);
         $plywood->setFileId(0);
+        $plywood->setQuantityRemaining($quantity);
        //$veneer->setQuoteId('1');
         //$plywood->setCreatedAt($createdAt);
         $plywood->setUpdatedAt($createdAt);
