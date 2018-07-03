@@ -3009,24 +3009,7 @@ class QuoteController extends Controller
                             </div>
                             
             
-                            <div class='itemListTablHldr'>
-                                <table class='prodItmLst'>
-                                    <thead>
-                                        <tr>
-                                            <th style='width:30px'>#</th>
-                                            <th>Qty</th>
-                                            <th>Grain</th>
-                                            <th>Species</th>
-                                            <th>PTRN</th>
-                                            <th>Grd</th>
-                                            <th>Back</th>
-                                            <th>Dimensions</th>
-                                            <th>Core</th>
-                                            <th class='t-left'>Details</th>
-                                            <th style='width:80px'>Unit Price</th>
-                                            <th>Total</th>
-                                        </tr>
-                                    </thead></table></div></div></div></body></html>";
+                            </div></div></body></html>";
         $htmlArr['body'] = "<!DOCTYPE html>
                 <html>
                 <head>
@@ -3040,8 +3023,24 @@ class QuoteController extends Controller
                 <body>
                     <div class=''>
                         <div class='invoiceCtnr'><div class='itemListTablHldr'>
-                                <table class='prodItmLst'>";
+                                <table class='prodItmLst'><thead>
+                                <tr>
+                                    <th style='width:30px'>#</th>
+                                    <th>Qty</th>
+                                    <th>Grain</th>
+                                    <th>Species</th>
+                                    <th>PTRN</th>
+                                    <th>Grd</th>
+                                    <th>Back</th>
+                                    <th>Dimensions</th>
+                                    <th>Core</th>
+                                    <th class='t-left' style='width:250px'>Details</th>
+                                    <th style='width:80px'>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead><tbody>";
 
+                                
         foreach($arrApi['data']['lineitems'] as $key=>$qData){
 
             if($qData['type'] == 'plywood'){
@@ -3058,7 +3057,7 @@ class QuoteController extends Controller
 
 
             $htmlArr['body'] .= "<tr>
-                                            <th>".$index."</th>
+                                            <th style='width:30px'>".$index."</th>
                                             <td>".$qData['quantity']."</td>
                                             <td>".$qData['grain']."</td>
                                             <td>".$qData['species']."</td>
@@ -3066,9 +3065,9 @@ class QuoteController extends Controller
                                             <td>".$qData['grade']."</td>
                                             <td>".$qData['back']."</td>
                                             <!--<td>".$qData['width']."x".$qData['widthFraction']." x ".$qData['length']."x".$qData['lengthFraction']." x ".$qData['thickness']."</td>-->
-                                                <td>".$qData['dimensions']."</td>
+                                            <td>".$qData['dimensions']."</td>
                                             <td>".$qData['core']."</td>";
-            $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+            $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left' style='width:250px'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
             $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
             if ($qData['finish'] == 'UV') {
                 $htmlArr['body'] .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']."%-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
@@ -3078,7 +3077,7 @@ class QuoteController extends Controller
             $htmlArr['body'] .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
             $htmlArr['body'] .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
 
-            $htmlArr['body'] .="<td>$".$qData['unitPrice']."</td>
+            $htmlArr['body'] .="<td style='width:80px'>$".$qData['unitPrice']."</td>
                                             <td>$".$qData['totalPrice']."</td>
                                         </tr>";
 
