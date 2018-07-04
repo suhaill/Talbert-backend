@@ -2976,9 +2976,8 @@ class QuoteController extends Controller
                                                         <tr>
                                                             <td class='cellDescLbl'>Ship To</td>
                                                             <td class='cellDescTxt'>
-                                                            <h3>".$arrApi['data']['shipAdd']['nickname']."</h3>
-                                                            <p>".$arrApi['data']['shipAdd']['street']."</p>
-                                                            <p>".$arrApi['data']['shipAdd']['city'].",".$arrApi['data']['shipAdd']['state']." ".$arrApi['data']['shipAdd']['zip']."</p>
+                                                            <h3>".$arrApi['data']['company']."</h3>
+                                                              
                                                             </td>
                                                         </tr>
                                                     </table>
