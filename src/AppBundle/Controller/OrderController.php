@@ -627,9 +627,9 @@ class OrderController extends Controller {
             $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
             $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
             if ($qData['finish'] == 'UV') {
-                $htmlArr['body'] .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']."%-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                $htmlArr['body'] .= "Finish: UV - ".$qData['uvCuredId']." - ".$qData['sheenId']." % - ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
             } elseif ($qData['finish'] == 'Paint') {
-                $htmlArr['body'] .= "Finish: Paint-".$qData['facPaint']."-".$qData['uvCuredId']."-".$qData['sheenId']." %".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                $htmlArr['body'] .= "Finish: Paint - ".$qData['facPaint']." - ".$qData['uvCuredId']." - ".$qData['sheenId']." % ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
             }
             $htmlArr['body'] .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
             $htmlArr['body'] .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
@@ -1461,11 +1461,11 @@ class OrderController extends Controller {
                     $lineItem[$i]['finish'] = $p['finish'];
                     $lineItem[$i]['uvCuredId'] = $this->getUVCuredNameById($p['uvCuredId']);
                     $lineItem[$i]['sheenId'] = $this->getSheenById($p['sheenId']);
-                    $lineItem[$i]['shameOnId'] = ($p['shameOnId']) ? 'BS' : '';
-                    $lineItem[$i]['coreSameOnbe'] = ($p['coreSameOnbe']) ? ',BE' : '';
-                    $lineItem[$i]['coreSameOnte'] = ($p['coreSameOnte']) ? ',TE' : '';
-                    $lineItem[$i]['coreSameOnre'] = ($p['coreSameOnre']) ? ',RE' : '';
-                    $lineItem[$i]['coreSameOnle'] = ($p['coreSameOnle']) ? ',LE' : '';
+                    $lineItem[$i]['shameOnId'] = ($p['shameOnId']) ? ' BS' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($p['coreSameOnbe']) ? ', BE' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($p['coreSameOnte']) ? ', TE' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($p['coreSameOnre']) ? ', RE' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($p['coreSameOnle']) ? ', LE' : '';
                     $lineItem[$i]['facPaint'] = $this->getFacPaintById($p['facPaint']);
                     $lineItem[$i]['isLabels'] = $p['isLabels'];
                     $lineItem[$i]['autoNumber'] = $this->getFirstLabel($p['autoNumber']);
@@ -1606,11 +1606,11 @@ class OrderController extends Controller {
                     $lineItem[$i]['finish'] = $d['finish'];
                     $lineItem[$i]['uvCuredId'] = $this->getUVCuredNameById($d['uvCured']);
                     $lineItem[$i]['sheenId'] = $this->getSheenById($d['sheen']);
-                    $lineItem[$i]['shameOnId'] = ($d['sameOnBack']) ? 'BS' : '';
-                    $lineItem[$i]['coreSameOnbe'] = ($d['sameOnBottom']) ? ',BE' : '';
-                    $lineItem[$i]['coreSameOnte'] = ($d['sameOnTop']) ? ',TE' : '';
-                    $lineItem[$i]['coreSameOnre'] = ($d['sameOnRight']) ? ',RE' : '';
-                    $lineItem[$i]['coreSameOnle'] = ($d['sameOnLeft']) ? ',LE' : '';
+                    $lineItem[$i]['shameOnId'] = ($d['sameOnBack']) ? ' BS' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($d['sameOnBottom']) ? ', BE' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($d['sameOnTop']) ? ', TE' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($d['sameOnRight']) ? ', RE' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($d['sameOnLeft']) ? ', LE' : '';
                     $lineItem[$i]['facPaint'] = $this->getFacPaintById($d['facPaint']);
                     $lineItem[$i]['isLabels'] = $d['isLabel'];
                     $lineItem[$i]['autoNumber'] = $this->getFirstLabel($d['autoNumber']);
