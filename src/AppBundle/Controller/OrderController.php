@@ -490,7 +490,7 @@ class OrderController extends Controller {
                 } else {
                     $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
                 }
-//                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId,$printType);
+                //                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId,$printType);
                 $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId,$printType);;
             }
         }
