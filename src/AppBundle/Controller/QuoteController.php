@@ -2182,11 +2182,16 @@ class QuoteController extends Controller
                     $lineItem[$i]['finish'] = $p->getFinish();
                     $lineItem[$i]['uvCuredId'] = $this->getUVCuredNameById($p->getUvCuredId());
                     $lineItem[$i]['sheenId'] = $this->getSheenById($p->getSheenId());
-                    $lineItem[$i]['shameOnId'] = ($p->getShameOnId()) ? 'BS' : '';
-                    $lineItem[$i]['coreSameOnbe'] = ($p->getCoreSameOnbe()) ? 'BE,' : '';
-                    $lineItem[$i]['coreSameOnte'] = ($p->getCoreSameOnte()) ? 'TE,' : '';
-                    $lineItem[$i]['coreSameOnre'] = ($p->getCoreSameOnre()) ? 'RE,' : '';
-                    $lineItem[$i]['coreSameOnle'] = ($p->getCoreSameOnle()) ? 'LE' : '';
+                    /* $lineItem[$i]['shameOnId'] = ($p->getShameOnId()) ? 'BS ' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($p->getCoreSameOnbe()) ? 'BE, ' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($p->getCoreSameOnte()) ? 'TE, ' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($p->getCoreSameOnre()) ? 'RE, ' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($p->getCoreSameOnle()) ? 'LE' : ''; */
+                    $lineItem[$i]['shameOnId'] = ($p->getShameOnId()) ? ' BS' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($p->getCoreSameOnbe()) ? ', BE' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($p->getCoreSameOnte()) ? ', TE' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($p->getCoreSameOnre()) ? ', RE' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($p->getCoreSameOnle()) ? ', LE' : '';
                     $lineItem[$i]['facPaint'] = $this->getFacPaintById($p->getFacPaint());
                     $lineItem[$i]['isLabels'] = $p->getIsLabels();
                     $lineItem[$i]['autoNumber'] = $this->getFirstLabel($p->getAutoNumber());
@@ -3056,41 +3061,41 @@ class QuoteController extends Controller
 
 
             $htmlArr['body'] .= "<tr>
-                                            <th style='width:30px'>".$index."</th>
-                                            <td>".$qData['quantity']."</td>
-                                            <td>".$qData['grain']."</td>
-                                            <td>".$qData['species']."</td>
-                                            <td>".$qData['pattern']."</td>
-                                            <td>".$qData['grade']."</td>
-                                            <td>".$qData['back']."</td>
-                                            <!--<td>".$qData['width']."x".$qData['widthFraction']." x ".$qData['length']."x".$qData['lengthFraction']." x ".$qData['thickness']."</td>-->
-                                            <td>".$qData['dimensions']."</td>
-                                            <td>".$qData['core']."</td>";
-            $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left' style='width:250px'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
-            $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
-            if ($qData['finish'] == 'UV') {
-                $htmlArr['body'] .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']."%-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
-            } elseif ($qData['finish'] == 'Paint') {
-                $htmlArr['body'] .= "Finish: Paint-".$qData['facPaint']."-".$qData['uvCuredId']."-".$qData['sheenId']."%".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
-            }
-            $htmlArr['body'] .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
-            $htmlArr['body'] .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
+                                    <th style='width:30px'>".$index."</th>
+                                    <td>".$qData['quantity']."</td>
+                                    <td>".$qData['grain']."</td>
+                                    <td>".$qData['species']."</td>
+                                    <td>".$qData['pattern']."</td>
+                                    <td>".$qData['grade']."</td>
+                                    <td>".$qData['back']."</td>
+                                    <!--<td>".$qData['width']."x".$qData['widthFraction']." x ".$qData['length']."x".$qData['lengthFraction']." x ".$qData['thickness']."</td>-->
+                                    <td>".$qData['dimensions']."</td>
+                                    <td>".$qData['core']."</td>";
+                                    $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left' style='width:250px'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+                                    $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
+                                    if ($qData['finish'] == 'UV') {
+                                        $htmlArr['body'] .= "Finish: UV - ".$qData['uvCuredId']." - ".$qData['sheenId']." % - ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                                    } elseif ($qData['finish'] == 'Paint') {
+                                        $htmlArr['body'] .= "Finish: Paint - ".$qData['facPaint']." - ".$qData['uvCuredId']." - ".$qData['sheenId']." % ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                                    }
+                                    $htmlArr['body'] .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
+                                    $htmlArr['body'] .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
 
-            $htmlArr['body'] .="<td style='width:80px'>$".$qData['unitPrice']."</td>
+                                    $htmlArr['body'] .="<td style='width:80px'>$".$qData['unitPrice']."</td>
                                             <td>$".$qData['totalPrice']."</td>
                                         </tr>";
 
         }
 
         $htmlArr['body'] .= "</tbody>
-                                            </table>
-                                            <table class='totalPrice'>
-                                                <tr>
-                                                      <td>&nbsp;</td>  
-                                                      <td class='price'>&nbsp;</td>  
-                                                </tr>
-                                            </table>
-                                        </div></div></div></body></html>";
+                                </table>
+                                <table class='totalPrice'>
+                                    <tr>
+                                            <td>&nbsp;</td>  
+                                            <td class='price'>&nbsp;</td>  
+                                    </tr>
+                                </table>
+                            </div></div></div></body></html>";
 
         $htmlArr['footer'] = "<!DOCTYPE html>
                 <html>
