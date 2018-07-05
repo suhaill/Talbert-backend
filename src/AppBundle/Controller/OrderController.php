@@ -446,7 +446,16 @@ class OrderController extends Controller {
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived quote details';
                 $arrApi['data']['id'] = $quoteData->getId();
-                $arrApi['data']['date'] = date("M d, Y",strtotime($quoteData->getEstimateDate()));
+               
+                if($printType == 'SHIPPER' ){
+                    
+                    $arrApi['data']['date'] = date("M d, Y");
+
+                }
+                else{
+                    $arrApi['data']['date'] = date("M d, Y",strtotime($quoteData->getEstimateDate()));
+
+                }
                 $arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
                 $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
                 $arrApi['data']['version'] = $quoteData->getVersion();
@@ -1353,7 +1362,8 @@ class OrderController extends Controller {
                 ->getQuery()
                 ->getResult();
         }
-        else{
+        else
+        {
 
 
             $plywoodRecords = $query->createQueryBuilder()
