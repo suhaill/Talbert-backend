@@ -225,7 +225,8 @@ class OrderController extends Controller {
                 }
             }
             $this->updateQuoteData($quoteId);
-            $quoteData = $this->getOrderDataById($quoteId);//print_r($quoteData);die();
+            $quoteData = $this->getOrderDataById($quoteId);
+            //print_r($quoteData);die();
             $orderData = $this->getOrderDetailsById($quoteId);
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
@@ -235,8 +236,8 @@ class OrderController extends Controller {
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived order details';
                 $arrApi['data']['id'] = $quoteData->getId();
-                //$arrApi['data']['date'] = $quoteData->getEstimateDate();
-                $arrApi['data']['date'] = $quoteData->getUpdatedAt()->format('Y-m-d H:i:s');
+                $arrApi['data']['date'] = $quoteData->getEstimateDate();
+                //$arrApi['data']['date'] = $quoteData->getUpdatedAt()->format('Y-m-d H:i:s');
                 $arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
                 $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
                 $arrApi['data']['version'] = $quoteData->getVersion();
