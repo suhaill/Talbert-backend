@@ -45,7 +45,7 @@ class PlywoodController extends Controller
             $thicknessId = trim($getJson->get('thickness'));
             $plywoodWidth = trim($getJson->get('width'));
             $widthFraction = trim($getJson->get('widthFraction'));
-            $netsize = trim($getJson->get('netsize'));
+            $netsize = trim($getJson->get('netsize')?$getJson->get('netsize'):0);
             $plywoodLength = trim($getJson->get('length'));
             $lengthFraction = trim($getJson->get('lengthFraction'));
             $finishThickId = trim($getJson->get('finishthick'));
@@ -642,7 +642,7 @@ class PlywoodController extends Controller
             $thicknessId = trim($getJson->get('thickness'));
             $plywoodWidth = trim($getJson->get('width'));
             $widthFraction = trim($getJson->get('widthFraction'));
-            $netsize = trim($getJson->get('netsize'));
+            $netsize = trim($getJson->get('netsize')?$getJson->get('netsize'):0);
             $plywoodLength = trim($getJson->get('length'));
             $lengthFraction = trim($getJson->get('lengthFraction'));
             $finishThickId = trim($getJson->get('finishthick'));

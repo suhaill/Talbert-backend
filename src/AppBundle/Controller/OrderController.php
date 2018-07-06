@@ -2,6 +2,8 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\SentQuotes;
+use AppBundle\Entity\MessageTemplates;
 use AppBundle\Service\JsonToArrayGenerator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -369,6 +371,14 @@ class OrderController extends Controller {
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    private function getMessageTemplateforEmailQuote() {
+        $em = $this->getDoctrine()->getManager();
+        $messTemplate = $em->getRepository(MessageTemplates::class)->findOneById(1);
+        if (!empty($messTemplate)) {
+            return $messTemplate->getMessage();
+        }
+    }
+
     /**
      * @Route("/api/quote/emailOrder")
      * @Security("is_granted('ROLE_USER')")
@@ -387,9 +397,14 @@ class OrderController extends Controller {
         $msg = $_DATA['msg'];
         $cmt = $_DATA['cmt'];
         $chkVal = $_DATA['chkVal'];
-        $html = $_DATA['html'];
+        $html = $this->getOrderHtmlByOrderId($qId);
+        $orderData = $this->getOrderDataById($qId);
+        $controlNumber = $orderData->getControlNumber();
+        $version = $orderData->getVersion();
+        /* print_R($html);
+        die(); */
         $datime = new \DateTime('now');
-        if (empty($qId) || empty($currUserId) || empty($currUserEmail) || empty($custEmail) || empty($msg) || empty($html)) {
+       if (empty($qId) || empty($currUserId) || empty($currUserEmail) || empty($custEmail)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Parameter missing.';
             $statusCode = 422;
@@ -402,7 +417,8 @@ class OrderController extends Controller {
             $message = \Swift_Message::newInstance()
                     ->setFrom($currUserEmail)
                     ->setTo($custEmail)
-                    ->setSubject('Order Email')
+                    //->setSubject('Order Email')
+                    ->setSubject('Here\'s your Order from Talbert #'.$controlNumber.'-'.$version)
                     ->setBody($newMessage, 'text/plain');
             for ($i = 0; $i < count($urls); $i++) {
                 $message->attach(\Swift_Attachment::fromPath($urls[$i]));
@@ -449,11 +465,12 @@ class OrderController extends Controller {
                 $arrApi['data']['id'] = $quoteData->getId();
                
                 if($printType == 'SHIPPER' ){
-                    
+                    date_default_timezone_set('America/Los_Angeles');
                     $arrApi['data']['date'] = date("M d, Y");
 
                 }
-                else{
+                else
+                {
                     $arrApi['data']['date'] = date("M d, Y",strtotime($quoteData->getEstimateDate()));
 
                 }
@@ -781,6 +798,352 @@ class OrderController extends Controller {
     {
         $numbers=explode("/",$fraction);
         return round($numbers[0]/$numbers[1],6);
+    }
+
+    private function getOrderHtmlByOrderId($id){
+        $images_destination = $this->container->getParameter('images_destination');
+        $htmlArr = [];
+        $_DATA['orderId'] = $id;
+        $_DATA['type'] = "printInvoice";
+
+        $quoteId = $_DATA['orderId'];
+        $printType = ($_DATA['type'] == 'printShipper') ? 'SHIPPER' : (($_DATA['type'] == 'printInvoice') ? 'INVOICE' : 'ORDER');
+        $orderData = $this->getOrderDetailsById($quoteId);
+        try {
+            $quoteData = $this->getQuoteDataById($quoteId);
+            if (empty($quoteData)) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'This quote does not exists';
+                $statusCode = 422;
+            } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived quote details';
+                $arrApi['data']['id'] = $quoteData->getId();
+               
+                if($printType == 'SHIPPER' ){
+                    date_default_timezone_set('America/Los_Angeles');
+                    $arrApi['data']['date'] = date("M d, Y");
+
+                }
+                else
+                {
+                    $arrApi['data']['date'] = date("M d, Y",strtotime($quoteData->getEstimateDate()));
+
+                }
+                $arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
+                $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
+                $arrApi['data']['version'] = $quoteData->getVersion();
+                $arrApi['data']['customer'] = $this->getCustomerNameById($quoteData->getCustomerId());
+                $arrApi['data']['company'] = $this->getCustomerCompanyById($quoteData->getCustomerId());
+                $arrApi['data']['userEmail'] = $this->getCustomerEmailById($quoteData->getEstimatorId());
+                $arrApi['data']['customerEmail'] = $this->getCustomerEmailById($quoteData->getCustomerId());
+                $arrApi['data']['customerId'] = $quoteData->getCustomerId();
+                $arrApi['data']['referenceNumber'] = ($quoteData->getRefNum()) ? 'PO-'.$quoteData->getRefNum() : 'None';
+                $arrApi['data']['salesman'] = $this->getSalesmanNameById($quoteData->getSalesmanId());
+                $arrApi['data']['salesmanId'] = $quoteData->getSalesmanId();
+                $arrApi['data']['job'] = ($quoteData->getJobName()) ? $quoteData->getJobName() : 'None';
+                $arrApi['data']['term'] = (string) $quoteData->getTermId();
+                $arrApi['data']['shipMethod'] = $this->getShipMethodNamebyId($quoteData->getShipMethdId());
+                $arrApi['data']['shipMethodId'] = $quoteData->getShipMethdId();
+                $arrApi['data']['billAdd'] = $this->getBillAddById($quoteData->getCustomerId());
+                $arrApi['data']['shipAdd'] = $this->getShippingAddById($quoteData->getShipAddId());
+                $arrApi['data']['shipAddId'] = $quoteData->getShipAddId();
+                $arrApi['data']['leadTime'] = $quoteData->getLeadTime();
+                $arrApi['data']['status'] = $quoteData->getStatus();
+                $arrApi['data']['comment'] = $quoteData->getComment();
+                $arrApi['data']['deliveryDate'] = date("M d, Y",strtotime($quoteData->getDeliveryDate()));
+                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot())?str_replace(',','',number_format($quoteData->getQuoteTot(),2)):'00.00';
+                $arrApi['data']['expFee'] = !empty($quoteData->getExpFee())?str_replace(',','',number_format($quoteData->getExpFee(),2)):'00.00';
+                $arrApi['data']['discount'] = !empty($quoteData->getDiscount())?str_replace(',','',number_format($quoteData->getDiscount(),2)):'00.00';
+                $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee())?str_replace(',','',number_format($quoteData->getLumFee(),2)):'00.00';
+                $arrApi['data']['shipCharge'] = !empty($quoteData->getShipCharge())?str_replace(',','',number_format($quoteData->getShipCharge(),2)):'00.00';
+                $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax())?str_replace(',','',number_format($quoteData->getSalesTax(),2)):'00.00';
+                $arrApi['data']['termName'] = $this->getTermName($quoteData->getTermId());
+                if ($quoteData->getQuoteTot() == 0) {
+                    $arrApi['data']['projectTot'] = '00.00';
+                } else {
+                    $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
+                }
+                //                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId,$printType);
+                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId,$printType);;
+            }
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+
+        $calSqrft = 0;
+        foreach($arrApi['data']['lineitems'] as $key=>$qData){
+            $a = ($qData['width'] + $qData['originalWidthFraction']);
+            $b = ($qData['length'] + $qData['originalLengthFraction']);
+            $calSqrft += ($a*$b * $qData['quantity'])/144;
+        }
+
+        $htmlArr = [];
+
+        $htmlArr['header'] = "<!DOCTYPE html>
+                <html>
+                <head>
+                    <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
+                    <style>
+                        body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:8pt; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
+                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 4px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                        table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}
+                    </style>
+                </head>
+                <body>
+                    <div class=''>
+                        <div class='invoiceCtnr'>
+                            <table class='invoiceHeader'>
+                                <tr>
+                                    <td>
+                                        <div class='invLogo'><img src='".$images_destination."/logo-invoice.png' alt='Talbert: Architectural Panels and Doors'></div>
+                                        <table class='addressHldr'>
+                                            <tr>
+                                                <td class='addCell'>
+                                                    <table class='addCellDscHldr'>
+                                                        <tr>
+                                                            <td class='cellDescLbl'>Sold To</td>
+                                                            <td class='cellDescTxt'>
+                                                                <h3>".$arrApi['data']['company']."</h3>
+                                                                <p>".$arrApi['data']['billAdd']['street']."</p>
+                                                                <p>".$arrApi['data']['billAdd']['city'].",".$arrApi['data']['billAdd']['state']." ".$arrApi['data']['billAdd']['zip']."</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                                <td class='addCell'>
+                                                    <table class='addCellDscHldr'>
+                                                        <tr>
+                                                            <td class='cellDescLbl'>Ship To</td>
+                                                            <td class='cellDescTxt'>
+                                                            <h3>".$arrApi['data']['company']."</h3>
+                                                            
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td class='invCapt'>
+                                        <div class='captBTxt'>".$printType."</div>
+                                        <div class='subTxt'>O-".$arrApi['data']['controlNumber']."-".$arrApi['data']['version']."</div>
+                                        <p>".$arrApi['data']['date']." &nbsp;|&nbsp; Net 30 days</p>
+                                        <p><em>At Talbert Architectural <br>Your Total Satisfaction <br>is Our Goal!</em></p>
+                                    </td>
+                                </tr>
+                            </table></div></div></body></html>";
+                            
+                $htmlArr['body'] = "<!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
+                                    <style>
+                                        body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:8pt; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
+                                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 4px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                                        table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}th.t-right,td.t-right{text-align:right !important;}
+                                    </style>
+                                </head>
+                                <body>
+                    <div class=''>
+                        <div class='invoiceCtnr'>
+                            <div class='custOdrDtls'>
+                                    <table>
+                                        <tr>
+                                            <td>Customer Reference: ".$arrApi['data']['referenceNumber']."</td>
+                                            <td>Job Name: ".$arrApi['data']['job']."</td>
+                                            <td>Delivery Date: ".$arrApi['data']['deliveryDate']."</td>
+                                            <td>Ship Via: ".$arrApi['data']['shipMethod']."</td>
+                                            <td>SqFt: ". round($calSqrft)."</td>
+                                        </tr>
+                                    </table>
+                            </div>
+                            <div class='itemListTablHldr'>
+                                <table class='prodItmLst'>
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Qty</th>
+                                            <th>Grain</th>
+                                            <th>Species</th>
+                                            <th>PTRN</th>
+                                            <th>Grd</th>
+                                            <th>Back</th>
+                                            <th>Dimensions</th>
+                                            <th>Core</th>
+                                            <th class='t-left'>Details</th>";
+                                    if ($printType == 'ORDER' || $printType == 'INVOICE') {
+                                        $htmlArr['body'] .= "<th>Unit Price</th>
+                                                  <th class='t-right'>Total</th>";
+                                    } else {
+                                        $htmlArr['body'] .= "<th class='t-left qtyShipped'>Qty Shipped</th>";
+                                    }
+
+        $htmlArr['body'] .= "</tr></thead><tbody>";
+
+        foreach($arrApi['data']['lineitems'] as $key=>$qData){
+
+            if($qData['type'] == 'plywood'){
+                $index = ($key+1)." P";
+            }
+            else if($qData['type'] == 'veneer'){
+                $index = ($key+1)." V";
+            }
+            else{
+                $index = ($key+1)." D";
+            }
+
+            $htmlArr['body'] .= "<tr>
+                        <th>".$index."</th>
+                        <td>".$qData['quantity']."</td>
+                        <td>".$qData['grain']."</td>
+                        <td>".$qData['species']."</td>
+                        <td>".$qData['pattern']."</td>
+                        <td>".$qData['grade']."</td>
+                        <td>".$qData['back']."</td>
+                        <!--<td>".$qData['width']."-".$qData['widthFraction']." x ".$qData['length']."-".$qData['lengthFraction']." x ".$qData['thickness']."</td>-->
+                        <td>".$qData['dimensions']."</td>
+                        <td>".$qData['core']."</td>
+                        ";
+            $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+            $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
+            if ($qData['finish'] == 'UV') {
+                $htmlArr['body'] .= "Finish: UV - ".$qData['uvCuredId']." - ".$qData['sheenId']." % - ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+            } elseif ($qData['finish'] == 'Paint') {
+                $htmlArr['body'] .= "Finish: Paint - ".$qData['facPaint']." - ".$qData['uvCuredId']." - ".$qData['sheenId']." % ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+            }
+            $htmlArr['body'] .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
+            $htmlArr['body'] .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
+
+            if ($printType == 'ORDER') {
+                if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
+                    $htmlArr['body'] .= "<td>$".$qData['unitPrice']."</td>
+                              <td>$".$qData['totalPrice']."</td>
+                              </tr>";
+                } else {
+                    $htmlArr['body'] .= "<td></td>
+                              <td>BACK ORDERED</td>
+                              </tr>";
+                }
+            } elseif ($printType == 'INVOICE') {
+                if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
+                    $htmlArr['body'] .= "<td>$".$qData['unitPrice']."</td>
+                              <td>$".$qData['totalPrice']."</td>
+                              </tr>";
+                } else {
+                    $htmlArr['body'] .= "<td></td>
+                              <td>BACK ORDERED</td>
+                              </tr>";
+                }
+            } else {
+                if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
+                    $htmlArr['body'] .= " <td>".($qData['quantity'] - $qData['quantityRemaining'])."</td>
+                           </tr>";
+                } else {
+                    $htmlArr['body'] .= " <td>BACK ORDERED</td>
+                           </tr>";
+                }
+            }
+        }
+
+        $htmlArr['body'] .= "</tbody>
+                                </table>
+                                <table class='totalPrice'>
+                                    <tr>";
+        if ($printType == 'ORDER' || $printType == 'INVOICE') {
+            $htmlArr['body'] .= "<td></td><td class='price'></td>";
+        } else {
+            $htmlArr['body'] .= "<td></td><td class='price'></td>";
+        }
+        $htmlArr['body'] .= "</tr></table>
+                            </div></div></div></body></html>";
+
+        $htmlArr['footer'] = "<!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
+                                    <style>
+                                        body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
+                                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 4px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                                        table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}
+                                    </style>
+                                </head>
+                                <body>
+                    <div class=''>
+                        <div class='invoiceCtnr'>
+                                <div class='invoiceFooter'>
+                                <div class='custOdrDtls'>
+                                    <table>
+                                        <tr>
+                                            <td><strong>Special Instructions:</strong> **".$arrApi['data']['comment']."**</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <table class='invoiceFootBtm'>
+                                    <tr>
+                                        <td class='sideBox note'>
+                                            <div class='name'>Sold By: ".$arrApi['data']['salesman']."</div> 
+                                            <p>Talbert Architectural Panels &amp; Doors, Inc. assumes no liability beyond the replacement of individual items, but not to exceed the purchase price of said item.</p>
+                                            <p>For FSC Edgebanding. The claim for edgebanding is the same as the claim for the panels to which it is affixed.</p>
+                                        </td>                            
+                                        <td>
+                                            <div class='warnTxt'>
+                                                <h3>WARNING</h3>
+                                                <p>Drilling, Sawing, Sanding or machining wood products generate wood dust, a substance known to the State of California to cause cancer.</p>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class='approved'>
+                                                <p>Approved by: ".$orderData->getApprovedBy()." via ".$orderData->getVia()."</p>
+                                                <p>".date("d.m.y",strtotime($orderData->getOrderDate()))." | ".date("h:i:s a",strtotime($orderData->getOrderDate()))."</p>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <img src='".$images_destination."/fsc-order.png' alt=''>
+                                        </td>";
+                            if ($printType == 'ORDER' || $printType == 'INVOICE') {
+                                $htmlArr['footer'] .="<td class='sideBox'>
+                                            <table class='totalTxt'>
+                                                <tr>
+                                                    <td>Sub Total</td>
+                                                    <td>$".$arrApi['data']['quoteSubTot']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Sale Tax</td>
+                                                    <td>$".$arrApi['data']['salesTax']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Shipping</td>
+                                                    <td>$".$arrApi['data']['shipCharge']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Lumber Fee</td>
+                                                    <td>$".$arrApi['data']['lumFee']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Total</strong></td>
+                                                    <td><strong>$".$arrApi['data']['projectTot']."</strong></td>
+                                                </tr>
+                                            </table>
+                                        </td>";
+                            } else {
+                                $htmlArr['footer'] .="<td class='sideBox'><table class='totalTxt'>
+                                                <tr><td></td><td></td></tr>
+                                                <tr><td></td><td></td></tr>
+                                                <tr><td></td><td></td></tr>
+                                                <tr><td></td><td></td></tr>
+                                                <tr><td><strong></strong></td><td><strong></strong></td></tr>
+                                            </table>
+                                        </td>";
+                            }
+                                $htmlArr['footer'] .= "</tr></table></div>
+                                    </div>   
+                                </div>
+                            </body>
+                        </html>";
+
+        return $htmlArr;
     }
 
     private function getOrderDetailsById($orderId) {
@@ -1180,13 +1543,23 @@ class OrderController extends Controller {
     }
 
     private function createOrderLineitemPDF($html, $pdfName, $request) {
-        $fs = new Filesystem();
+        /* $fs = new Filesystem();
         $snappy = new Pdf('../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename=$pdfName');
         $snappy->generateFromHtml($html, $pdfName);
         $fs->chmod($pdfName, 0777);
         return 'http://' . $request->getHost() . '/' . $request->getBasePath() . '/' . $pdfName;
+         */
+        $fs = new Filesystem();
+        $snappy = new Pdf(  '../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename=$pdfName');
+        $snappy->setOption('header-html', $html['header']);
+        $snappy->setOption('footer-html', $html['footer']);
+        $snappy->generateFromHtml($html['body'], $pdfName, array('orientation'=>'Landscape', 'page-size' => 'Letter'));
+        $fs->chmod($pdfName, 0777);
+        return 'http://'.$request->getHost().'/'.$request->getBasePath().'/'.$pdfName;
     }
 
     private function createMessageToBeSent($msg, $cmt) {
