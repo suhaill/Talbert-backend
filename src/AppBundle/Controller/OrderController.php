@@ -2666,7 +2666,9 @@ class OrderController extends Controller {
                 if (!empty($v['type']) && $v['type'] == 'Veneer') {
                     //for ($i=0;$i<$v['quantity'];$i++) {
                         $htmlBlocks[] = $this->getOrderTicketVeneerHTMLV($v, $images_destination);
-                        $htmlBlocks[] = $this->getOrderTicketVeneerHTMLS($v, $images_destination);
+                        //$htmlBlocks[] = $this->getOrderTicketVeneerHTMLS($v, $images_destination);
+                        $htmlBlocks[] = $this->getOrderTicketVeneerHTMLSnew($v, $images_destination);
+
                     //}
                 }
 //                if (!empty($v['type']) && $v['type'] == 'Door') {
@@ -2993,7 +2995,7 @@ class OrderController extends Controller {
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                     <style>
-                        body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:40px;}
+                        body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:700;font-family:inherit;}table.ticketFoot{margin-top:40px;}
                         .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:90px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:36px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 20px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:16px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
                         .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                     </style>
@@ -3026,11 +3028,11 @@ class OrderController extends Controller {
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Veneer Size</label></td>
-                    <td class="cellDesc" style="font-size:16px;">'.($v['width'] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v['length']+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
+                    <td class="cellDesc" style="font-size:16px;"><strong>'.($v['width'] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v['length']+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Finished Size</label></td>
-                    <td class="cellDesc" style="font-size:16px;">'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
+                    <td class="cellDesc" style="font-size:16px;"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Thickness</label></td>
@@ -3064,10 +3066,157 @@ class OrderController extends Controller {
                     <td class="cellLabel"><label>Pattern</label></td>
                     <td class="cellDesc" style="font-size:16px;">'.$v['patternName'].'</td>
                 </tr>
-                <tr>
+                <!--<tr>
                     <td class="cellLabel"><label>Label</label></td>
                     <td class="cellDesc" style="font-size:16px;">No</td>
+                </tr>-->
+                <tr>
+                    <td class="cellLabel"><label>Core</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['coreType'].'</td>
                 </tr>
+                <tr>
+                    <td class="cellLabel"><label>Notes:</label></td>
+                    <td class="cellDesc" style="font-size:16px;"><strong>'.$v['comments'].'</strong></td>
+                </tr>
+            </table></div></div></body></html>';
+    $htmlArr['footer'] = '<!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
+                    <style>
+                        body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:40px;}
+                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:90px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:36px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 20px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                        .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    </style>
+                </head>
+                <body>
+                <div class="ticketWrap">
+        <div class="ticketScreen veneer">
+                <table class="ticketFoot">
+                <tr>
+                    <td class="lftFoot"></td>
+                    <td class="dep footIN">
+                        <table>
+                            <tr>
+                                <td><span class="itTxt t-left">' . date('l | M d', strtotime($v['deliveryDate'])) . '</span></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr> 
+            </table>
+        </div>
+    </div></body></html>';
+        return $htmlArr;
+    }
+
+    private function getOrderTicketVeneerHTMLSnew($v, $images_destination) {
+        $htmlArr = [];
+        $htmlArr['header'] = '<!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
+                    <style>
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                </style>
+                </head>
+                <body>
+                <div class="ticketWrap">
+        <div class="ticketScreen veneer">
+            <table class="ticketHead">
+                <tr>
+                    <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                    <td class="dep">Sanding Department</td>
+                </tr> 
+            </table></div></div></body></html>';
+
+    $htmlArr['body'] = '<!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
+                    <style>
+                        body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:700;font-family:inherit;}table.ticketFoot{margin-top:40px;}
+                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:90px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:36px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 20px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:16px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                        .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    </style>
+                </head>
+                <body>
+                <div class="ticketWrap">
+        <div class="ticketScreen veneer">
+                <table class="ticketDesc">
+                <tr>
+                    <td class="cellLabel"></td>
+                    <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"></td>
+                    <td class="cellDesc" style="font-size:16px;">PO: ' . $v['refNum'] . '<br>Order: ' . $v['estNumber'] . '<br>Item: '.$v['lineItemNum'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"></td>
+                    <td class="cellDesc"><hr></td>
+                </tr>
+            </table>
+            <table class="ticketDesc" style="min-height:300px;">
+                <tr>
+                    <td class="cellLabel"><label>Quantity</label></td>
+                    <td class="cellDesc" style="font-size:16px;">' . $v['quantity'] . ' Pieces</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Species</label></td>
+                    <td class="cellDesc" style="font-size:16px;">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Veneer Size</label></td>
+                    <td class="cellDesc" style="font-size:16px;"><strong>'.($v['width'] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v['length']+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Finished Size</label></td>
+                    <td class="cellDesc" style="font-size:16px;"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Thickness</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['thicknessName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Species</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['SpecieName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Face Grade</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['faceGradeName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Grain Direction</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['grainDirectionName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Back</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['backerName'].'</td>
+                </tr>';
+
+                if($v["isSequenced"]){
+                    $htmlArr['body'] .= '<tr>
+                        <td class="cellLabel"><label>Sequenced</label></td>
+                        <td class="cellDesc">'.($v["isSequenced"] == 1 ? "<strong>SEQUENCED</strong>" : "").'</td>
+                    </tr>';
+                }
+
+                $htmlArr['body'] .= '<tr>
+                    <td class="cellLabel"><label>Pattern</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['patternName'].'</td>
+                </tr>
+                <!--<tr>
+                    <td class="cellLabel"><label>Label</label></td>
+                    <td class="cellDesc" style="font-size:16px;">No</td>
+                </tr>-->
                 <tr>
                     <td class="cellLabel"><label>Core</label></td>
                     <td class="cellDesc" style="font-size:16px;">'.$v['coreType'].'</td>
@@ -3512,7 +3661,7 @@ class OrderController extends Controller {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
-                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:700;font-family:inherit;}table.ticketFoot{margin-top:50px;}
                     .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
                     .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
@@ -3540,11 +3689,11 @@ class OrderController extends Controller {
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Veneer Size</label></td>
-                            <td class="cellDesc">'.($v["width"] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
+                            <td class="cellDesc"><strong>'.($v["width"] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Finished Size</label></td>
-                            <td class="cellDesc">'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
+                            <td class="cellDesc"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Thickness</label></td>
@@ -3695,7 +3844,7 @@ class OrderController extends Controller {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
-                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:700;font-family:inherit;}table.ticketFoot{margin-top:50px;}
                     .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
                     .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
@@ -3730,11 +3879,11 @@ class OrderController extends Controller {
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
-                        <td class="cellDesc">'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
+                        <td class="cellDesc"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
                     </tr>
                     <!--<tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
-                        <td class="cellDesc">'.($v["width"] + 1).'" x '.($v["length"]+1).'"</td>
+                        <td class="cellDesc"><strong>'.($v["width"] + 1).'" x '.($v["length"]+1).'</strong>"</td>
                     </tr>-->
                     <tr>
                         <td class="cellLabel"><label>Core Thickness</label></td>
