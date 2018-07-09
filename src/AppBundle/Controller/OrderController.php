@@ -409,7 +409,7 @@ class OrderController extends Controller {
             $arrApi['message'] = 'Parameter missing.';
             $statusCode = 422;
         } else {
-            $pdfName = 'uploads/order_screenshots/OrderPDF-' . $qId . '-' . time() . '.pdf';
+            $pdfName = 'uploads/order_screenshots/InvoicePDF-' . $qId . '-' . time() . '.pdf';
             $quotePdfUrl = $this->createOrderLineitemPDF($html, $pdfName, $request);
             $newMessage = $this->createMessageToBeSent($msg, $cmt);
             $urls = $this->getAttachmentUrls($chkVal, $request);
@@ -418,7 +418,7 @@ class OrderController extends Controller {
                     ->setFrom($currUserEmail)
                     ->setTo($custEmail)
                     //->setSubject('Order Email')
-                    ->setSubject('Here\'s your Order from Talbert #'.$controlNumber.'-'.$version)
+                    ->setSubject('Here\'s your Invoice from Talbert #'.$controlNumber.'-'.$version)
                     ->setBody($newMessage, 'text/plain');
             for ($i = 0; $i < count($urls); $i++) {
                 $message->attach(\Swift_Attachment::fromPath($urls[$i]));
