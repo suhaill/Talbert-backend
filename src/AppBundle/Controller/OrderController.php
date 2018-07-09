@@ -781,11 +781,11 @@ class OrderController extends Controller {
                                             </table>
                                         </td>";
                             }
-                                                        $htmlArr['footer'] .= "</tr></table></div>
-                                                            </div>   
-                                                        </div>
-                                                    </body>
-                                                </html>";
+                                        $htmlArr['footer'] .= "</tr></table></div>
+                                            </div>   
+                                        </div>
+                                    </body>
+                                </html>";
 
         $snappy = $this->get('knp_snappy.pdf');
         $snappy->setOption('header-html', $htmlArr['header']);
@@ -2639,11 +2639,11 @@ class OrderController extends Controller {
         $data = $jsontoarraygenerator->getJson($request);
         $quoteId = !empty($data->get('quote_id')) ? trim($data->get('quote_id')) : '';
         $plywoodData = $this->getPlywoodDataByQuoteId($quoteId);
+
         $veneerData = $this->getVeneerDataByQuoteId($quoteId);
         $doorData= $this->getDoorDataByQuoteId($quoteId);
         $arr = array_merge($veneerData, $plywoodData);
         $final = $this->arraySortByColumn($arr, 'lineItemNum');
-        
         $images_destination = $this->container->getParameter('images_destination');
         $lineItemHTML = '';
         $plyHtmlV ='';
@@ -2658,7 +2658,9 @@ class OrderController extends Controller {
                     //for ($i=0;$i<$v['quantity'];$i++) {
                         $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLV($v, $images_destination);
                         $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLC($v, $images_destination);
-                        $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLS($v, $images_destination);
+                        //$htmlBlocks[] = $this->getOrderTicketPlywoodHTMLS($v, $images_destination);
+                        $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLSnew($v, $images_destination);
+
                     //}
                 }
                 if (!empty($v['type']) && $v['type'] == 'Veneer') {
@@ -2790,7 +2792,7 @@ class OrderController extends Controller {
         if (!empty($quoteId)) {
             $query = $this->getDoctrine()->getManager();
             $result = $query->createQueryBuilder()
-                    ->select(['v.id','v.quantity', 'v.plywoodWidth as width','v.widthFraction', 'v.plywoodLength as length','v.lengthFraction', 'v.comments', 'v.speciesId', 'v.topEdge', 'v.bottomEdge',
+                    ->select(['v.autoNumber','v.id','v.quantity', 'v.plywoodWidth as width','v.widthFraction', 'v.plywoodLength as length','v.lengthFraction', 'v.comments', 'v.speciesId', 'v.topEdge', 'v.bottomEdge',
                         'v.rightEdge', 'v.leftEdge', "v.finishThickId as pThicknessName", 'v.finishThickType', "'Plywood' as type",
                         "v.finThickFraction", "v.thickness as panelThicknessName", 'v.lineItemNum', 'v.isSequenced','v.isLabels','st.statusName'])
                     ->from('AppBundle:Plywood', 'v')
@@ -2970,8 +2972,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                     <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
                 </head>
                 <body>
@@ -3049,12 +3051,16 @@ class OrderController extends Controller {
                 <tr>
                     <td class="cellLabel"><label>Back</label></td>
                     <td class="cellDesc" style="font-size:16px;">'.$v['backerName'].'</td>
-                </tr>
-                <tr>
-                    <td class="cellLabel"><label>Sequenced</label></td>
-                    <td class="cellDesc" style="font-size:16px;">'.($v['sequenced'] ? 'Yes' : 'No').'</td>
-                </tr>
-                <tr>
+                </tr>';
+
+                if($v["isSequenced"]){
+                    $htmlArr['body'] .= '<tr>
+                        <td class="cellLabel"><label>Sequenced</label></td>
+                        <td class="cellDesc">'.($v["isSequenced"] == 1 ? "<strong>SEQUENCED</strong>" : "").'</td>
+                    </tr>';
+                }
+
+                $htmlArr['body'] .= '<tr>
                     <td class="cellLabel"><label>Pattern</label></td>
                     <td class="cellDesc" style="font-size:16px;">'.$v['patternName'].'</td>
                 </tr>
@@ -3191,12 +3197,16 @@ class OrderController extends Controller {
                 <tr>
                     <td class="cellLabel"><label>Back</label></td>
                     <td class="cellDesc" style="font-size:16px;">'.$v['backerName'].'</td>
-                </tr>
-                <tr>
-                    <td class="cellLabel"><label>Sequenced</label></td>
-                    <td class="cellDesc" style="font-size:16px;">'.($v['sequenced'] ? 'Yes' : 'No').'</td>
-                </tr>
-                <tr>
+                </tr>';
+
+                if($v["isSequenced"]){
+                    $htmlArr['body'] .= '<tr>
+                        <td class="cellLabel"><label>Sequenced</label></td>
+                        <td class="cellDesc">'.($v["isSequenced"] == 1 ? "<strong>SEQUENCED</strong>" : "").'</td>
+                    </tr>';
+                }
+
+                $htmlArr['body'] .= '<tr>
                     <td class="cellLabel"><label>Pattern</label></td>
                     <td class="cellDesc" style="font-size:16px;">'.$v['patternName'].'</td>
                 </tr>
@@ -3265,7 +3275,191 @@ class OrderController extends Controller {
         $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
         $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
         $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
+        $autoNumber = $this->getFirstLabel($v['autoNumber']);
+        $edge = '';
+        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
+                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
+                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
+                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
 
+            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
+                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
+            }
+            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
+                $edge .= 'BE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
+            }
+            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
+                $edge .= 'RE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
+            }
+            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
+                $edge .= 'LE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+            }
+        } else {
+            $edge = 'No';
+        }
+
+        $htmlArr = [];
+        $htmlArr['header'] = '<!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
+                <style>
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:700;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                </style>
+            </head>
+            <body><div class="ticketWrap">
+                <div class="ticketScreen veneer">
+                    <table class="ticketHead">
+                        <tr>
+                            <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                            <td class="dep">Veneer Department</td>
+                        </tr> 
+                    </table></div></div></body></html>';
+
+
+    $htmlArr['body'] = '<!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
+                <style>
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:700;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                </style>
+            </head>
+            <body><div class="ticketWrap">
+                <div class="ticketScreen veneer">
+                       <table class="ticketDesc">
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><label class="custName">' . $v["username"] . '</label></td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc">PO: ' . $v["refNum"] . '<br>Order: ' . $v["estNumber"] . '<br>Item: '.$v["lineItemNum"].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><hr></td>
+                        </tr>
+                    </table>
+                    <table class="ticketDesc" style="min-height:300px;">
+                        <tr>
+                            <td class="cellLabel"><label>Quantity</label></td>
+                            <td class="cellDesc">' . $v["quantity"] . ' Pieces</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Veneer Size</label></td>
+                            <td class="cellDesc"><strong>'.($v["width"] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Finished Size</label></td>
+                            <td class="cellDesc"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Thickness</label></td>
+                            <td class="cellDesc">' . $v["thicknessName"] . '"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Species</label></td>
+                            <td class="cellDesc">' . $v["SpecieName"] . ' - ' . $v["patternName"] . '</td>
+                        </tr>
+                        <!--<tr>
+                            <td class="cellLabel"><label>Species</label></td>
+                            <td class="cellDesc">' . $v["patternName"] . '</td>
+                        </tr>-->
+                        <tr>
+                            <td class="cellLabel"><label>Pattern</label></td>
+                            <td class="cellDesc">'.$v['patternMatch'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Face Grade</label></td>
+                            <td class="cellDesc">' . $v["faceGradeName"] . '</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Grain Direction</label></td>
+                            <td class="cellDesc">' . $v["grainDirectionName"] . '</td>
+                        </tr>';
+
+                        if($v["isSequenced"]){
+                            $htmlArr['body'] .= '<tr>
+                                <td class="cellLabel"><label>Sequenced</label></td>
+                                <td class="cellDesc">'.($v["isSequenced"] == 1 ? "<strong>SEQUENCED</strong>" : "").'</td>
+                            </tr>';
+                        }
+
+                        $htmlArr['body'] .= '<tr>
+                            <td class="cellLabel"><label>Back</label></td>
+                            <td class="cellDesc">' . $v["backerName"] . '</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Edge Details</label></td>
+                            <td class="cellDesc">' . $edge . '</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Label</label></td>
+                            <td class="cellDesc">'.($v["isLabels"] ? "$autoNumber" : "").'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Core</label></td>
+                            <td class="cellDesc">'.$v["coreType"].' - '.$this->float2rat($v["panelThicknessName"]).'"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Notes:</label></td>
+                            <td class="cellDesc"><strong>'.$v["comments"].'</strong></td>
+                        </tr>
+                    </table></div></div></body></html>';
+        $htmlArr['footer'] = '<!DOCTYPE html>
+        <html> 
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
+                <style>
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                </style>
+            </head>
+            <body><div class="ticketWrap">
+                <div class="ticketScreen veneer">
+                <table class="ticketFoot">
+                        <tr>
+                            <td class="lftFoot"></td>
+                            <td class="dep footIN">
+                                <table>
+                                    <tr>
+                                        <td><span class="itTxt t-left">'.date("D | M d",strtotime($v["deliveryDate"])).'</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr> 
+                    </table>
+                </div>
+            </div></body></html>';
+        return $htmlArr;
+    }
+
+    private function getOrderTicketPlywoodHTMLSnew($v, $images_destination) {
+        $topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $bottomEdgeName = !empty($v['bottomEdgeName']) ? $v['bottomEdgeName'] : 'N/A';
+        $rightEdgeName = !empty($v['rightEdgeName']) ? $v['rightEdgeName'] : 'N/A';
+        $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
+        $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
+        $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
+        $topSpeciesName = !empty($v['topSpeciesName']) ? $v['topSpeciesName'] : 'N/A';
+        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
+        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
+        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
+        $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
+        $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
+        $autoNumber = $this->getFirstLabel($v['autoNumber']);
         $edge = '';
         if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
                 ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
@@ -3297,8 +3491,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3306,7 +3500,7 @@ class OrderController extends Controller {
                     <table class="ticketHead">
                         <tr>
                             <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
-                            <td class="dep">Veneer Department</td>
+                            <td class="dep">Sanding Department</td>
                         </tr> 
                     </table></div></div></body></html>';
 
@@ -3319,8 +3513,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3375,12 +3569,16 @@ class OrderController extends Controller {
                         <tr>
                             <td class="cellLabel"><label>Grain Direction</label></td>
                             <td class="cellDesc">' . $v["grainDirectionName"] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Sequenced</label></td>
-                            <td class="cellDesc">'.($v["isSequenced"] == 1 ? "Yes" : "No").'</td>
-                        </tr>
-                        <tr>
+                        </tr>';
+
+                        if($v["isSequenced"]){
+                            $htmlArr['body'] .= '<tr>
+                                <td class="cellLabel"><label>Sequenced</label></td>
+                                <td class="cellDesc">'.($v["isSequenced"] == 1 ? "<strong>SEQUENCED</strong>" : "").'</td>
+                            </tr>';
+                        }
+
+                        $htmlArr['body'] .= '<tr>
                             <td class="cellLabel"><label>Back</label></td>
                             <td class="cellDesc">' . $v["backerName"] . '</td>
                         </tr>
@@ -3390,7 +3588,7 @@ class OrderController extends Controller {
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Label</label></td>
-                            <td class="cellDesc">'.($v["isLabels"] ? "Yes" : "No").'</td>
+                            <td class="cellDesc">'.($v["isLabels"] ? "$autoNumber" : "").'</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Core</label></td>
@@ -3409,8 +3607,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3477,8 +3675,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3498,8 +3696,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3584,8 +3782,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3655,8 +3853,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3676,8 +3874,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3723,12 +3921,16 @@ class OrderController extends Controller {
                     <tr>
                         <td class="cellLabel"><label>Edge</label></td>
                         <td class="cellDesc">' . $edge . '</td>
-                    </tr>
-                    <tr>
-                        <td class="cellLabel"><label>Sequenced</label></td>
-                        <td class="cellDesc">' . ($v["isSequenced"] == 1 ? "Yes" : "No") . '</td>
-                    </tr>
-                    <!--<tr>
+                    </tr>';
+
+                    if($v["isSequenced"]){
+                        $htmlArr['body'] .= '<tr>
+                            <td class="cellLabel"><label>Sequenced</label></td>
+                            <td class="cellDesc">'.($v["isSequenced"] == 1 ? "<strong>SEQUENCED</strong>" : "").'</td>
+                        </tr>';
+                    }
+
+                    $htmlArr['body'] .= '<!--<tr>
                         <td class="cellLabel"><label>Species</label></td>
                         <td class="cellDesc">' . $v["patternName"] . '</td>
                     </tr>
