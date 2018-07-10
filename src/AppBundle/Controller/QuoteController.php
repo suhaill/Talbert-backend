@@ -2173,6 +2173,15 @@ class QuoteController extends Controller
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($p->getLengthFraction());
                     $lineItem[$i]['grain'] = $this->getGrainPattern( $p->getPatternId(),'plywood' );
                     $lineItem[$i]['edgeDetail'] = ($p->getEdgeDetail()) ? 1 : 0;
+                    
+                    $edgeDetailValue1 = ' ';
+                    $edgeDetailValue2 = '';
+                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getTopEdge()) != '') ? "TE-".$this->getEdgeNameById($p->getTopEdge()):'';
+                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getBottomEdge()) != '') ? " | BE-".$this->getEdgeNameById($p->getBottomEdge()):'';
+                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getRightEdge()) != '') ? " | RE-".$this->getEdgeNameById($p->getRightEdge()):'';
+                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getLeftEdge()) != '') ? " | LE-".$this->getEdgeNameById($p->getLeftEdge()):'';
+
+                    $lineItem[$i]['edgeDetailValue'] = $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
                     $lineItem[$i]['topEdge'] = $p->getTopEdge();
                     $lineItem[$i]['bottomEdge'] = $p->getBottomEdge();
                     $lineItem[$i]['rightEdge'] = $p->getRightEdge();
@@ -2314,6 +2323,14 @@ class QuoteController extends Controller
                     $lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
                     //$lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
                     $lineItem[$i]['edgeDetail'] = ($d->getEdgeFinish()) ? '1' : 0;
+                    $edgeDetailValue1 = ' ';
+                    $edgeDetailValue2 = '';
+                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getTopEdge()) != '') ? "TE-".$this->getEdgeNameById($p->getTopEdge()):'';
+                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getBottomEdge()) != '') ? " | BE-".$this->getEdgeNameById($p->getBottomEdge()):'';
+                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getRightEdge()) != '') ? " | RE-".$this->getEdgeNameById($p->getRightEdge()):'';
+                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getLeftEdge()) != '') ? " | LE-".$this->getEdgeNameById($p->getLeftEdge()):'';
+
+                    $lineItem[$i]['edgeDetailValue'] = $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
                     $lineItem[$i]['topEdge'] = $d->getTopEdge();
                     $lineItem[$i]['bottomEdge'] = $d->getBottomEdge();
                     $lineItem[$i]['rightEdge'] = $d->getRightEdge();
@@ -3071,7 +3088,26 @@ class QuoteController extends Controller
                                     <!--<td>".$qData['width']."x".$qData['widthFraction']." x ".$qData['length']."x".$qData['lengthFraction']." x ".$qData['thickness']."</td>-->
                                     <td>".$qData['dimensions']."</td>
                                     <td>".$qData['core']."</td>";
-                                    $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left' style='width:250px'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])." | BE-".$this->getEdgeNameById($qData['bottomEdge'])." | RE-".$this->getEdgeNameById($qData['rightEdge'])." | LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+                                    
+                                    
+                                    //$htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left' style='width:250px'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])." | BE-".$this->getEdgeNameById($qData['bottomEdge'])." | RE-".$this->getEdgeNameById($qData['rightEdge'])." | LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+                                    
+                                    $edgeDetailValue1 = "<td class='t-left' style='width:250px'>Edge Detail: ";
+                                    $edgeDetailValue2 = '';
+                                    $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['topEdge']) != '') ? "TE-".$this->getEdgeNameById($qData['topEdge']):'';
+                                    $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['bottomEdge']) != '') ? " | BE-".$this->getEdgeNameById($qData['bottomEdge']):'';
+                                    $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['rightEdge']) != '') ? " | RE-".$this->getEdgeNameById($qData['rightEdge']):'';
+                                    $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['leftEdge']) != '') ? " | LE-".$this->getEdgeNameById($qData['leftEdge']):'';
+                                    //$edgeDetailValue2 .= "<br> : <td class='t-left'>";
+                                    
+                                    if(ltrim( $edgeDetailValue2,' | ' ) != ''){
+                                        $htmlArr['body'] .= $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
+                        
+                                    }
+                                    else{
+                                        $htmlArr['body'] .= "<td>";
+                                    }
+
                                     $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
                                     if ($qData['finish'] == 'UV') {
                                         $htmlArr['body'] .= "Finish: UV - ".$qData['uvCuredId']." - ".$qData['sheenId']." % - ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";

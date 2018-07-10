@@ -650,7 +650,23 @@ class OrderController extends Controller {
                         <td>".$qData['dimensions']."</td>
                         <td>".$qData['core']."</td>
                         ";
-            $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])." | BE-".$this->getEdgeNameById($qData['bottomEdge'])." | RE-".$this->getEdgeNameById($qData['rightEdge'])." | LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+            //$htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])." | BE-".$this->getEdgeNameById($qData['bottomEdge'])." | RE-".$this->getEdgeNameById($qData['rightEdge'])." | LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+            
+            $edgeDetailValue1 = "<td class='t-left' style='width:250px'>Edge Detail: ";
+            $edgeDetailValue2 = '';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['topEdge']) != '') ? "TE-".$this->getEdgeNameById($qData['topEdge']):'';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['bottomEdge']) != '') ? " | BE-".$this->getEdgeNameById($qData['bottomEdge']):'';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['rightEdge']) != '') ? " | RE-".$this->getEdgeNameById($qData['rightEdge']):'';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['leftEdge']) != '') ? " | LE-".$this->getEdgeNameById($qData['leftEdge']):'';
+            //$edgeDetailValue2 .= "<br> : <td class='t-left'>";
+            if(ltrim( $edgeDetailValue2,' | ' ) != ''){
+                $htmlArr['body'] .= $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
+
+            }
+            else{
+                $htmlArr['body'] .= "<td>";
+            }
+
             $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
             if ($qData['finish'] == 'UV') {
                 $htmlArr['body'] .= "Finish: UV - ".$qData['uvCuredId']." - ".$qData['sheenId']." % - ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
@@ -1006,7 +1022,22 @@ class OrderController extends Controller {
                         <td>".$qData['dimensions']."</td>
                         <td>".$qData['core']."</td>
                         ";
-            $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])." | BE-".$this->getEdgeNameById($qData['bottomEdge'])." | RE-".$this->getEdgeNameById($qData['rightEdge'])." | LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+            //$htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])." | BE-".$this->getEdgeNameById($qData['bottomEdge'])." | RE-".$this->getEdgeNameById($qData['rightEdge'])." | LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+            $edgeDetailValue1 = " <td class='t-left' style='width:250px'>Edge Detail: ";
+            $edgeDetailValue2 = '';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['topEdge']) != '') ? "TE-".$this->getEdgeNameById($qData['topEdge']):'';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['bottomEdge']) != '') ? " | BE-".$this->getEdgeNameById($qData['bottomEdge']):'';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['rightEdge']) != '') ? " | RE-".$this->getEdgeNameById($qData['rightEdge']):'';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['leftEdge']) != '') ? " | LE-".$this->getEdgeNameById($qData['leftEdge']):'';
+            //$edgeDetailValue2 .= "<br> : <td class='t-left'>";
+            if(ltrim( $edgeDetailValue2,' | ' ) != ''){
+                $htmlArr['body'] .= $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
+
+            }
+            else{
+                $htmlArr['body'] .= "<td>";
+            }
+
             $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
             if ($qData['finish'] == 'UV') {
                 $htmlArr['body'] .= "Finish: UV - ".$qData['uvCuredId']." - ".$qData['sheenId']." % - ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
@@ -1835,6 +1866,16 @@ class OrderController extends Controller {
                     $lineItem[$i]['originalLengthFraction'] = ($p['lengthFraction']);                    
                     $lineItem[$i]['grain'] = $this->getGrainNameById($p['patternId']);
                     $lineItem[$i]['edgeDetail'] = ($p['edgeDetail']) ? 1 : 0;
+
+                    $edgeDetailValue1 = ' ';
+                    $edgeDetailValue2 = '';
+                    $edgeDetailValue2 .= ($p['edgeDetail'] == 1 && $this->getEdgeNameById($p['topEdge']) != '') ? "TE-".$this->getEdgeNameById($p['topEdge']):'';
+                    $edgeDetailValue2 .= ($p['edgeDetail'] == 1 && $this->getEdgeNameById($p['bottomEdge']) != '') ? " | BE-".$this->getEdgeNameById($p['bottomEdge']):'';
+                    $edgeDetailValue2 .= ($p['edgeDetail'] == 1 && $this->getEdgeNameById($p['rightEdge']) != '') ? " | RE-".$this->getEdgeNameById($p['rightEdge']):'';
+                    $edgeDetailValue2 .= ($p['edgeDetail'] == 1 && $this->getEdgeNameById($p['leftEdge']) != '') ? " | LE-".$this->getEdgeNameById($p['leftEdge']):'';
+
+                    $lineItem[$i]['edgeDetailValue'] = $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
+
                     $lineItem[$i]['topEdge'] = $p['topEdge'];
                     $lineItem[$i]['bottomEdge'] = $p['bottomEdge'];
                     $lineItem[$i]['rightEdge'] = $p['rightEdge'];
@@ -3605,10 +3646,10 @@ class OrderController extends Controller {
         $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
         $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
         $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
-        $topSpeciesName = !empty($v['topSpeciesName']) ? $v['topSpeciesName'] : 'N/A';
-        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
-        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
-        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
+        $topSpeciesName = !empty($v['topSpeciesName']) ? $v['topSpeciesName'] : 'SaF';
+        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'SaF';
+        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'SaF';
+        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'SaF';
         $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
         $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
         $autoNumber = $this->getFirstLabel($v['autoNumber']);
@@ -3792,33 +3833,32 @@ class OrderController extends Controller {
         $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
         $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
         $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
-        $topSpeciesName = !empty($v['topSpeciesName']) ? $v['topSpeciesName'] : 'N/A';
-        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
-        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
-        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
+        $topSpeciesName = !empty($v['topSpeciesName']) ? $v['topSpeciesName'] : 'SaF';
+        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'SaF';
+        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'SaF';
+        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'SaF';
         $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
         $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
 
 
         $edge = '';
-        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
-                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
-                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
-                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
-            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
+        if ( $topEdgeName == 'N/A' && $bottomEdgeName == 'N/A' && $rightEdgeName == 'N/A' && $leftEdgeName == 'N/A' ) {
+            $edge = 'No';
+        } 
+        else 
+        {
+            if ($topEdgeName !== 'N/A' ) {
                 $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
             }
-            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
+            if ($bottomEdgeName !== 'N/A' ) {
                 $edge .= 'BE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
             }
-            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
+            if ($rightEdgeName !== 'N/A' ) {
                 $edge .= 'RE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
             }
-            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
+            if ($leftEdgeName !== 'N/A' ) {
                 $edge .= 'LE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
             }
-        } else {
-            $edge = 'No';
         }
 
         $htmlArr = [];
@@ -3902,12 +3942,14 @@ class OrderController extends Controller {
                     <tr>
                         <td class="cellLabel"><label>Back</label></td>
                         <td class="cellDesc">'.$v["backerName"].'</td>
-                    </tr>
-                    <tr>
-                        <td class="cellLabel"><label>Edge</label></td>
-                        <td class="cellDesc">'.$edge.'</td>
-                    </tr>
-                    <tr>
+                    </tr>';
+                    if($edge != 'No' ){
+                        $htmlArr['body'] .= '<tr>
+                            <td class="cellLabel"><label>Edge Details</label></td>
+                            <td class="cellDesc">' . $edge . '</td>
+                        </tr>';
+                    }
+                    $htmlArr['body'] .= '<tr>
                         <td class="cellLabel"><label></label></td>
                         <td class="cellDesc"></td>
                     </tr>
