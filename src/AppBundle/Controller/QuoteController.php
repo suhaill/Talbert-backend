@@ -3071,7 +3071,7 @@ class QuoteController extends Controller
                                     <!--<td>".$qData['width']."x".$qData['widthFraction']." x ".$qData['length']."x".$qData['lengthFraction']." x ".$qData['thickness']."</td>-->
                                     <td>".$qData['dimensions']."</td>
                                     <td>".$qData['core']."</td>";
-                                    $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left' style='width:250px'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+                                    $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left' style='width:250px'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])." | BE-".$this->getEdgeNameById($qData['bottomEdge'])." | RE-".$this->getEdgeNameById($qData['rightEdge'])." | LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
                                     $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
                                     if ($qData['finish'] == 'UV') {
                                         $htmlArr['body'] .= "Finish: UV - ".$qData['uvCuredId']." - ".$qData['sheenId']." % - ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";

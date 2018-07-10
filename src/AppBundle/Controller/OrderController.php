@@ -650,7 +650,7 @@ class OrderController extends Controller {
                         <td>".$qData['dimensions']."</td>
                         <td>".$qData['core']."</td>
                         ";
-            $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+            $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])." | BE-".$this->getEdgeNameById($qData['bottomEdge'])." | RE-".$this->getEdgeNameById($qData['rightEdge'])." | LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
             $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
             if ($qData['finish'] == 'UV') {
                 $htmlArr['body'] .= "Finish: UV - ".$qData['uvCuredId']." - ".$qData['sheenId']." % - ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
@@ -1006,7 +1006,7 @@ class OrderController extends Controller {
                         <td>".$qData['dimensions']."</td>
                         <td>".$qData['core']."</td>
                         ";
-            $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+            $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])." | BE-".$this->getEdgeNameById($qData['bottomEdge'])." | RE-".$this->getEdgeNameById($qData['rightEdge'])." | LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
             $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
             if ($qData['finish'] == 'UV') {
                 $htmlArr['body'] .= "Finish: UV - ".$qData['uvCuredId']." - ".$qData['sheenId']." % - ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
@@ -2853,6 +2853,7 @@ class OrderController extends Controller {
         } else {
             $result = [];
         }
+        
         return $result;
     }
 
@@ -3418,35 +3419,34 @@ class OrderController extends Controller {
         $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
         $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
         $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
-        $topSpeciesName = !empty($v['topSpeciesName']) ? $v['topSpeciesName'] : 'N/A';
-        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
-        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
-        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
+        $topSpeciesName = !empty($v['topSpeciesName']) ? $v['topSpeciesName'] : 'SaF';
+        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'SaF';
+        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'SaF';
+        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'SaF';
         $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
         $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
         $autoNumber = $this->getFirstLabel($v['autoNumber']);
         $edge = '';
-        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
-                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
-                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
-                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
 
-            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
+        if ( $topEdgeName == 'N/A' && $bottomEdgeName == 'N/A' && $rightEdgeName == 'N/A' && $leftEdgeName == 'N/A' ) {
+            $edge = 'No';
+        } 
+        else 
+        {
+            if ($topEdgeName !== 'N/A' ) {
                 $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
             }
-            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
+            if ($bottomEdgeName !== 'N/A' ) {
                 $edge .= 'BE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
             }
-            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
+            if ($rightEdgeName !== 'N/A' ) {
                 $edge .= 'RE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
             }
-            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
+            if ($leftEdgeName !== 'N/A' ) {
                 $edge .= 'LE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
             }
-        } else {
-            $edge = 'No';
         }
-
+       
         $htmlArr = [];
         $htmlArr['header'] = '<!DOCTYPE html>
         <html>
@@ -3468,7 +3468,6 @@ class OrderController extends Controller {
                             <td class="dep">Veneer Department</td>
                         </tr> 
                     </table></div></div></body></html>';
-
 
     $htmlArr['body'] = '<!DOCTYPE html>
         <html>
@@ -3546,12 +3545,16 @@ class OrderController extends Controller {
                         $htmlArr['body'] .= '<tr>
                             <td class="cellLabel"><label>Back</label></td>
                             <td class="cellDesc">' . $v["backerName"] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Edge Details</label></td>
-                            <td class="cellDesc">' . $edge . '</td>
-                        </tr>
-                        <tr>
+                        </tr>';
+
+                        if($edge != 'No' ){
+                            $htmlArr['body'] .= '<tr>
+                                <td class="cellLabel"><label>Edge Details</label></td>
+                                <td class="cellDesc">' . $edge . '</td>
+                            </tr>';
+                        }
+
+                        $htmlArr['body'] .= '<tr>
                             <td class="cellLabel"><label>Label</label></td>
                             <td class="cellDesc">'.($v["isLabels"] ? "$autoNumber" : "").'</td>
                         </tr>
@@ -3610,25 +3613,24 @@ class OrderController extends Controller {
         $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
         $autoNumber = $this->getFirstLabel($v['autoNumber']);
         $edge = '';
-        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
-                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
-                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
-                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
-
-            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
+        
+        if ( $topEdgeName == 'N/A' && $bottomEdgeName == 'N/A' && $rightEdgeName == 'N/A' && $leftEdgeName == 'N/A' ) {
+            $edge = 'No';
+        } 
+        else 
+        {
+            if ($topEdgeName !== 'N/A' ) {
                 $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
             }
-            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
+            if ($bottomEdgeName !== 'N/A' ) {
                 $edge .= 'BE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
             }
-            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
+            if ($rightEdgeName !== 'N/A' ) {
                 $edge .= 'RE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
             }
-            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
+            if ($leftEdgeName !== 'N/A' ) {
                 $edge .= 'LE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
             }
-        } else {
-            $edge = 'No';
         }
 
         $htmlArr = [];
@@ -3730,12 +3732,16 @@ class OrderController extends Controller {
                         $htmlArr['body'] .= '<tr>
                             <td class="cellLabel"><label>Back</label></td>
                             <td class="cellDesc">' . $v["backerName"] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Edge Details</label></td>
-                            <td class="cellDesc">' . $edge . '</td>
-                        </tr>
-                        <tr>
+                        </tr>';
+
+                        if($edge != 'No' ){
+                            $htmlArr['body'] .= '<tr>
+                                <td class="cellLabel"><label>Edge Details</label></td>
+                                <td class="cellDesc">' . $edge . '</td>
+                            </tr>';
+                        }
+
+                        $htmlArr['body'] .= '<tr>
                             <td class="cellLabel"><label>Label</label></td>
                             <td class="cellDesc">'.($v["isLabels"] ? "$autoNumber" : "").'</td>
                         </tr>
