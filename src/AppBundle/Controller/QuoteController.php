@@ -3105,7 +3105,7 @@ class QuoteController extends Controller
                         
                                     }
                                     else{
-                                        $htmlArr['body'] .= "<td>";
+                                        $htmlArr['body'] .= "<td class='t-left'>";
                                     }
 
                                     $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";

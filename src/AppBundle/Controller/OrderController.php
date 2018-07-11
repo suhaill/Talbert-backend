@@ -664,7 +664,7 @@ class OrderController extends Controller {
 
             }
             else{
-                $htmlArr['body'] .= "<td>";
+                $htmlArr['body'] .= "<td class='t-left'>";
             }
 
             $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
@@ -1035,7 +1035,7 @@ class OrderController extends Controller {
 
             }
             else{
-                $htmlArr['body'] .= "<td>";
+                $htmlArr['body'] .= "<td class='t-left'>";
             }
 
             $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
@@ -1769,7 +1769,6 @@ class OrderController extends Controller {
         }
         else
         {
-
 
             $plywoodRecords = $query->createQueryBuilder()
             ->select(['p.id, p.quantity, p.quantityRemaining, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName,p.millingDescription'])
@@ -2924,7 +2923,7 @@ class OrderController extends Controller {
             ->getResult(); */
 
             $result = $query->createQueryBuilder()
-                    ->select(['v.quantity', 'v.width','v.widthFraction', 'v.length','v.lengthFraction', 'v.comments', 'v.sequenced', 'v.lineItemNum', "'Veneer' as type,st.statusName"])
+                    ->select(['v.quantity', 'v.width','v.widthFraction', 'v.length','v.lengthFraction', 'v.comments', 'v.sequenced', 'v.lineItemNum', 'v.thicknessId', "'Veneer' as type,st.statusName"])
                     ->from('AppBundle:Veneer', 'v')
                     ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
                     ->leftJoin('AppBundle:Status', 'st', 'WITH', "st.id = lis.statusId")
@@ -3022,7 +3021,7 @@ class OrderController extends Controller {
                 </head>
                 <body>
                 <div class="ticketWrap">
-        <div class="ticketScreen veneer">
+            <div class="ticketScreen veneer">
             <table class="ticketHead">
                 <tr>
                     <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
@@ -3030,7 +3029,7 @@ class OrderController extends Controller {
                 </tr> 
             </table></div></div></body></html>';
 
-    $htmlArr['body'] = '<!DOCTYPE html>
+        $htmlArr['body'] = '<!DOCTYPE html>
             <html>
                 <head>
                     <meta charset="UTF-8">
@@ -3073,12 +3072,12 @@ class OrderController extends Controller {
                     <td class="cellDesc" style="font-size:16px;"><strong>'.($v['width'] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v['length']+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
                 </tr>
                 <tr>
-                    <td class="cellLabel"><label>Finished Size</label></td>
-                    <td class="cellDesc" style="font-size:16px;"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                    <td class="cellLabel"><label>Veneer Thickness</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['thicknessName'].'</td>
                 </tr>
                 <tr>
-                    <td class="cellLabel"><label>Thickness</label></td>
-                    <td class="cellDesc" style="font-size:16px;">'.$v['thicknessName'].'</td>
+                    <td class="cellLabel"><label>Finished Size</label></td>
+                    <td class="cellDesc" style="font-size:16px;"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"'.($v['thicknessId']!=0?' x '.$this->getThicknessNameById($v['thicknessId']):'').'</strong></td>
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Species</label></td>
@@ -3220,12 +3219,12 @@ class OrderController extends Controller {
                     <td class="cellDesc" style="font-size:16px;"><strong>'.($v['width'] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v['length']+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
                 </tr>
                 <tr>
-                    <td class="cellLabel"><label>Finished Size</label></td>
-                    <td class="cellDesc" style="font-size:16px;"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                    <td class="cellLabel"><label>Veneer Thickness</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['thicknessName'].'</td>
                 </tr>
                 <tr>
-                    <td class="cellLabel"><label>Thickness</label></td>
-                    <td class="cellDesc" style="font-size:16px;">'.$v['thicknessName'].'</td>
+                    <td class="cellLabel"><label>Finished Size</label></td>
+                    <td class="cellDesc" style="font-size:16px;"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"'.($v['thicknessId']!=0?' x '.$this->getThicknessNameById($v['thicknessId']):'').'</strong></td>
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Species</label></td>
@@ -3469,6 +3468,16 @@ class OrderController extends Controller {
         $autoNumber = $this->getFirstLabel($v['autoNumber']);
         $edge = '';
 
+        if($v['finishThickType'] == 'inch'){
+            if($v['finishThickId']>0){
+                $thickness=$v['finishThickId'].($v['finThickFraction']!=0?' '.$this->float2rat($v['finThickFraction']):'').'"';
+            } else {
+                $thickness=$this->float2rat($v['finThickFraction']).'"';
+            }
+        } else {
+            $thickness=$v['finishThickId'].' '.$v['finishThickType'];
+        }
+
         if ( $topEdgeName == 'N/A' && $bottomEdgeName == 'N/A' && $rightEdgeName == 'N/A' && $leftEdgeName == 'N/A' ) {
             $edge = 'No';
         } 
@@ -3548,12 +3557,12 @@ class OrderController extends Controller {
                             <td class="cellDesc"><strong>'.($v["width"] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
                         </tr>
                         <tr>
-                            <td class="cellLabel"><label>Finished Size</label></td>
-                            <td class="cellDesc"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                            <td class="cellLabel"><label>Veneer Thickness</label></td>
+                            <td class="cellDesc">' . $v["thicknessName"] . '"</td>
                         </tr>
                         <tr>
-                            <td class="cellLabel"><label>Thickness</label></td>
-                            <td class="cellDesc">' . $v["thicknessName"] . '"</td>
+                            <td class="cellLabel"><label>Finished Size</label></td>
+                            <td class="cellDesc"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"'.($thickness!=0?' x '.$thickness:'').'</strong></td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Species</label></td>
@@ -3594,12 +3603,14 @@ class OrderController extends Controller {
                                 <td class="cellDesc">' . $edge . '</td>
                             </tr>';
                         }
-
+                        if($autoNumber != '' && $v["isLabels"]){
+                            $htmlArr['body'] .= '<tr>
+                                <td class="cellLabel"><label>Label</label></td>
+                                <td class="cellDesc">'.($v["isLabels"] ? "$autoNumber" : "").'</td>
+                            </tr>';
+                        }
+                        
                         $htmlArr['body'] .= '<tr>
-                            <td class="cellLabel"><label>Label</label></td>
-                            <td class="cellDesc">'.($v["isLabels"] ? "$autoNumber" : "").'</td>
-                        </tr>
-                        <tr>
                             <td class="cellLabel"><label>Core</label></td>
                             <td class="cellDesc">'.$v["coreType"].' - '.$this->float2rat($v["panelThicknessName"]).'"</td>
                         </tr>
@@ -3654,6 +3665,16 @@ class OrderController extends Controller {
         $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
         $autoNumber = $this->getFirstLabel($v['autoNumber']);
         $edge = '';
+
+        if($v['finishThickType'] == 'inch'){
+            if($v['finishThickId']>0){
+                $thickness=$v['finishThickId'].($v['finThickFraction']!=0?' '.$this->float2rat($v['finThickFraction']):'').'"';
+            } else {
+                $thickness=$this->float2rat($v['finThickFraction']).'"';
+            }
+        } else {
+            $thickness=$v['finishThickId'].' '.$v['finishThickType'];
+        }
         
         if ( $topEdgeName == 'N/A' && $bottomEdgeName == 'N/A' && $rightEdgeName == 'N/A' && $leftEdgeName == 'N/A' ) {
             $edge = 'No';
@@ -3735,12 +3756,12 @@ class OrderController extends Controller {
                             <td class="cellDesc"><strong>'.($v["width"] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
                         </tr>
                         <tr>
-                            <td class="cellLabel"><label>Finished Size</label></td>
-                            <td class="cellDesc"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                            <td class="cellLabel"><label>Veneer Thickness</label></td>
+                            <td class="cellDesc">' . $v["thicknessName"] . '"</td>
                         </tr>
                         <tr>
-                            <td class="cellLabel"><label>Thickness</label></td>
-                            <td class="cellDesc">' . $v["thicknessName"] . '"</td>
+                            <td class="cellLabel"><label>Finished Size</label></td>
+                            <td class="cellDesc"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"'.($thickness!=0?' x '.$thickness:'').'</strong></td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Species</label></td>
@@ -3782,11 +3803,14 @@ class OrderController extends Controller {
                             </tr>';
                         }
 
+                        if($v["isLabels"] && $autoNumber  !=''){
+                            $htmlArr['body'] .= '<tr>
+                                <td class="cellLabel"><label>Label</label></td>
+                                <td class="cellDesc">'.($v["isLabels"] ? "$autoNumber" : "").'</td>
+                            </tr>';
+                        }
+                        
                         $htmlArr['body'] .= '<tr>
-                            <td class="cellLabel"><label>Label</label></td>
-                            <td class="cellDesc">'.($v["isLabels"] ? "$autoNumber" : "").'</td>
-                        </tr>
-                        <tr>
                             <td class="cellLabel"><label>Core</label></td>
                             <td class="cellDesc">'.$v["coreType"].' - '.$this->float2rat($v["panelThicknessName"]).'"</td>
                         </tr>
@@ -3840,7 +3864,16 @@ class OrderController extends Controller {
         $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
         $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
 
-
+        if($v['finishThickType'] == 'inch'){
+            if($v['finishThickId']>0){
+                $thickness=$v['finishThickId'].($v['finThickFraction']!=0?' '.$this->float2rat($v['finThickFraction']):'').'"';
+            } else {
+                $thickness=$this->float2rat($v['finThickFraction']).'"';
+            }
+        } else {
+            $thickness=$v['finishThickId'].' '.$v['finishThickType'];
+        }
+        
         $edge = '';
         if ( $topEdgeName == 'N/A' && $bottomEdgeName == 'N/A' && $rightEdgeName == 'N/A' && $leftEdgeName == 'N/A' ) {
             $edge = 'No';
@@ -3925,7 +3958,7 @@ class OrderController extends Controller {
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
-                        <td class="cellDesc"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                        <td class="cellDesc"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"'.($thickness!=0?' x '.$thickness:'').'</strong></td>
                     </tr>
                     <!--<tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
