@@ -2999,7 +2999,8 @@ class QuoteController extends Controller
                                                             <td class='cellDescLbl'>Ship To</td>
                                                             <td class='cellDescTxt'>
                                                             <h3>".$arrApi['data']['company']."</h3>
-                                                              
+                                                            <p>".$arrApi['data']['shipAdd']['street']."</p>
+                                                            <p>".$arrApi['data']['shipAdd']['city'].",".$arrApi['data']['shipAdd']['state']." ".$arrApi['data']['shipAdd']['zip']."</p>
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -3179,6 +3180,10 @@ class QuoteController extends Controller
                                                 <tr>
                                                     <td>Sub Total</td>
                                                     <td>$".$arrApi['data']['quoteSubTot']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Expedite Fee</td>
+                                                    <td>$".$arrApi['data']['expFee']."</td>
                                                 </tr>
                                                 <tr>
                                                     <td>Sale Tax</td>

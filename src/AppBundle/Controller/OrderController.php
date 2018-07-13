@@ -280,7 +280,7 @@ class OrderController extends Controller {
                     $b = ($qData['length'] + $qData['originalLengthFraction']);
                     $calSqrft += ($a*$b * $qData['quantity'])/144;
                 }
-                $arrApi['data']['calSqrft']= $calSqrft;
+                $arrApi['data']['calSqrft']= round($calSqrft);
                 if(count($arrApi['data']['lineitems'])==1){
                     if($arrApi['data']['lineitems'][0]['type']=='door'){
                         $arrApi['data']['ticketFlag']=false;
@@ -562,7 +562,8 @@ class OrderController extends Controller {
                                                             <td class='cellDescLbl'>Ship To</td>
                                                             <td class='cellDescTxt'>
                                                             <h3>".$arrApi['data']['company']."</h3>
-                                                            
+                                                            <p>".$arrApi['data']['shipAdd']['street']."</p>
+                                                            <p>".$arrApi['data']['shipAdd']['city'].",".$arrApi['data']['shipAdd']['state']." ".$arrApi['data']['shipAdd']['zip']."</p>
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -768,6 +769,10 @@ class OrderController extends Controller {
                                                 <tr>
                                                     <td>Sub Total</td>
                                                     <td>$".$arrApi['data']['quoteSubTot']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Expedite Fee</td>
+                                                    <td>$".$arrApi['data']['expFee']."</td>
                                                 </tr>
                                                 <tr>
                                                     <td>Sale Tax</td>
