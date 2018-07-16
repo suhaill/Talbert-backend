@@ -587,7 +587,7 @@ class CustomerController extends Controller
                         ->from('AppBundle:CustomerContacts', 'cc')
                         ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
                         ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
-                        ->where("u.userType='customer' and cc.contactName Like '".$custName."%'")
+                        ->where("u.userType='customer' and cc.contactName Like '".$custName."%' OR p.company Like '".$custName."%'")
                         ->orderBy($sort, $orderBy)
                         ->groupBy('u.id')
                         ->setFirstResult($offset)
