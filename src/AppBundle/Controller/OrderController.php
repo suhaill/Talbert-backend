@@ -2227,7 +2227,7 @@ class OrderController extends Controller {
     private function updateQuoteData($quoteId) {
         $salesTaxRate = 0;
         $salesTaxAmount = 0;
-        $quoteSubTotal = $this->getPlywoodSubTotalByQuoteId($quoteId) + $this->getVeneerSubTotalByQuoteId($quoteId);
+        $quoteSubTotal = $this->getPlywoodSubTotalByQuoteId($quoteId) + $this->getVeneerSubTotalByQuoteId($quoteId) + $this->getDoorSubTotalByQuoteId($quoteId);
         $quoteData = $this->getOrderDataById($quoteId);
         $shipAddId = $quoteData->getShipAddId();
         $expFee = $quoteData->getExpFee();
@@ -4420,5 +4420,29 @@ class OrderController extends Controller {
             $em->persist($door);
         }
         $em->flush();
+    }
+
+    private function getDoorSubTotalByQuoteId($quoteId) {
+        $subtotal = 0;
+        $query = $this->getDoctrine()->getManager();
+        $doorRecords = $query->createQueryBuilder()
+            ->select(['dc.totalCost as totolCost'])
+            ->from('AppBundle:DoorCalculator', 'dc')
+            ->leftJoin('AppBundle:Doors', 'd', 'WITH', 'dc.doorId = d.id')
+            ->where('d.quoteId = '.$quoteId, 'd.status = 1')
+            ->getQuery()
+            ->getResult();
+        //print_r($doorRecords);die;
+//        $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $quoteId,'status'=>1));
+        if (!empty($doorRecords)) {
+            $i=0;
+            foreach ($doorRecords as $d) {
+                $subtotal += $d['totolCost'];
+                $i++;
+            }
+        } else {
+            $subtotal = 0;
+        }
+        return $subtotal;
     }
 }
