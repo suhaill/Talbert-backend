@@ -2327,10 +2327,10 @@ class QuoteController extends Controller
                     $lineItem[$i]['edgeDetail'] = ($d->getEdgeFinish()) ? '1' : 0;
                     $edgeDetailValue1 = ' ';
                     $edgeDetailValue2 = '';
-                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getTopEdge()) != '') ? "TE-".$this->getEdgeNameById($p->getTopEdge()):'';
-                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getBottomEdge()) != '') ? " | BE-".$this->getEdgeNameById($p->getBottomEdge()):'';
-                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getRightEdge()) != '') ? " | RE-".$this->getEdgeNameById($p->getRightEdge()):'';
-                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getLeftEdge()) != '') ? " | LE-".$this->getEdgeNameById($p->getLeftEdge()):'';
+                    $edgeDetailValue2 .= ($d->getEdgeFinish() == 1 && $this->getEdgeNameById($d->getTopEdge()) != '') ? "TE-".$this->getEdgeNameById($d->getTopEdge()):'';
+                    $edgeDetailValue2 .= ($d->getEdgeFinish() == 1 && $this->getEdgeNameById($d->getBottomEdge()) != '') ? " | BE-".$this->getEdgeNameById($d->getBottomEdge()):'';
+                    $edgeDetailValue2 .= ($d->getEdgeFinish() == 1 && $this->getEdgeNameById($d->getRightEdge()) != '') ? " | RE-".$this->getEdgeNameById($d->getRightEdge()):'';
+                    $edgeDetailValue2 .= ($d->getEdgeFinish() == 1 && $this->getEdgeNameById($d->getLeftEdge()) != '') ? " | LE-".$this->getEdgeNameById($d->getLeftEdge()):'';
 
                     $lineItem[$i]['edgeDetailValue'] = $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
                     $lineItem[$i]['topEdge'] = $d->getTopEdge();

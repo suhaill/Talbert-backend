@@ -416,8 +416,8 @@ class DoorController extends Controller
                 $filesObj->setAttachableId($newdoorId);
                 $filesObj->setCreatedAt($datime);
                 $filesObj->setUpdatedAt($datime);
-//                $em->persist($filesObj);
-//                $em->flush();
+                $em->persist($filesObj);
+                $em->flush();
             }
         }
     }

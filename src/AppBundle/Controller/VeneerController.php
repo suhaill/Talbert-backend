@@ -177,14 +177,13 @@ class VeneerController extends Controller
                 {
                     $em2 = $this->getDoctrine()->getManager();
                     $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
-                    //var_dump($file);
                     $fileEntity = new Files();
                     $fileEntity->setFileName($file->getFileName());
                     $fileEntity->setAttachableId($lastInserted);
                     $fileEntity->setAttachableType($file->getAttachableType());
                     $fileEntity->setOriginalName($file->getOriginalName());
-//                    $em->persist($fileEntity);
-//                    $em->flush();
+                    $em->persist($fileEntity);
+                    $em->flush();
 
                     /* $file->setAttachableId($lastInserted);
                     $em2->persist($file);
