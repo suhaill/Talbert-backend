@@ -301,7 +301,9 @@ class QuoteController extends Controller
             $lineItemArrP=!empty($lineItemArr['P'])?$lineItemArr['P']:[];
             $lineItemArrV=!empty($lineItemArr['V'])?$lineItemArr['V']:[];
             $datime = new \DateTime('now');
-            $quoteData = $this->getQuoteDataById($quoteId,$editFlag,$estnumber);
+            // $quoteData = $this->getQuoteDataById($quoteId,$editFlag,$estnumber);
+            $quoteData = $this->getQuoteDataById($quoteId);
+            //print_r($quoteData);die;
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'This quote does not exists';
