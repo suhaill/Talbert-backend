@@ -383,8 +383,8 @@ class PlywoodController extends Controller
                     $fileEntity->setAttachableId($lastInserted);
                     $fileEntity->setAttachableType($file->getAttachableType());
                     $fileEntity->setOriginalName($file->getOriginalName());
-//                    $em->persist($fileEntity);
-//                    $em->flush();
+                    $em->persist($fileEntity);
+                    $em->flush();
 
                     /* $file->setAttachableId($lastInserted);
                     $em2->persist($file);
