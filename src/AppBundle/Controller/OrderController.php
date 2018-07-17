@@ -2235,7 +2235,7 @@ class OrderController extends Controller {
         if (!empty($shipAddId)) {
             $salesTaxRate = $this->getSalesTaxRateByAddId($shipAddId);
         }
-        $salesTaxAmount = (($quoteSubTotal + $expFee - $discount ) * ($salesTaxRate)) / 100;
+        $salesTaxAmount = (($quoteSubTotal) * ($salesTaxRate)) / 100;
         $shipCharge = $this->getShippingChargeByAddId($shipAddId);
         $lumFee = $this->getPlywoodLumberFeeByQuoteId($quoteId) + $this->getVeneerLumberFeeByQuoteId($quoteId);
         $projectTotal = ($quoteSubTotal + $expFee - $discount + $salesTaxAmount + $shipCharge + $lumFee);
