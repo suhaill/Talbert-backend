@@ -380,8 +380,8 @@ class CustomerController extends Controller
                             } else {
                                 $arrApi['status'] = 1;
                                 $arrApi['message'] = 'Successfully updated customer data.';
-                                $this->updateUserRecord($isActive, $company, $datime, $userId);
-                                $this->updateBillingAddress($bStreet, $bCity, $bState, $bZip, $datime, $userId);
+                                //$this->updateUserRecord($isActive, $company, $datime, $userId);
+                                //$this->updateBillingAddress($bStreet, $bCity, $bState, $bZip, $datime, $userId);
                                 $this->updateShippingAddress($shipArr, $userId, $datime);
                                 $this->updateDiscountData($prdArr, $userId);
                                 $this->updateCustomerprofileData($trmId, $comment, $userId,$is_checked);
@@ -757,26 +757,40 @@ class CustomerController extends Controller
     }
 
     private function updateShippingAddress($shipArr, $userId, $datime){
-        $deleteShipAdd = $this->deleteShippingAddressByUserId('shipping', $userId);
-        if ($deleteShipAdd) {
             $em = $this->getDoctrine()->getManager();
             foreach ($shipArr as $val) {
-                $addresses = new Addresses();
-                $addresses->setNickname(trim($val['nickname']));
-                $addresses->setStreet(trim($val['street']));
-                $addresses->setCity(trim($val['city']));
-                $addresses->setStateId(trim($val['state']));
-                $addresses->setZip(trim($val['zip']));
-                $addresses->setDeliveryCharge($this->formateDeliveryCharge(trim($val['deliveryCharge'])));
-                $addresses->setSalesTaxRate($this->formateSalestax(trim($val['salesTaxRate'])));
-                $addresses->setAddressType('shipping');
-                $addresses->setStatus(1);
-                $addresses->setUserId($userId);
-                $addresses->setUpdatedAt($datime);
-                $em->persist($addresses);
-                $em->flush();
+                if (empty($val['id'])) {
+                    $addresses = new Addresses();
+                    $addresses->setNickname(trim($val['nickname']));
+                    $addresses->setStreet(trim($val['street']));
+                    $addresses->setCity(trim($val['city']));
+                    $addresses->setStateId(trim($val['state']));
+                    $addresses->setZip(trim($val['zip']));
+                    $addresses->setDeliveryCharge($this->formateDeliveryCharge(trim($val['deliveryCharge'])));
+                    $addresses->setSalesTaxRate($this->formateSalestax(trim($val['salesTaxRate'])));
+                    $addresses->setAddressType('shipping');
+                    $addresses->setStatus(1);
+                    $addresses->setUserId($userId);
+                    $addresses->setUpdatedAt($datime);
+                    $em->persist($addresses);
+                    $em->flush();
+                } else {
+                    $addresses = $em->getRepository(Addresses::class)->find($val['id']);
+                    $addresses->setNickname(trim($val['nickname']));
+                    $addresses->setStreet(trim($val['street']));
+                    $addresses->setCity(trim($val['city']));
+                    $addresses->setStateId(trim($val['state']));
+                    $addresses->setZip(trim($val['zip']));
+                    $addresses->setDeliveryCharge($this->formateDeliveryCharge(trim($val['deliveryCharge'])));
+                    $addresses->setSalesTaxRate($this->formateSalestax(trim($val['salesTaxRate'])));
+                    $addresses->setAddressType('shipping');
+                    $addresses->setStatus(1);
+                    $addresses->setUserId($userId);
+                    $addresses->setUpdatedAt($datime);
+                    $em->persist($addresses);
+                    $em->flush();
+                }
             }
-        }
     }
 
     private function updateDiscountData($prdArr, $userId) {
@@ -1064,7 +1078,7 @@ class CustomerController extends Controller
                 $add = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findBy(array('userId' => $userId,'addressType'=>'shipping'));
                 if (!empty($add)) {
                     for ($i=0; $i < count($add); $i++) {
-                        //$user['shipp'][$i]['id'] = $add[$i]->getId();
+                        $user['shipp'][$i]['id'] = $add[$i]->getId();
                         $user['shipp'][$i]['nickname'] = $add[$i]->getNickname();
                         $user['shipp'][$i]['street'] = $add[$i]->getStreet();
                         $user['shipp'][$i]['city'] = $add[$i]->getCity();
