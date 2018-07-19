@@ -133,7 +133,7 @@ class OrderController extends Controller {
         $orderBy = trim($data->get('orderBy'));
         $requestColumnName = '';
         if ($columnName == '' || $columnName == 'customer') {
-            $columnName = 'u.fname';
+            $columnName = 'u.company';
         } else if ($columnName == 'estimatorId') {
             $columnName = 'q.controlNumber';
         } else if ($columnName == 'status') {
@@ -158,7 +158,7 @@ class OrderController extends Controller {
                 ->innerJoin('AppBundle:OrderStatus', 'os', 'WITH', "o.id = os.orderId")
                 ->leftJoin('AppBundle:Status', 's', 'WITH', "os.statusId=s.id ")
                 ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
-                ->where("o.isActive = 1 and q.status='Approved' and os.isActive=1 and s.id=5")
+                ->where("o.isActive = 1 and q.status = 'Approved' AND os.isActive=1 and s.id IN(1,2,3,4,5,14)")
                 ->orderBy($columnName, $orderBy)
                 ->getQuery()
                 ->getResult()
@@ -813,6 +813,48 @@ class OrderController extends Controller {
         $snappy->setOption('footer-html', $htmlArr['footer']);
         return new Response($snappy->getOutputFromHtml($htmlArr['body'], array('orientation'=>'Landscape',  'page-size' => 'Letter')), 200, array('Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Test.pdf"'));
         //return new Response($snappy->getOutputFromHtml($html,array('orientation'=>'Landscape', 'page-size' => 'Letter')),200,array('Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Work-Order-Print.pdf"'));
+    }
+
+    /**
+     * @Route("/api/order/changeOrderStatus")
+     * @Method("POST")
+     */
+    public function changeOrderstatusAction(Request $request) {
+        $arrApi = array();
+        $arrApi['statusCode'] = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $quoteId  = $data->get('orderId');
+        $statusId = $data->get('statusId');
+        $arrApi = $this->changeStatusOfOrder($quoteId, $statusId);
+        return new JsonResponse($arrApi, $arrApi['statusCode']);
+    }
+
+    private function changeStatusOfOrder($quoteId, $statusId) {
+        $res = [];
+        $em = $this->getDoctrine()->getManager();
+        $order = $this->getDoctrine()->getRepository('AppBundle:Orders')->findOneBy(array('quoteId'=> $quoteId));
+        if (!empty($order)) {
+            $OrderStatus = $this->getDoctrine()->getRepository('AppBundle:OrderStatus')->findOneBy(array('orderId'=> $order->getId()));
+            if (!empty($OrderStatus)) {
+                $OrderStatus->setStatusId($statusId);
+                $OrderStatus->setUpdatedAt(new \DateTime('now'));
+                $em->persist($OrderStatus);
+                $em->flush();
+                $res['status'] = 1;
+                $res['message'] = 'Status has been changed';
+                $res['statusCode'] = 200;
+            } else {
+                $res['status'] = 0;
+                $res['message'] = 'There is no status of this order';
+                $res['statusCode'] = 422;
+            }
+        } else {
+            $res['status'] = 0;
+            $res['message'] = 'This order does not exists';
+            $res['statusCode'] = 422;
+        }
+        return $res;
     }
 
     private function convertToDecimal($fraction)
