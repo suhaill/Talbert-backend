@@ -3196,8 +3196,8 @@ class QuoteController extends Controller
                                                     <td>$".$arrApi['data']['lumFee']."</td>
                                                 </tr>
                                                 <tr>
-                                                    <td><strong>Total</strong></td>
-                                                    <td><strong>$".$arrApi['data']['projectTot']."</strong></td>
+                                                    <td>Total</td>
+                                                    <td>$".$arrApi['data']['projectTot']."</td>
                                                 </tr>
                                             </table>
                                         </td>
