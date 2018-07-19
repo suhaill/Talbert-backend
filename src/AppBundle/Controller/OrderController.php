@@ -238,6 +238,7 @@ class OrderController extends Controller {
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived order details';
                 $arrApi['data']['id'] = $quoteData->getId();
+                $arrApi['data']['statusName'] = $this->getStatusNameByOrderId($quoteData->getId());
                 $arrApi['data']['date'] = $quoteData->getEstimateDate();
                 //$arrApi['data']['date'] = $quoteData->getUpdatedAt()->format('Y-m-d H:i:s');
                 $arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
@@ -300,6 +301,30 @@ class OrderController extends Controller {
             throw $e->getMessage();
         }
         return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function getStatusNameByOrderId($orderId) {
+        $statusName = '';
+        $query = $this->getDoctrine()->getManager();
+        $order = $query->createQueryBuilder()
+                ->select(['o.id as orderId', 'q.controlNumber', 'q.version', 'q.customerId', 'q.estimatedate', 'q.id',
+                    'os.statusId',
+                    's.abbr as status',
+                    'u.company as companyname', 'u.fname', 'u.lname'
+                ])
+                ->from('AppBundle:Orders', 'o')
+                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', "q.id = o.quoteId")
+                ->innerJoin('AppBundle:OrderStatus', 'os', 'WITH', "o.id = os.orderId")
+                ->leftJoin('AppBundle:Status', 's', 'WITH', "os.statusId=s.id ")
+                ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
+                ->where("o.isActive = 1 and q.status = 'Approved' AND os.isActive=1 AND o.quoteId=".$orderId)
+                ->getQuery()
+                ->getResult()
+        ;
+        if (!empty($order)) {
+            $statusName = $order[0]['status']; 
+        } 
+        return $statusName;               
     }
 
     /**
