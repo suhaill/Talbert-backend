@@ -4549,7 +4549,7 @@ class OrderController extends Controller {
 
     private function deleteShipdQtybyId($shipdQtyId) {
         $conn = $this->getDoctrine()->getConnection('default');
-        $SQL="DELETE FROM `shipped_quantity` WHERE id = :id";
+        $SQL="DELETE FROM shipped_quantity WHERE id = :id";
         $stmt=$conn->prepare($SQL);
         $stmt->bindParam(':id',$shipdQtyId,PDO::PARAM_INT);
         $stmt->execute();
