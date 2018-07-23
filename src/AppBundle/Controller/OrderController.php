@@ -724,7 +724,7 @@ class OrderController extends Controller {
                 }
             } else {
                 if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
-                    $htmlArr['body'] .= " <td>".($qData['quantity'] - $qData['quantityRemaining'])."</td>
+                    $htmlArr['body'] .= " <td>".$qData['shipdQty']."</td>
                            </tr>";
                 } else {
                     $htmlArr['body'] .= " <td>BACK ORDERED</td>
@@ -764,8 +764,11 @@ class OrderController extends Controller {
                                     <table style='width:100%'>
                                         <tr>
                                             <td><strong>Special Instructions:</strong> **".$arrApi['data']['comment']."**</td>
-                                            <td style='width: 70%;text-align:right;border:0px;'>Received by: <strong style='text-decoration:underline;padding:0 0 3px;margin:0 6px'>Mike talbert</strong>&nbsp;Date: <strong style='text-decoration:underline;padding:0 0 3px;margin:0 6px'>12 july 2018</strong></td>
-                                        </tr>
+                                            ";
+        if($printType == 'SHIPPER'){                                    
+            $htmlArr['footer'] .= "<td style='width: 70%;text-align:right;border:0px;'>Received by: <strong style='text-decoration:underline;padding:0 0 3px;margin:0 6px'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong>&nbsp;Date: <strong style='text-decoration:underline;padding:0 0 3px;margin:0 6px'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong></td>";
+        }
+        $htmlArr['footer'] .= "</tr>
                                     </table>
                                 </div>
                                 <table class='invoiceFootBtm'>
@@ -855,6 +858,35 @@ class OrderController extends Controller {
         $statusId = $data->get('statusId');
         $arrApi = $this->changeStatusOfOrder($quoteId, $statusId);
         return new JsonResponse($arrApi, $arrApi['statusCode']);
+    }
+
+    /**
+     * @Route("/api/order/deleteShipdQty")
+     * @Method("POST")
+     */
+    public function deleteQtyAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $shipdQtyId = $data->get('id');
+        $orderId = $data->get('orderId');
+        $lineitemId = $data->get('lineitemId');
+        $lineitemType = $data->get('lineitemType');
+        $qtyToBAddedToRem = $data->get('qtyShipped');
+        $isDeleted = $this->deleteShipdQtybyId($shipdQtyId);
+        if ($isDeleted) {
+            $isAdded = $this->addQtyToRemainingQty($qtyToBAddedToRem, $lineitemType, $lineitemId);
+            if ($isAdded) {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully deleted record'; 
+            } else {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Remaining quantity can not be added'; 
+                $statusCode = 422;
+            }
+        }
+        return new JsonResponse($arrApi, $statusCode);
     }
 
     private function changeStatusOfOrder($quoteId, $statusId) {
@@ -1918,6 +1950,7 @@ class OrderController extends Controller {
                         $thickness=$p['finishThickId'].' '.$p['finishThickType'];
                     }
                     $lineItem[$i]['id'] = $p['id'];
+                    $lineItem[$i]['shipdQty'] = $this->getLineItemQtyForShipper($qId , $p['id'], 'Plywood');
                     $lineItem[$i]['type'] = 'plywood';
                     $lineItem[$i]['url'] = 'line-item/edit-plywood';
                     $lineItem[$i]['quantity'] = $p['quantity'];
@@ -1989,6 +2022,7 @@ class OrderController extends Controller {
                 foreach ($veneerRecords as $v) {
 //                    $calSqrftV += ((float)($v['width'] + $v['widthFraction'])*(float)($v['length'] + $v['lengthFraction']));
                     $lineItem[$i]['id'] = $v['id'];
+                    $lineItem[$i]['shipdQty'] = $this->getLineItemQtyForShipper($qId , $v['id'], 'Veneer');
                     $lineItem[$i]['type'] = 'veneer';
                     $lineItem[$i]['url'] = 'line-item/edit-veneer';
                     $lineItem[$i]['quantity'] = $v['quantity'];
@@ -2068,6 +2102,7 @@ class OrderController extends Controller {
                         $thickness=$d['finishThickId'].' '.$d['finishThickType'];
                     }
                     $lineItem[$i]['id'] = $d['id'];
+                    $lineItem[$i]['shipdQty'] = $this->getLineItemQtyForShipper($qId , $d['id'], 'Door');
                     $lineItem[$i]['type'] = 'door';
                     $lineItem[$i]['url'] = 'door/edit-door';
                     $lineItem[$i]['quantity'] = $d['qty'];
@@ -4510,5 +4545,46 @@ class OrderController extends Controller {
             $subtotal = 0;
         }
         return $subtotal;
+    }
+
+    private function deleteShipdQtybyId($shipdQtyId) {
+        $conn = $this->getDoctrine()->getConnection('default');
+        $SQL="DELETE FROM `shipped_quantity` WHERE id = :id";
+        $stmt=$conn->prepare($SQL);
+        $stmt->bindParam(':id',$shipdQtyId,PDO::PARAM_INT);
+        $stmt->execute();
+        return true;
+    }
+
+private function addQtyToRemainingQty($qtyToBAddedToRem, $lineitemType, $lineitemId) {
+        $em = $this->getDoctrine()->getManager();
+        if ($lineitemType == 'Veneer') {
+            $lineItem = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findOneById($lineitemId);
+        } elseif ($lineitemType == 'Plywood') {
+            $lineItem = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findOneById($lineitemId);
+        } else {
+            $lineItem = $this->getDoctrine()->getRepository('AppBundle:Doors')->findOneById($lineitemId);
+        }
+        $newRemQty = $lineItem->getQuantityRemaining() + $qtyToBAddedToRem;
+        $lineItem->setQuantityRemaining($newRemQty);
+        $em->persist($lineItem);
+        $em->flush();
+        return true;
+    }
+
+private function getLineItemQtyForShipper($orderId , $lineItemId, $lineItemType) {
+        $qtyShipped = 0;
+        $conn = $this->getDoctrine()->getConnection('default');
+        $SQL="SELECT qty_shipped FROM `shipped_quantity` WHERE order_id=:order_id AND lineitem_id=:lineitem_id AND lineitem_type=:lineitem_type ORDER BY id DESC LIMIT 0,1";
+        $stmt=$conn->prepare($SQL);
+        $stmt->bindParam(':order_id',$orderId,PDO::PARAM_INT);
+        $stmt->bindParam(':lineitem_id',$lineItemId,PDO::PARAM_INT);
+        $stmt->bindParam(':lineitem_type',$lineItemType, PDO::PARAM_STR);
+        $stmt->execute();
+        $res = $stmt->fetchAll();
+        if (!empty($res)) {
+            $qtyShipped = $res[0]['qty_shipped'];
+        }
+        return $qtyShipped;
     }
 }
