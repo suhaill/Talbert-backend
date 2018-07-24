@@ -271,7 +271,6 @@ class OrderController extends Controller {
                 $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax()) ? str_replace(',', '', number_format($quoteData->getSalesTax(), 2)) : '00.00';
                 $arrApi['data']['projectTot'] = ($quoteData->getProjectTot() != $quoteData->getShipCharge()) ? !empty($quoteData->getProjectTot()) ? str_replace(',', '', number_format($quoteData->getProjectTot(), 2)) : '00.00' : 0;
                 $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
-//                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId);
 //                $arrApi['data']['lineitems'] = $lineitems['lineItem'];
 //                $arrApi['data']['calSqrft'] = $lineitems['calSqrft'];
                 $arrApi['data']['orderDate'] = date("d.m.y",strtotime($orderData->getOrderDate()))." | ".date("h:i:s a",strtotime($orderData->getOrderDate()));
@@ -468,13 +467,19 @@ class OrderController extends Controller {
     /**
      * @Route("/api/order/printWorkOrder")
      * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
      */
     public function testingAction(Request $request) {
         $images_destination = $this->container->getParameter('images_destination');
         $arrApi = array();
         $statusCode = 200;
+        $linItemArr = [];
         $_DATA = file_get_contents('php://input');
         $_DATA = json_decode($_DATA, true);
+        if (!empty($_DATA['linitemArr'])) {
+            $linitemArrStr = $_DATA['linitemArr'];
+            $linItemArr = $this->getLineItemArr($linitemArrStr);
+        }
         $quoteId = $_DATA['orderId'];
         $printType = ($_DATA['type'] == 'printShipper') ? 'SHIPPER' : (($_DATA['type'] == 'printInvoice') ? 'INVOICE' : 'ORDER');
         $orderData = $this->getOrderDetailsById($quoteId);
@@ -533,8 +538,7 @@ class OrderController extends Controller {
                 } else {
                     $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
                 }
-                //                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId,$printType);
-                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId,$printType);;
+                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId,$printType,$linItemArr);
             }
         }
         catch(Exception $e) {
@@ -986,8 +990,7 @@ class OrderController extends Controller {
                 } else {
                     $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
                 }
-                //                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId,$printType);
-                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId,$printType);;
+                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId,$printType);
             }
         }
         catch(Exception $e) {
@@ -1814,8 +1817,8 @@ class OrderController extends Controller {
         }
     }
 
-    private function getVeneerslistbyQuoteId($qId,$printType=null) {
-        
+    private function getVeneerslistbyQuoteId($qId,$printType=null,$linItemArr=null) {
+        //print_r($linItemArr);die;
         $query = $this->getDoctrine()->getManager();
 
         if($printType == 'SHIPPER'){
@@ -1833,13 +1836,13 @@ class OrderController extends Controller {
             ->addSelect(['pat.name as pattern'])
             ->leftJoin('AppBundle:BackerGrade', 'bgrd', 'WITH', "p.backerId = bgrd.id")
             ->addSelect(['bgrd.name as backerName'])
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId and p.isActive=1 AND s.statusName !='LineItemBackOrder'")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId and p.isActive=1 AND s.statusName !='LineItemBackOrder' AND p.id IN(".$linItemArr['pIdStr'].")")
             ->orderBy('p.id','ASC')
             ->setParameter('quoteId', $qId)
             ->setParameter('lineItemType', 'Plywood')
             ->getQuery()
             ->getResult();
-
+            
             $veneerRecords = $query->createQueryBuilder()
             ->select(['v.id, v.quantity, v.quantityRemaining, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName',"'' as millingDescription"])
             ->from('AppBundle:Veneer', 'v')
@@ -1855,18 +1858,19 @@ class OrderController extends Controller {
             ->addSelect(['b.name as backerName'])
             ->leftJoin('AppBundle:CoreType', 'ct', 'WITH', "ct.id = v.coreTypeId")
             ->addSelect(['ct.name as coreType'])
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND v.quoteId = :quoteId and v.isActive=1 AND s.statusName !='LineItemBackOrder'")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND v.quoteId = :quoteId and v.isActive=1 AND s.statusName !='LineItemBackOrder' AND v.id IN(".$linItemArr['vIdStr'].")")
             ->orderBy('v.id','ASC')
             ->setParameter('quoteId', $qId)
             ->setParameter('lineItemType', 'Veneer')
             ->getQuery()
             ->getResult();
+
             $doorRecords = $query->createQueryBuilder()
                 ->select(['d.id, d.qty, d.quantityRemaining, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType,d.millingDescription'])
                 ->from('AppBundle:Doors', 'd')
                 ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
                 ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
-                ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND d.quoteId = :quoteId and d.status=1 AND s.statusName !='LineItemBackOrder'")
+                ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND d.quoteId = :quoteId and d.status=1 AND s.statusName !='LineItemBackOrder' AND d.id IN(".$linItemArr['dIdStr'].")")
                 ->orderBy('d.id','ASC')
                 ->setParameter('quoteId', $qId)
                 ->setParameter('lineItemType', 'Door')
@@ -4556,7 +4560,7 @@ class OrderController extends Controller {
         return true;
     }
 
-private function addQtyToRemainingQty($qtyToBAddedToRem, $lineitemType, $lineitemId) {
+    private function addQtyToRemainingQty($qtyToBAddedToRem, $lineitemType, $lineitemId) {
         $em = $this->getDoctrine()->getManager();
         if ($lineitemType == 'Veneer') {
             $lineItem = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findOneById($lineitemId);
@@ -4572,7 +4576,7 @@ private function addQtyToRemainingQty($qtyToBAddedToRem, $lineitemType, $lineite
         return true;
     }
 
-private function getLineItemQtyForShipper($orderId , $lineItemId, $lineItemType) {
+    private function getLineItemQtyForShipper($orderId , $lineItemId, $lineItemType) {
         $qtyShipped = 0;
         $conn = $this->getDoctrine()->getConnection('default');
         $SQL="SELECT qty_shipped FROM `shipped_quantity` WHERE order_id=:order_id AND lineitem_id=:lineitem_id AND lineitem_type=:lineitem_type ORDER BY id DESC LIMIT 0,1";
@@ -4586,5 +4590,42 @@ private function getLineItemQtyForShipper($orderId , $lineItemId, $lineItemType)
             $qtyShipped = $res[0]['qty_shipped'];
         }
         return $qtyShipped;
+    }
+
+    private function getLineItemArr($linitemArrStr) {
+        $arr = [];
+        $pIdStr = '';
+        $vIdStr = '';
+        $dIdStr = '';
+        if (!empty($linitemArrStr)) {
+            $str = rtrim($linitemArrStr,',');
+            $liArr = explode(',', $str);
+            for ($i=0; $i<count($liArr);$i++) {
+                $litm = explode('-', $liArr[$i]);
+                if ($litm[1] == 'P') {
+                    $pIdStr .= $litm[0].',';
+                } elseif ($litm[1] == 'V') {
+                    $vIdStr .= $litm[0].',';
+                } else {
+                    $dIdStr .= $litm[0].',';
+                }
+            }
+            if (!empty($pIdStr)) {
+                $arr['pIdStr'] = rtrim($pIdStr, ',');
+            } else {
+                $arr['pIdStr'] = 0;
+            }
+            if (!empty($vIdStr)) {
+                $arr['vIdStr'] = rtrim($vIdStr, ',');
+            } else {
+                $arr['vIdStr'] = 0;
+            }
+            if (!empty($dIdStr)) {
+                $arr['dIdStr'] = rtrim($dIdStr, ',');
+            } else {
+                $arr['dIdStr'] = 0;
+            }
+        }
+        return $arr;
     }
 }
