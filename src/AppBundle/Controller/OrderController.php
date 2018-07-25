@@ -1818,7 +1818,6 @@ class OrderController extends Controller {
     }
 
     private function getVeneerslistbyQuoteId($qId,$printType=null,$linItemArr=null) {
-        //print_r($linItemArr);die;
         $query = $this->getDoctrine()->getManager();
 
         if($printType == 'SHIPPER'){
@@ -4579,7 +4578,7 @@ class OrderController extends Controller {
     private function getLineItemQtyForShipper($orderId , $lineItemId, $lineItemType) {
         $qtyShipped = 0;
         $conn = $this->getDoctrine()->getConnection('default');
-        $SQL="SELECT qty_shipped FROM `shipped_quantity` WHERE order_id=:order_id AND lineitem_id=:lineitem_id AND lineitem_type=:lineitem_type ORDER BY id DESC LIMIT 0,1";
+        $SQL="SELECT qty_shipped FROM shipped_quantity WHERE order_id=:order_id AND lineitem_id=:lineitem_id AND lineitem_type=:lineitem_type AND DATE(createdAt) = DATE(NOW()) ORDER BY id DESC LIMIT 0,1";
         $stmt=$conn->prepare($SQL);
         $stmt->bindParam(':order_id',$orderId,PDO::PARAM_INT);
         $stmt->bindParam(':lineitem_id',$lineItemId,PDO::PARAM_INT);
