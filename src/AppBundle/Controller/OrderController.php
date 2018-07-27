@@ -496,8 +496,7 @@ class OrderController extends Controller {
                
                 if($printType == 'SHIPPER' ){
                     date_default_timezone_set('America/Los_Angeles');
-                    $arrApi['data']['date'] = date("M d, Y");
-
+                    $arrApi['data']['date'] = $this->getDateForShiperPDF($quoteId, $linitemArrStr);
                 }
                 else
                 {
@@ -4626,5 +4625,26 @@ class OrderController extends Controller {
             }
         }
         return $arr;
+    }
+
+    private function getDateForShiperPDF($orderId, $linitemArrStr) {
+        $lineItemIdStr = '';
+        $linItemArr = explode(',', rtrim($linitemArrStr,','));
+        for ($i=0;$i<count($linItemArr);$i++) {
+            $liAr = explode('-', $linItemArr[$i]);
+            $lineItemIdStr .= $liAr[0].','; 
+        }
+        $conn = $this->getDoctrine()->getConnection('default');
+        $SQL="SELECT * FROM shipped_quantity WHERE order_id=:order_id AND lineitem_id IN(".rtrim($lineItemIdStr, ',').") ORDER BY id DESC limit 0,1";
+        $stmt=$conn->prepare($SQL);
+        $stmt->bindParam(':order_id',$orderId,PDO::PARAM_INT);
+        $stmt->execute();
+        $res = $stmt->fetchAll();
+        if (!empty($res)) {
+            $date = date("M d, Y", strtotime($res[0]['createdAt']));
+        } else {
+            $date = date("M d, Y");
+        }
+        return $date;
     }
 }
