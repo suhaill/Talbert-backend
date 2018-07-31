@@ -2602,6 +2602,7 @@ class OrderController extends Controller {
         $startDate = $data->get('startDate');
         $endDate = $data->get('endDate');
         $type = $data->get('type');
+        $currStatus = $data->get('currStatus');
 //        $offset = ($pageNo - 1)  * $limit;
         if (false) {
             $arrApi['status'] = 0;
@@ -2623,7 +2624,7 @@ class OrderController extends Controller {
                     if ($type == 'status') {
                         if ($searchVal != 'all') {
                             $keyword = $searchVal;
-                            $condition .= $concat . "os.statusId = :searchVal ";
+                            //$condition .= $concat . "os.statusId = :searchVal ";
 //                            $concat = " AND ";
                         }
                         $keywordLike='';
@@ -2631,9 +2632,15 @@ class OrderController extends Controller {
                         $keywordLike = '%' . $searchVal . '%';
                         $keyword =  $searchVal ;
                         $condition .= $concat . "(u.company Like :searchValLike Or q.controlNumber= :searchVal)";
+                        //$condition .= " AND os.statusId=".$currStatus;
 //                        $concat = " AND ";
                     }
 //                }
+                if ($currStatus != 'all') {
+                    $condition .= $concat . "os.statusId=".$currStatus;
+                } else {
+                    $condition .= $concat . "os.statusId IN(2,3,4,5,14,15)";
+                }
                 if (!empty($startDate) && !empty($endDate)) {
                     $condition = $condition . $concat . " q.estimatedate >= :from AND q.estimatedate <= :to ";
                 } else if (!empty($startDate) && empty($endDate) || ($startDate == $endDate && !empty($endDate) && !empty($startDate))) {
@@ -2641,7 +2648,6 @@ class OrderController extends Controller {
                 } else if (empty($startDate) && !empty($endDate)) {
                     $condition = $condition . $concat . " q.estimatedate <= :to ";
                 }
-                
                 $query = $this->getDoctrine()->getManager();
                 $query1 = $query->createQueryBuilder()
                         ->select(['o.id as orderId', 'q.controlNumber', 'q.version', 'q.customerId', 'q.estimatedate', 'q.id',
@@ -2657,9 +2663,9 @@ class OrderController extends Controller {
                         ->where($condition)
                         ->setParameter('active', 1)
                         ->setParameter('status', 'Approved');
-                if ($searchVal != 'all') {
-                    $query1->setParameter('searchVal', $keyword);
-                }
+                        if ($type != 'status') {
+                            $query1->setParameter('searchVal', $keyword);
+                        }
                 if ($keywordLike != '') {
                     $query1->setParameter('searchValLike', $keywordLike);
                 }
@@ -2684,7 +2690,7 @@ class OrderController extends Controller {
                     for ($i = 0; $i < count($quotes); $i++) {
                         $quoteList[$i] = [
                             'id' => $quotes[$i]['id'],
-                            'estimateNumber' => 'O-' . $quotes[$i]['controlNumber'] . '-' . $quotes[$i]['version'],
+                            'estimateNumber' => $quotes[$i]['controlNumber'] . '-' . $quotes[$i]['version'],
                             'customername' => $quotes[$i]['fname'],
                             'companyname' => $quotes[$i]['companyname'],
                             'orderId' => $quotes[$i]['orderId'],
