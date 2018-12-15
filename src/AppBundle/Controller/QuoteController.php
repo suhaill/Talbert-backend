@@ -203,7 +203,6 @@ class QuoteController extends Controller
             $quoteId = $request->query->get('id');
             if (empty($quoteId)) {
                 $quotes = $this->getDoctrine()->getRepository('AppBundle:Quotes')->findBy(array('status'=> array('Current','Hold','Dead')),array('id'=>'desc'));
-                //print_R($quotes);
                 if (!empty($quotes)) {
                     $quoteId = $quotes[0]->getId();
                 }
@@ -226,6 +225,7 @@ class QuoteController extends Controller
                 $arrApi['data']['company'] = $this->getCustomerCompanyById($quoteData->getCustomerId());
                 $arrApi['data']['userEmail'] = $this->getCustomerEmailById($quoteData->getEstimatorId());
                 $arrApi['data']['customerEmail'] = $this->getCustomerEmailById($quoteData->getCustomerId());
+                $arrApi['data']['customerEmails'] = $this->getCustomerEmailByIdForEmailQuote($quoteData->getCustomerId());
                 $arrApi['data']['customerId'] = $quoteData->getCustomerId();
                 $arrApi['data']['referenceNumber'] = $quoteData->getRefNum();
                 $arrApi['data']['salesman'] = $this->getSalesmanNameById($quoteData->getSalesmanId());
@@ -241,7 +241,7 @@ class QuoteController extends Controller
                 $arrApi['data']['status'] = $quoteData->getStatus();
                 $arrApi['data']['comment'] = $quoteData->getComment();
                 $arrApi['data']['deliveryDate'] = $quoteData->getDeliveryDate();
-                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot())?str_replace(',','',number_format($quoteData->getQuoteTot(),0)):'00.00';
+                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot())?str_replace(',','',number_format($quoteData->getQuoteTot(),2)):'00.00';
                 $arrApi['data']['expFee'] = !empty($quoteData->getExpFee())?str_replace(',','',number_format($quoteData->getExpFee(),2)):'00.00';
                 $arrApi['data']['discount'] = !empty($quoteData->getDiscount())?str_replace(',','',number_format($quoteData->getDiscount(),2)):'00.00';
                 $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee())?str_replace(',','',number_format($quoteData->getLumFee(),2)):'00.00';
@@ -301,7 +301,9 @@ class QuoteController extends Controller
             $lineItemArrP=!empty($lineItemArr['P'])?$lineItemArr['P']:[];
             $lineItemArrV=!empty($lineItemArr['V'])?$lineItemArr['V']:[];
             $datime = new \DateTime('now');
-            $quoteData = $this->getQuoteDataById($quoteId,$editFlag,$estnumber);
+            // $quoteData = $this->getQuoteDataById($quoteId,$editFlag,$estnumber);
+            $quoteData = $this->getQuoteDataById($quoteId);
+            //print_r($quoteData);die;
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'This quote does not exists';
@@ -1941,6 +1943,7 @@ class QuoteController extends Controller
             $quote->setShipMethdId($shipMethod);
             $quote->setShipAddId($shipAddId);
             $quote->setShipCharge($this->getShipChargeByAddId($shipAddId));
+            $quote->setSalesTaxRate($this->getSalesTaxRateByAddId($shipAddId));
             $quote->setLeadTime($leadTime);
             $quote->setExpFee(0.00);
             $quote->setDiscount(0.00);
@@ -2120,12 +2123,12 @@ class QuoteController extends Controller
     }
 
     private function getSheenById($id) {
-        return ($id == 1) ? '3' : ($id == 2) ? '5' : ($id == 3) ? '10' : ($id == 4) ? '20' : ($id == 5) ? '30' : ($id == 6) ? '40' : ($id == 7) ? '50' : ($id == 8) ? '60' : ($id == 9) ? '70' : ($id == 10) ? '80' : ($id == 11) ? '90' : ($id == 12) ? '100' : '0';
+        return ($id == 1) ? '3' : (($id == 2) ? '5' : (($id == 3) ? '10' : (($id == 4) ? '20' : (($id == 5) ? '30' : (($id == 6) ? '40' : (($id == 7) ? '50' : (($id == 8) ? '60' : (($id == 9) ? '70' : (($id == 10) ? '80' : (($id == 11) ? '90' : (($id == 12) ? '100' : '0')))))))))));
     }
 
     private function getFacPaintById($id) {
         //return ($id == 1) ? 'Prime Only' : ($id == 2) ? 'White / Light Color' : 'Dark Color';
-        return ($id == 1) ? 'PO' : ($id == 2) ? 'WLC' : 'DCL';
+        return ($id == 1) ? 'PO' : (($id == 2) ? 'WLC' : 'DCL');
     }
 
     private function getVeneerslistbyQuoteId($qId) {
@@ -2173,6 +2176,15 @@ class QuoteController extends Controller
                     $lineItem[$i]['lengthFraction'] = $this->float2rat($p->getLengthFraction());
                     $lineItem[$i]['grain'] = $this->getGrainPattern( $p->getPatternId(),'plywood' );
                     $lineItem[$i]['edgeDetail'] = ($p->getEdgeDetail()) ? 1 : 0;
+                    
+                    $edgeDetailValue1 = ' ';
+                    $edgeDetailValue2 = '';
+                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getTopEdge()) != '') ? "TE-".$this->getEdgeNameById($p->getTopEdge()):'';
+                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getBottomEdge()) != '') ? " | BE-".$this->getEdgeNameById($p->getBottomEdge()):'';
+                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getRightEdge()) != '') ? " | RE-".$this->getEdgeNameById($p->getRightEdge()):'';
+                    $edgeDetailValue2 .= ($p->getEdgeDetail() == 1 && $this->getEdgeNameById($p->getLeftEdge()) != '') ? " | LE-".$this->getEdgeNameById($p->getLeftEdge()):'';
+
+                    $lineItem[$i]['edgeDetailValue'] = $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
                     $lineItem[$i]['topEdge'] = $p->getTopEdge();
                     $lineItem[$i]['bottomEdge'] = $p->getBottomEdge();
                     $lineItem[$i]['rightEdge'] = $p->getRightEdge();
@@ -2182,11 +2194,16 @@ class QuoteController extends Controller
                     $lineItem[$i]['finish'] = $p->getFinish();
                     $lineItem[$i]['uvCuredId'] = $this->getUVCuredNameById($p->getUvCuredId());
                     $lineItem[$i]['sheenId'] = $this->getSheenById($p->getSheenId());
-                    $lineItem[$i]['shameOnId'] = ($p->getShameOnId()) ? 'BS' : '';
-                    $lineItem[$i]['coreSameOnbe'] = ($p->getCoreSameOnbe()) ? ',BE' : '';
-                    $lineItem[$i]['coreSameOnte'] = ($p->getCoreSameOnte()) ? ',TE' : '';
-                    $lineItem[$i]['coreSameOnre'] = ($p->getCoreSameOnre()) ? ',RE' : '';
-                    $lineItem[$i]['coreSameOnle'] = ($p->getCoreSameOnle()) ? ',LE' : '';
+                    /* $lineItem[$i]['shameOnId'] = ($p->getShameOnId()) ? 'BS ' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($p->getCoreSameOnbe()) ? 'BE, ' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($p->getCoreSameOnte()) ? 'TE, ' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($p->getCoreSameOnre()) ? 'RE, ' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($p->getCoreSameOnle()) ? 'LE' : ''; */
+                    $lineItem[$i]['shameOnId'] = ($p->getShameOnId()) ? ' BS' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($p->getCoreSameOnbe()) ? ', BE' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($p->getCoreSameOnte()) ? ', TE' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($p->getCoreSameOnre()) ? ', RE' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($p->getCoreSameOnle()) ? ', LE' : '';
                     $lineItem[$i]['facPaint'] = $this->getFacPaintById($p->getFacPaint());
                     $lineItem[$i]['isLabels'] = $p->getIsLabels();
                     $lineItem[$i]['autoNumber'] = $this->getFirstLabel($p->getAutoNumber());
@@ -2309,6 +2326,14 @@ class QuoteController extends Controller
                     $lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
                     //$lineItem[$i]['grain'] = $this->getGrainPattern($d->getId(),'door');
                     $lineItem[$i]['edgeDetail'] = ($d->getEdgeFinish()) ? '1' : 0;
+                    $edgeDetailValue1 = ' ';
+                    $edgeDetailValue2 = '';
+                    $edgeDetailValue2 .= ($d->getEdgeFinish() == 1 && $this->getEdgeNameById($d->getTopEdge()) != '') ? "TE-".$this->getEdgeNameById($d->getTopEdge()):'';
+                    $edgeDetailValue2 .= ($d->getEdgeFinish() == 1 && $this->getEdgeNameById($d->getBottomEdge()) != '') ? " | BE-".$this->getEdgeNameById($d->getBottomEdge()):'';
+                    $edgeDetailValue2 .= ($d->getEdgeFinish() == 1 && $this->getEdgeNameById($d->getRightEdge()) != '') ? " | RE-".$this->getEdgeNameById($d->getRightEdge()):'';
+                    $edgeDetailValue2 .= ($d->getEdgeFinish() == 1 && $this->getEdgeNameById($d->getLeftEdge()) != '') ? " | LE-".$this->getEdgeNameById($d->getLeftEdge()):'';
+
+                    $lineItem[$i]['edgeDetailValue'] = $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
                     $lineItem[$i]['topEdge'] = $d->getTopEdge();
                     $lineItem[$i]['bottomEdge'] = $d->getBottomEdge();
                     $lineItem[$i]['rightEdge'] = $d->getRightEdge();
@@ -2527,20 +2552,15 @@ class QuoteController extends Controller
     }
 
     private function updateQuoteData($quoteId) {
-        //echo $quoteId;
         $salesTaxRate = 0;
         $salesTaxAmount = 0;
         $quoteSubTotal = $this->getPlywoodSubTotalByQuoteId($quoteId) + $this->getVeneerSubTotalByQuoteId($quoteId) + $this->getDoorSubTotalByQuoteId($quoteId);
         $quoteData = $this->getQuoteDataById($quoteId);
-        $shipAddId = $quoteData->getShipAddId();
         $shipCharge = $quoteData->getShipCharge();
         $expFee = $quoteData->getExpFee();
         $discount = $quoteData->getDiscount();
-        if (!empty($shipAddId)) {
-            $salesTaxRate = $this->getSalesTaxRateByAddId($shipAddId);
-        }
+        $salesTaxRate = $quoteData->getSalesTaxRate();
         $salesTaxAmount = (($quoteSubTotal ) * ($salesTaxRate)) / 100;
-        //$shipCharge = $this->getShippingChargeByAddId($shipAddId);
         $lumFee = $this->getPlywoodLumberFeeByQuoteId($quoteId) + $this->getVeneerLumberFeeByQuoteId($quoteId);
         $projectTotal = ($quoteSubTotal + $expFee - $discount + $salesTaxAmount + $shipCharge + $lumFee);
         $this->saveQuoteCalculatedData($quoteId, $quoteSubTotal, $salesTaxAmount, $shipCharge, $lumFee, $projectTotal);
@@ -2553,11 +2573,11 @@ class QuoteController extends Controller
         if (!empty($quote)) {
             if(!empty($quoteSubTotal)){
                 $quote->setSalesTax($salesTaxAmount);
-                $quote->setShipCharge($shipCharge);
+                //$quote->setShipCharge($shipCharge);
                 $quote->setLumFee($lumFee);
             } else {
                 $quote->setSalesTax(0);
-                $quote->setShipCharge(0);
+                //$quote->setShipCharge(0);
                 $quote->setLumFee(0);
                 $quote->setExpFee(0);
                 $quote->setDiscount(0);
@@ -2946,7 +2966,7 @@ class QuoteController extends Controller
                         <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
                         <style>
                             body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:8pt; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
-                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;margin-bottom:18px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
                         table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}
                         </style>
                     </head>
@@ -2976,7 +2996,7 @@ class QuoteController extends Controller
                                                         <tr>
                                                             <td class='cellDescLbl'>Ship To</td>
                                                             <td class='cellDescTxt'>
-                                                            <h3>".$arrApi['data']['shipAdd']['nickname']."</h3>
+                                                            <h3>".$arrApi['data']['company']."</h3>
                                                             <p>".$arrApi['data']['shipAdd']['street']."</p>
                                                             <p>".$arrApi['data']['shipAdd']['city'].",".$arrApi['data']['shipAdd']['state']." ".$arrApi['data']['shipAdd']['zip']."</p>
                                                             </td>
@@ -3009,39 +3029,38 @@ class QuoteController extends Controller
                             </div>
                             
             
-                            <div class='itemListTablHldr'>
-                                <table class='prodItmLst'>
-                                    <thead>
-                                        <tr>
-                                            <th style='width:30px'>#</th>
-                                            <th>Qty</th>
-                                            <th>Grain</th>
-                                            <th>Species</th>
-                                            <th>PTRN</th>
-                                            <th>Grd</th>
-                                            <th>Back</th>
-                                            <th>Dimensions</th>
-                                            <th>Core</th>
-                                            <th class='t-left'>Details</th>
-                                            <th style='width:80px'>Unit Price</th>
-                                            <th>Total</th>
-                                        </tr>
-                                    </thead></table></div></div></div></body></html>";
+                            </div></div></body></html>";
         $htmlArr['body'] = "<!DOCTYPE html>
                 <html>
                 <head>
                         <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
                         <style>
                             body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:8pt; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
-                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;margin-bottom:18px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
                         table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}
                         </style>
                     </head>
                 <body>
                     <div class=''>
                         <div class='invoiceCtnr'><div class='itemListTablHldr'>
-                                <table class='prodItmLst'>";
+                                <table class='prodItmLst'><thead>
+                                <tr>
+                                    <th style='width:30px'>#</th>
+                                    <th>Qty</th>
+                                    <th>Grain</th>
+                                    <th>Species</th>
+                                    <th>PTRN</th>
+                                    <th>Grd</th>
+                                    <th>Back</th>
+                                    <th>Dimensions</th>
+                                    <th>Core</th>
+                                    <th class='t-left' style='width:250px'>Details</th>
+                                    <th style='width:80px'>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead><tbody>";
 
+                                
         foreach($arrApi['data']['lineitems'] as $key=>$qData){
 
             if($qData['type'] == 'plywood'){
@@ -3058,41 +3077,60 @@ class QuoteController extends Controller
 
 
             $htmlArr['body'] .= "<tr>
-                                            <th>".$index."</th>
-                                            <td>".$qData['quantity']."</td>
-                                            <td>".$qData['grain']."</td>
-                                            <td>".$qData['species']."</td>
-                                            <td>".$qData['pattern']."</td>
-                                            <td>".$qData['grade']."</td>
-                                            <td>".$qData['back']."</td>
-                                            <!--<td>".$qData['width']."x".$qData['widthFraction']." x ".$qData['length']."x".$qData['lengthFraction']." x ".$qData['thickness']."</td>-->
-                                                <td>".$qData['dimensions']."</td>
-                                            <td>".$qData['core']."</td>";
-            $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
-            $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
-            if ($qData['finish'] == 'UV') {
-                $htmlArr['body'] .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']." %-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
-            } elseif ($qData['finish'] == 'Paint') {
-                $htmlArr['body'] .= "Finish: Paint-".$qData['facPaint']."-".$qData['uvCuredId']."-".$qData['sheenId']." %".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
-            }
-            $htmlArr['body'] .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
-            $htmlArr['body'] .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
+                                    <th style='width:30px'>".$index."</th>
+                                    <td>".$qData['quantity']."</td>
+                                    <td>".$qData['grain']."</td>
+                                    <td>".$qData['species']."</td>
+                                    <td>".$qData['pattern']."</td>
+                                    <td>".$qData['grade']."</td>
+                                    <td>".$qData['back']."</td>
+                                    <!--<td>".$qData['width']."x".$qData['widthFraction']." x ".$qData['length']."x".$qData['lengthFraction']." x ".$qData['thickness']."</td>-->
+                                    <td>".$qData['dimensions']."</td>
+                                    <td>".$qData['core']."</td>";
+                                    
+                                    
+                                    //$htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left' style='width:250px'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])." | BE-".$this->getEdgeNameById($qData['bottomEdge'])." | RE-".$this->getEdgeNameById($qData['rightEdge'])." | LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+                                    
+                                    $edgeDetailValue1 = "<td class='t-left' style='width:250px'>Edge Detail: ";
+                                    $edgeDetailValue2 = '';
+                                    $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['topEdge']) != '') ? "TE-".$this->getEdgeNameById($qData['topEdge']):'';
+                                    $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['bottomEdge']) != '') ? " | BE-".$this->getEdgeNameById($qData['bottomEdge']):'';
+                                    $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['rightEdge']) != '') ? " | RE-".$this->getEdgeNameById($qData['rightEdge']):'';
+                                    $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['leftEdge']) != '') ? " | LE-".$this->getEdgeNameById($qData['leftEdge']):'';
+                                    //$edgeDetailValue2 .= "<br> : <td class='t-left'>";
+                                    
+                                    if(ltrim( $edgeDetailValue2,' | ' ) != ''){
+                                        $htmlArr['body'] .= $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
+                        
+                                    }
+                                    else{
+                                        $htmlArr['body'] .= "<td class='t-left'>";
+                                    }
 
-            $htmlArr['body'] .="<td>$".$qData['unitPrice']."</td>
+                                    $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
+                                    if ($qData['finish'] == 'UV') {
+                                        $htmlArr['body'] .= "Finish: UV - ".$qData['uvCuredId']." - ".$qData['sheenId']." % - ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                                    } elseif ($qData['finish'] == 'Paint') {
+                                        $htmlArr['body'] .= "Finish: Paint - ".$qData['facPaint']." - ".$qData['uvCuredId']." - ".$qData['sheenId']." % ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                                    }
+                                    $htmlArr['body'] .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
+                                    $htmlArr['body'] .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
+
+                                    $htmlArr['body'] .="<td style='width:80px'>$".$qData['unitPrice']."</td>
                                             <td>$".$qData['totalPrice']."</td>
                                         </tr>";
 
         }
 
         $htmlArr['body'] .= "</tbody>
-                                            </table>
-                                            <table class='totalPrice'>
-                                                <tr>
-                                                    <td>Special Tooling - Description</td>
-                                                    <td class='price'>$350.00</td>
-                                                </tr>
-                                            </table>
-                                        </div></div></div></body></html>";
+                                </table>
+                                <table class='totalPrice'>
+                                    <tr>
+                                            <td>&nbsp;</td>  
+                                            <td class='price'>&nbsp;</td>  
+                                    </tr>
+                                </table>
+                            </div></div></div></body></html>";
 
         $htmlArr['footer'] = "<!DOCTYPE html>
                 <html>
@@ -3100,19 +3138,20 @@ class QuoteController extends Controller
                         <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
                         <style>
                             body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:8pt; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
-                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;margin-bottom:18px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
                         table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}
+                        td strong.totalPrice{font-size:16px;font-weight:700;}
                         </style>
                     </head>
                 <body>
                     <div class=''><div class='invoiceFooter'>
-                                <!--<div class='custOdrDtls'>
+                                <div class='custOdrDtls'>
                                     <table>
                                         <tr>
                                             <td><strong>Special Instructions:</strong> **".$arrApi['data']['comment']."**</td>
                                         </tr>
                                     </table>
-                                </div> -->
+                                </div>
                                 <table class='invoiceFootBtm'>
                                     <tr>
                                         <td class='sideBox note'>
@@ -3142,6 +3181,10 @@ class QuoteController extends Controller
                                                     <td>$".$arrApi['data']['quoteSubTot']."</td>
                                                 </tr>
                                                 <tr>
+                                                    <td>Expedite Fee</td>
+                                                    <td>$".$arrApi['data']['expFee']."</td>
+                                                </tr>
+                                                <tr>
                                                     <td>Sale Tax</td>
                                                     <td>$".$arrApi['data']['salesTax']."</td>
                                                 </tr>
@@ -3154,8 +3197,8 @@ class QuoteController extends Controller
                                                     <td>$".$arrApi['data']['lumFee']."</td>
                                                 </tr>
                                                 <tr>
-                                                    <td><strong>Total</strong></td>
-                                                    <td><strong>$".$arrApi['data']['projectTot']."</strong></td>
+                                                    <td><strong class='totalPrice'>Total</strong></td>
+                                                    <td><strong class='totalPrice'>$".$arrApi['data']['projectTot']."</strong></td>
                                                 </tr>
                                             </table>
                                         </td>
@@ -3182,5 +3225,20 @@ class QuoteController extends Controller
             $this->saveOrderData($qId, $estNo, $estNo, $approveBy, $via, $other, $orderDate, $custPO, $deliveryDate,'backOrder');
         }
         $this->updateQuoteStatus($qId, 'Approved', $deliveryDate, $datime);
+    }
+
+    private function getCustomerEmailByIdForEmailQuote($customer_id) {
+        $emails = array();
+        if (!empty($customer_id)) {
+            $custCont = $this->getDoctrine()
+                ->getRepository('AppBundle:CustomerContacts')
+                ->findBy(array('userId' => $customer_id));
+            if (!empty($custCont)) {
+                foreach ($custCont as $e) {
+                    $emails[] = $e->getEmail();
+                }
+            }
+        }
+        return $emails;
     }
 }

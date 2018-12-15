@@ -51,13 +51,13 @@ class VeneerController extends Controller
             $thicknessId = trim($getJson->get('thickness'));
             $width = trim($getJson->get('width'));
             $widthFraction = trim($getJson->get('widthFraction'));
-            $isNetSize = trim($getJson->get('netsize'));
+            $isNetSize = trim($getJson->get('netsize') ? $getJson->get('netsize') : 0) ;
             $length = trim($getJson->get('length'));
             $lengthFraction = trim($getJson->get('lengthFraction'));
             $coreTypeId = trim($getJson->get('coretype'));
             $backer = trim($getJson->get('backer'));
-            $isFlexSanded = trim($getJson->get('flexsanded'));
-            $sequenced = trim($getJson->get('sequenced'));
+            $isFlexSanded = trim($getJson->get('flexsanded') ? $getJson->get('flexsanded') : 0);
+            $sequenced = trim($getJson->get('sequenced')  ? $getJson->get('sequenced') : 0);
             $lumberFee = trim($getJson->get('lumberfee'));
             $comments = trim($getJson->get('comment'));
             $fileId = trim($getJson->get('fileId'));
@@ -119,8 +119,8 @@ class VeneerController extends Controller
         $veneer->setQuantity($quantity);
         $veneer->setQuantityRemaining($quantity);
         $veneer->setSpeciesId($speciesId);
-        $veneer->setGrainPatternId('');
-        $veneer->setFlakexFiguredId('');
+        $veneer->setGrainPatternId(0);
+        $veneer->setFlakexFiguredId(0);
         $veneer->setPatternId($pattern);
         $veneer->setGrainDirectionId($grainDirectionId);
         $veneer->setGradeId($gradeId);
@@ -177,14 +177,13 @@ class VeneerController extends Controller
                 {
                     $em2 = $this->getDoctrine()->getManager();
                     $file =  $this->getDoctrine()->getRepository('AppBundle:Files')->find($fileId_ar[$i]);
-                    //var_dump($file);
                     $fileEntity = new Files();
                     $fileEntity->setFileName($file->getFileName());
                     $fileEntity->setAttachableId($lastInserted);
                     $fileEntity->setAttachableType($file->getAttachableType());
                     $fileEntity->setOriginalName($file->getOriginalName());
-//                    $em->persist($fileEntity);
-//                    $em->flush();
+                    $em->persist($fileEntity);
+                    $em->flush();
 
                     /* $file->setAttachableId($lastInserted);
                     $em2->persist($file);
@@ -355,13 +354,13 @@ class VeneerController extends Controller
             $thicknessId = trim($getJson->get('thickness'));
             $width = trim($getJson->get('width'));
             $widthFraction = trim($getJson->get('widthFraction'));
-            $isNetSize = trim($getJson->get('netsize'));
+            $isNetSize = trim($getJson->get('netsize')?$getJson->get('netsize'):0);
             $length = trim($getJson->get('length'));
             $lengthFraction = trim($getJson->get('lengthFraction'));
             $coreTypeId = trim($getJson->get('coretype'));
             $backer = trim($getJson->get('backer'));
-            $isFlexSanded = trim($getJson->get('flexsanded'));
-            $sequenced = trim($getJson->get('sequenced'));
+            $isFlexSanded = trim($getJson->get('flexsanded')?$getJson->get('flexsanded'):0);
+            $sequenced = trim($getJson->get('sequenced')?$getJson->get('sequenced'):0);
             $lumberFee = trim($getJson->get('lumberfee'));
             $comments = trim($getJson->get('comment'));
             $fileId = trim($getJson->get('fileId'));
@@ -401,8 +400,8 @@ class VeneerController extends Controller
         //$veneer = new Veneer();
         $veneer->setQuantity($quantity);
         $veneer->setSpeciesId($speciesId);
-        $veneer->setGrainPatternId('');
-        $veneer->setFlakexFiguredId('');
+        $veneer->setGrainPatternId(0);
+        $veneer->setFlakexFiguredId(0);
         $veneer->setPatternId($pattern);
         $veneer->setGrainDirectionId($grainDirectionId);
         $veneer->setGradeId($gradeId);
@@ -419,6 +418,7 @@ class VeneerController extends Controller
         $veneer->setLumberFee($lumberFee);
         $veneer->setComments($comments);
         $veneer->setFileId(0);
+        $veneer->setQuantityRemaining($quantity);
         //$veneer->setQuoteId('1');
         //$veneer->setCreatedAt($createdAt);
         $veneer->setUpdatedAt($createdAt);

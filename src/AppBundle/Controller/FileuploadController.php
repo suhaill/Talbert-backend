@@ -36,7 +36,7 @@ class FileuploadController extends Controller
 
       $file = $request->files->get('file');
 
-      $attachableId = $request->request->get('attachableId');
+      $attachableId = $request->request->get('attachableId') ? $request->request->get('attachableId') : 0;
       $attachableType = $request->request->get('attachableType');
       $originalname = $file->getClientOriginalName();
       
