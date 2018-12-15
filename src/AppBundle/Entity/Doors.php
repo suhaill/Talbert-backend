@@ -38,6 +38,13 @@ class Doors
     /**
      * @var int
      *
+     * @ORM\Column(name="quantityRemaining", type="integer", options={"default" = 0})
+     */
+    private $quantityRemaining;
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="lineitem_num", type="integer")
      */
     private $lineItemNum;
@@ -823,6 +830,22 @@ class Doors
     public function getQty()
     {
         return $this->qty;
+    }
+
+    /**
+     * @return int
+     */
+    public function getQuantityRemaining()
+    {
+        return $this->quantityRemaining;
+    }
+
+    /**
+     * @param int $quantityRemaining
+     */
+    public function setQuantityRemaining($quantityRemaining)
+    {
+        $this->quantityRemaining = $quantityRemaining;
     }
 
     /**

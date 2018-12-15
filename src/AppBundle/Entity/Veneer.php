@@ -31,6 +31,13 @@ class Veneer
     /**
      * @var int
      *
+     * @ORM\Column(name="quantityRemaining", type="integer", options={"default" = 0})
+     */
+    private $quantityRemaining;
+
+    /**
+     * @var int
+     *
      * @ORM\Column(name="species_id", type="integer")
      */
     private $speciesId;
@@ -400,6 +407,22 @@ class Veneer
     public function getQuantity()
     {
         return $this->quantity;
+    }
+
+    /**
+     * @return int
+     */
+    public function getQuantityRemaining()
+    {
+        return $this->quantityRemaining;
+    }
+
+    /**
+     * @param int $quantityRemaining
+     */
+    public function setQuantityRemaining($quantityRemaining)
+    {
+        $this->quantityRemaining = $quantityRemaining;
     }
 
     /**
