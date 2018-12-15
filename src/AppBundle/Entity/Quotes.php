@@ -247,6 +247,13 @@ class Quotes
     /**
      * @var string
      *
+     * @ORM\Column(name="sales_tax_rate", type="string", length=10, nullable=true, options={"default":0})
+     */
+    private $salesTaxRate;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="project_tot", type="string", length=10, nullable=true, options={"default":0})
      */
     private $projectTot;
@@ -665,6 +672,22 @@ class Quotes
     /**
      * @return string
      */
+    public function getSalesTaxRate()
+    {
+        return $this->salesTaxRate;
+    }
+
+    /**
+     * @param string $salesTaxRate
+     */
+    public function setSalesTaxRate($salesTaxRate)
+    {
+        $this->salesTaxRate = $salesTaxRate;
+    }
+
+    /**
+     * @return string
+     */
     public function getProjectTot()
     {
         return $this->projectTot;
@@ -726,4 +749,3 @@ class Quotes
         return $this->updatedAt;
     }
 }
-

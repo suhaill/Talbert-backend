@@ -38,7 +38,7 @@ class SalesmanController extends Controller
                 ->from('AppBundle:Profile', 'p')
                 ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = p.userId")
                 ->addSelect(["p.fname"])
-                ->where('u.isSalesman = :value1 AND u.isActive = :value2')
+                ->where("u.isSalesman = :value1 AND u.isActive = :value2 and p.fname!=''")
                 ->setParameters(array('value1'=>1,'value2'=>1))
                 ->orderBy('p.fname','ASC')
                 ->getQuery()
