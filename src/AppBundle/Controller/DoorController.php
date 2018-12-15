@@ -416,8 +416,8 @@ class DoorController extends Controller
                 $filesObj->setAttachableId($newdoorId);
                 $filesObj->setCreatedAt($datime);
                 $filesObj->setUpdatedAt($datime);
-//                $em->persist($filesObj);
-//                $em->flush();
+                $em->persist($filesObj);
+                $em->flush();
             }
         }
     }
@@ -434,14 +434,14 @@ class DoorController extends Controller
     private function saveDoorData($data) {
         $qid = trim($data->get('qid'));
         $qty = trim($data->get('qty'));
-        $pair = trim($data->get('pair'));
+        $pair = trim($data->get('pair')?$data->get('pair'):0);
         $swing = trim($data->get('swing'));
         $pairSwing = trim($data->get('pairSwing'));
         $width = trim($data->get('width'));
         $widthFraction = trim($data->get('widthFraction'));
         $pairWidth = trim($data->get('pairWidth'));
         $pairWidthFraction = trim($data->get('pairWidthFraction'));
-        $netsize = trim($data->get('netsize'));
+        $netsize = trim($data->get('netsize')?$data->get('netsize'):0);
         $length = trim($data->get('length'));
         $lengthFraction = trim($data->get('lengthFraction'));
         $pairLength = trim($data->get('pairLength'));
@@ -495,11 +495,11 @@ class DoorController extends Controller
         $uvcured = trim($data->get('uvcured'));
         $uvcolor = trim($data->get('uvcolor'));
         $sheen = trim($data->get('sheen'));
-        $sameOnBack = trim($data->get('sameOnBack'));
-        $sameOnBottom = trim($data->get('sameOnBottom'));
-        $sameOnTop = trim($data->get('sameOnTop'));
-        $sameOnRight = trim($data->get('sameOnRight'));
-        $sameOnLeft = trim($data->get('sameOnLeft'));
+        $sameOnBack = trim($data->get('sameOnBack')?$data->get('sameOnBack'):0);
+        $sameOnBottom = trim($data->get('sameOnBottom')?$data->get('sameOnBottom'):0);
+        $sameOnTop = trim($data->get('sameOnTop')?$data->get('sameOnTop'):0);
+        $sameOnRight = trim($data->get('sameOnRight')?$data->get('sameOnRight'):0);
+        $sameOnLeft = trim($data->get('sameOnLeft')?$data->get('sameOnLeft'):0);
         $doorFrame = trim($data->get('doorFrame'));
         $doorDrop = trim($data->get('doorDrop'));
         $surfaceMachining = trim($data->get('surfaceMachining'));
@@ -556,6 +556,7 @@ class DoorController extends Controller
         $door = new Doors();
         $door->setQuoteId($qid);
         $door->setQty($qty);
+        $door->setQuantityRemaining($qty);
         $door->setLineItemNum($lineItemNumberToBeUsed);
         $door->setPair($pair);
         $door->setSwing($swing);
@@ -748,6 +749,7 @@ class DoorController extends Controller
         $door = $em->getRepository(Doors::class)->find($data->get('doorId'));
         $datime = new \DateTime('now');
         $door->setQty($data->get('qty'));
+        $door->setQuantityRemaining($data->get('qty'));
         $door->setLineItemNum($data->get('editLineItemNumber'));
         $door->setPair($data->get('pair'));
         $door->setSwing($data->get('swing'));
@@ -1009,6 +1011,9 @@ class DoorController extends Controller
         $doorCalculator->setFinishEdgeCost($doorCalCData->getFinishEdgeCost());
         $doorCalculator->setFinishEdgeWaste($doorCalCData->getFinishEdgeWaste());
         $doorCalculator->setSubTotalFinishEdge($doorCalCData->getSubTotalFinishEdge());
+        $doorCalculator->setMillingCost($doorCalCData->getMillingCost());
+        $doorCalculator->setMillingWaste($doorCalCData->getMillingWaste());
+        $doorCalculator->setSubTotalMilling($doorCalCData->getSubTotalMilling());
         $doorCalculator->setRunningCost($doorCalCData->getRunningCost());
         $doorCalculator->setRunningWaste($doorCalCData->getRunningWaste());
         $doorCalculator->setSubTotalrunning($doorCalCData->getSubTotalrunning());

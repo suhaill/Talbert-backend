@@ -45,13 +45,13 @@ class PlywoodController extends Controller
             $thicknessId = trim($getJson->get('thickness'));
             $plywoodWidth = trim($getJson->get('width'));
             $widthFraction = trim($getJson->get('widthFraction'));
-            $netsize = trim($getJson->get('netsize'));
+            $netsize = trim($getJson->get('netsize')?$getJson->get('netsize'):0);
             $plywoodLength = trim($getJson->get('length'));
             $lengthFraction = trim($getJson->get('lengthFraction'));
             $finishThickId = trim($getJson->get('finishthick'));
             $finThickFraction = (trim($getJson->get('finishThicktype')) == 'inch') ? trim($getJson->get('finThickFraction')) : 0;
             $finishThicktype = trim($getJson->get('finishThicktype'));
-            $isSequenced = trim($getJson->get('sequenced'));
+            $isSequenced = trim($getJson->get('sequenced')?$getJson->get('sequenced'):0);
             $coreType = trim($getJson->get('coretype'));
             $thickness = trim($getJson->get('corethickness'));
             $finish = trim($getJson->get('finish'));
@@ -59,11 +59,11 @@ class PlywoodController extends Controller
             $uvCuredId = trim($getJson->get('uvcured'));
             $uvColorId = trim($getJson->get('uvcolor'));
             $sheenId = trim($getJson->get('sheen'));
-            $shameOnId = trim($getJson->get('coresameon'));
-            $coreSameOnbe = trim($getJson->get('coresameonbe'));
-            $coreSameOnte = trim($getJson->get('coresameonte'));
-            $coreSameOnre = trim($getJson->get('coresameonre'));
-            $coreSameOnle = trim($getJson->get('coresameonle'));
+            $shameOnId = trim($getJson->get('coresameon')?$getJson->get('coresameon'):0);
+            $coreSameOnbe = trim($getJson->get('coresameonbe')?$getJson->get('coresameonbe'):0);
+            $coreSameOnte = trim($getJson->get('coresameonte')?$getJson->get('coresameonte'):0);
+            $coreSameOnre = trim($getJson->get('coresameonre')?$getJson->get('coresameonre'):0);
+            $coreSameOnle = trim($getJson->get('coresameonle')?$getJson->get('coresameonle'):0);
             $backerId = trim($getJson->get('backergrade'));
             $edgeDetail = trim($getJson->get('egdedetail'));
             $edgeSameOnB = trim($getJson->get('edgeSameOnB')  ? $getJson->get('edgeSameOnL') : 0);
@@ -230,10 +230,11 @@ class PlywoodController extends Controller
         $em = $this->getDoctrine()->getManager();
         $plywood = new Plywood();
         $plywood->setQuantity($quantity);
+        $plywood->setQuantityRemaining($quantity);
         $plywood->setLineItemNum($lineItemNumberToBeUsed);
         $plywood->setSpeciesId($speciesId);
-        $plywood->setGrainPatternId('');
-        $plywood->setFlakexFiguredId('');
+        $plywood->setGrainPatternId(0);
+        $plywood->setFlakexFiguredId(0);
         $plywood->setPatternId($patternId);
         $plywood->setGrainDirectionId($grainDirectionId);
         $plywood->setPatternMatch($patternMatch);
@@ -382,8 +383,8 @@ class PlywoodController extends Controller
                     $fileEntity->setAttachableId($lastInserted);
                     $fileEntity->setAttachableType($file->getAttachableType());
                     $fileEntity->setOriginalName($file->getOriginalName());
-//                    $em->persist($fileEntity);
-//                    $em->flush();
+                    $em->persist($fileEntity);
+                    $em->flush();
 
                     /* $file->setAttachableId($lastInserted);
                     $em2->persist($file);
@@ -641,13 +642,13 @@ class PlywoodController extends Controller
             $thicknessId = trim($getJson->get('thickness'));
             $plywoodWidth = trim($getJson->get('width'));
             $widthFraction = trim($getJson->get('widthFraction'));
-            $netsize = trim($getJson->get('netsize'));
+            $netsize = trim($getJson->get('netsize')?$getJson->get('netsize'):0);
             $plywoodLength = trim($getJson->get('length'));
             $lengthFraction = trim($getJson->get('lengthFraction'));
             $finishThickId = trim($getJson->get('finishthick'));
             $finThickFraction = (trim($getJson->get('finishThicktype')) == 'inch') ? trim($getJson->get('finThickFraction')) : 0;
             $finishThicktype = trim($getJson->get('finishThicktype'));
-            $isSequenced = trim($getJson->get('sequenced'));
+            $isSequenced = trim($getJson->get('sequenced')?$getJson->get('sequenced'):0);
             $coreType = trim($getJson->get('coretype'));
             $thickness = trim($getJson->get('corethickness'));
             $finish = trim($getJson->get('finish'));
@@ -656,11 +657,11 @@ class PlywoodController extends Controller
             $uvColorId = trim($getJson->get('uvcolor'));
             $sheenId = trim($getJson->get('sheen'));
 
-            $shameOnId = trim($getJson->get('coresameon'));
-            $coreSameOnbe = trim($getJson->get('coresameonbe'));
-            $coreSameOnte = trim($getJson->get('coresameonte'));
-            $coreSameOnre = trim($getJson->get('coresameonre'));
-            $coreSameOnle = trim($getJson->get('coresameonle'));
+            $shameOnId = trim($getJson->get('coresameon')?$getJson->get('coresameon'):0);
+            $coreSameOnbe = trim($getJson->get('coresameonbe')?$getJson->get('coresameonbe'):0);
+            $coreSameOnte = trim($getJson->get('coresameonte')?$getJson->get('coresameonte'):0);
+            $coreSameOnre = trim($getJson->get('coresameonre')?$getJson->get('coresameonre'):0);
+            $coreSameOnle = trim($getJson->get('coresameonle')?$getJson->get('coresameonle'):0);
 
             $backerId = trim($getJson->get('backergrade'));
             $edgeDetail = trim($getJson->get('egdedetail'));
@@ -832,8 +833,8 @@ class PlywoodController extends Controller
         //$plywood = new Plywood();
         $plywood->setQuantity($quantity);
         $plywood->setSpeciesId($speciesId);
-        $plywood->setGrainPatternId('');
-        $plywood->setFlakexFiguredId('');
+        $plywood->setGrainPatternId(0);
+        $plywood->setFlakexFiguredId(0);
         $plywood->setPatternId($patternId);
         $plywood->setGrainDirectionId($grainDirectionId);
         $plywood->setPatternMatch($patternMatch);
@@ -894,6 +895,7 @@ class PlywoodController extends Controller
         //$plywood->setQuoteId('1');
         $plywood->setComments($comments);
         $plywood->setFileId(0);
+        $plywood->setQuantityRemaining($quantity);
        //$veneer->setQuoteId('1');
         //$plywood->setCreatedAt($createdAt);
         $plywood->setUpdatedAt($createdAt);

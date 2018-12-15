@@ -18,6 +18,7 @@ use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use AppBundle\Entity\User;
 use AppBundle\Entity\Profile;
+use AppBundle\Entity\CustomerContacts;
 use PDO;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -37,14 +38,15 @@ class CustomerController extends Controller
             $data = $jsontoarraygenerator->getJson($request);
             $currLoggedInUserId = $data->get('current_user_id');
             $currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
+            $contactInfo = $data->get('contacts');
             $company = trim($data->get('company'));
-            $fName = trim($data->get('fname'));
+//            $fName = !empty(trim($contactInfo[0]['fname']))?trim($contactInfo[0]['fname']):'';
             $passwd = password_hash('123456', PASSWORD_DEFAULT);
             $roleId = '11';
             $isActive = $data->get('is_active');
             $usrType = 'customer';
-            $phone = trim($data->get('phone'));
-            $email = trim($data->get('email'));
+//            $phone = !empty(trim($contactInfo[0]['phone']))?trim($contactInfo[0]['phone']):'';
+            $email = !empty(trim($contactInfo[0]['email']))?trim($contactInfo[0]['email']):'';
             $usrname = $email;
             $trmId = $data->get('term');
             $comment = trim($data->get('comment'));
@@ -55,43 +57,75 @@ class CustomerController extends Controller
             $prdArr = $data->get('products');
             $shipArr = $data->get('shipp');
             $is_checked = $data->get('is_checked');
-            
+            $isName=false;
+            $isPhone=false;
+            $isEmail=false;
+            $isPhoneExist=false;
+            $isEmailExist=false;
+            if(!empty($contactInfo)){
+                for($i=0;$i<count($contactInfo);$i++){
+                    if(empty(trim($contactInfo[$i]['fname']))){
+                        $isName=true;
+                    }
+                    if(is_numeric(trim($contactInfo[$i]['phone'])) && strlen(trim($contactInfo[$i]['phone'])) > 10){
+                        $isPhone=true;
+                    } else {
+                        if($this->checkIfPhoneExists($contactInfo[$i]['phone'])==true){
+                            $isPhoneExist=true;
+                        }
+                    }
+                    if(!filter_var(trim($contactInfo[$i]['email']),FILTER_VALIDATE_EMAIL )){
+                        $isEmail=true;
+                    } else {
+                        if($this->checkIfEmailExists($contactInfo[$i]['email'])==true){
+                            $isEmailExist=true;
+                        }
+                    }
+                }
+            }
             $datime = new \DateTime('now');
             $isValidShipAdd = $this->validateShippingAddress($shipArr);
             if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'You are not allowed to add customers';
             } else {
-                if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($email) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip)  || empty ($shipArr) || empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || empty (trim($shipArr[0]['salesTaxRate'])) || empty($isValidShipAdd)) {
+                if ( empty($company) || $isActive > 1 || empty ($trmId) ||
+                        empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip)  || empty ($shipArr) || 
+                        empty (trim($shipArr[0]['nickname'])) || empty (trim($shipArr[0]['street'])) || 
+                        empty (trim($shipArr[0]['city'])) || empty (trim($shipArr[0]['state'])) || 
+                        empty (trim($shipArr[0]['zip'])) || empty (trim($shipArr[0]['deliveryCharge'])) || 
+                        empty (trim($shipArr[0]['salesTaxRate'])) || empty($isValidShipAdd) || $isName==true 
+                ) {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'Please fill all required fields';
                 } else {
-                    if ( is_numeric($phone) && strlen($phone) > 10 ) {
+                    if ( $isPhone==true) {
                         $arrApi['status'] = 0;
                         $arrApi['message'] = 'Please enter correct phone number';
                     } else {
-                        if ( !filter_var($email,FILTER_VALIDATE_EMAIL )) {
+                        if ( $isEmail==true) {
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Invalid email address';
                         } else {
-                            $phoneCount = $this->checkIfPhoneExists($phone);
-                            if ($phoneCount) {
+//                            $phoneCount = $this->checkIfPhoneExists($phone);
+                            if ($isPhoneExist) {
                                 $arrApi['status'] = 0;
                                 $arrApi['message'] = 'Entered Phone number already exists.';
                             } else {
-                                $emailCount = $this->checkIfEmailExists($email);
-                                if ($emailCount) {
+//                                $emailCount = $this->checkIfEmailExists($email);
+                                if ($isEmailExist) {
                                     $arrApi['status'] = 0;
                                     $arrApi['message'] = 'Entered Email already exists.';
                                 } else {
-                                    $lastUserId = $this->saveCustomerData($usrname, $passwd, $roleId, $isActive, $datime, $usrType);
+                                    $lastUserId = $this->saveCustomerData($usrname, $passwd, $roleId, $isActive, $datime, 
+                                            $usrType);
                                     if (empty($lastUserId)) {
                                         $arrApi['status'] = 0;
                                         $arrApi['message'] = 'Error while adding customer.';
                                     } else {
                                         $arrApi['status'] = 1;
                                         $arrApi['message'] = 'Customer Added Successfully.';
-                                        $lstPrfId = $this->saveProfileData($lastUserId, $company, $fName, $email, $phone);
+                                        $lstPrfId = $this->saveProfileData($lastUserId, $company);
                                         if (empty($lstPrfId)) {
                                             $arrApi['profileMessage'] = 'Profile Data not saved.';
                                         } else {
@@ -99,6 +133,7 @@ class CustomerController extends Controller
                                             $this->saveBillingAddress($bStreet, $bCity, $bState, $bZip, $lastUserId, $datime);
                                             $this->saveShippingAddress($shipArr, $lastUserId, $datime);
                                             $this->saveDiscountData($prdArr, $lastUserId);
+                                            $this->saveCustomerContact($contactInfo,$lastUserId);
                                         }
                                     }
                                 }
@@ -120,22 +155,43 @@ class CustomerController extends Controller
     public function getCustomersAction(Request $request){
         if ($request->getMethod() == 'GET') {
             $arrApi = array();
-            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'),5);
+//            $users = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'),5);
+            $query = $this->getDoctrine()->getManager();
+            $users = $query->createQueryBuilder()
+                ->select(['u.id','p.company','u.createdAt','c.contactName as fname'])
+                ->from('AppBundle:User', 'u')
+                ->innerJoin('AppBundle:CustomerContacts', 'c', 'WITH', 'c.userId=u.id')
+                ->innerJoin('AppBundle:Profile', 'p', 'WITH', 'p.userId=u.id')
+                ->where("u.userType = 'customer'")
+                ->orderBy('u.id', 'DESC')
+                ->groupBy('c.userId')
+                ->setFirstResult(0)
+                ->setMaxResults(5)
+                ->getQuery()
+                ->getResult();
             if ( empty($users) ) {
                 $arrApi['status'] = 0;
                 $arrApi['message'] = 'There is no user.';
             } else {
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived the customers list.';
-                for ($i=0; $i<count($users); $i++) {
-                    $userId = $users[$i]->getId();
-                    if (!empty($userId)) {
-                        $arrApi['data']['customers'][$i]['id'] = $users[$i]->getId();
-                        $arrApi['data']['customers'][$i]['fname'] = $this->getFnameById($userId);
-                        $arrApi['data']['customers'][$i]['comapny'] = $this->getCompanyById($userId);
-                        $arrApi['data']['customers'][$i]['createdDate'] = $this->getCreatedDateById($userId);
-                    }
+                foreach ($users as $v) {
+                    $arrApi['data']['customers'][]=[
+                        'id'=>$v['id'],
+                        'fname'=>$v['fname'],
+                        'comapny'=>$v['company'],
+                        'createdDate'=>$v['createdAt']->format('m/d/Y')
+                    ];
                 }
+//                for ($i=0; $i<count($users); $i++) {
+//                    $userId = $users[$i]->getId();
+//                    if (!empty($userId)) {
+//                        $arrApi['data']['customers'][$i]['id'] = $users[$i]->getId();
+//                        $arrApi['data']['customers'][$i]['fname'] = $this->getFnameById($userId);
+//                        $arrApi['data']['customers'][$i]['comapny'] = $this->getCompanyById($userId);
+//                        $arrApi['data']['customers'][$i]['createdDate'] = $this->getCreatedDateById($userId);
+//                    }
+//                }
             }
             return new JsonResponse($arrApi);
         }
@@ -247,13 +303,15 @@ class CustomerController extends Controller
             try {
                 $jsontoarraygenerator = new JsonToArrayGenerator();
                 $data = $jsontoarraygenerator->getJson($request);
+                
+                $contactInfo = $data->get('contacts');
                 $userId = $data->get('customer_id');
                 $currLoggedInUserId = $data->get('current_user_id');
                 $currLoggedInUserRoleId = $this->getRoleIdByUserId($currLoggedInUserId);
                 $company = trim($data->get('company'));
-                $fName = trim($data->get('fname'));
+//                $fName = !empty(trim($contactInfo[0]['fname']))?trim($contactInfo[0]['fname']):'';
                 $isActive = $data->get('is_active');
-                $phone = trim($data->get('phone'));
+//                $phone = !empty(trim($contactInfo[0]['phone']))?trim($contactInfo[0]['phone']):'';
                 $trmId = $data->get('term');
                 $comment = trim($data->get('comment'));
                 $bStreet = trim($data->get('billingStreet'));
@@ -265,32 +323,69 @@ class CustomerController extends Controller
                 $datime = new \DateTime('now');
                 $is_checked = $data->get('is_checked');
                 $isValidShipAdd = $this->validateShippingAddress($shipArr);
+                $isName=false;
+                $isPhone=false;
+                $isEmail=false;
+                $isPhoneExist=false;
+                $isEmailExist=false;
+                if(!empty($contactInfo)){
+                    for($i=0;$i<count($contactInfo);$i++){
+                        if(empty(trim($contactInfo[$i]['fname']))){
+                            $isName=true;
+                        }
+                        if(is_numeric(trim($contactInfo[$i]['phone'])) && strlen(trim($contactInfo[$i]['phone'])) > 10){
+                            $isPhone=true;
+                        } else {
+                            if($this->checkIfOthrUsrHasThisPhone($contactInfo[$i]['phone'], $userId)==true){
+                                $isPhoneExist=true;
+                            }
+                        }
+                        if(!filter_var(trim($contactInfo[$i]['email']),FILTER_VALIDATE_EMAIL )){
+                            $isEmail=true;
+                        } else {
+                            if($this->checkIfOthrUsrHasThisEmail($contactInfo[$i]['email'], $userId)==true){
+                                $isEmailExist=true;
+                            }
+                        }
+                    }
+                }
+                
                 if ( empty($currLoggedInUserRoleId) || $currLoggedInUserRoleId != '1') {
                     $arrApi['status'] = 0;
                     $arrApi['message'] = 'You are not allowed to update customers';
                     $statusCode = 422;
                 } else {
-                    if ( empty($company) || $isActive > 1 || empty ($fName) || empty ($phone) || empty ($trmId) || empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty($isValidShipAdd) ) {
+                    if ( empty($company) || $isActive > 1 || empty ($trmId) || 
+                            empty ($bStreet) || empty ($bCity) || empty($bState) || empty ($bZip) || empty($isValidShipAdd) 
+                            || $isName==true 
+                    ) {
                         $arrApi['status'] = 0;
                         $arrApi['message'] = 'Please fill all required fields';
                     } else {
-                        if ( is_numeric($phone) && strlen($phone) > 10 ) {
+                        if ($isEmail==true) {
+                            $arrApi['status'] = 0;
+                            $arrApi['message'] = 'Invalid email address';
+                        } else if ($isEmailExist) {
+                            $arrApi['status'] = 0;
+                            $arrApi['message'] = 'Entered Email already exists.';
+                        } else if ($isPhone==true) {
                             $arrApi['status'] = 0;
                             $arrApi['message'] = 'Please enter correct phone number';
                         } else {
-                            $phoneCount = $this->checkIfOthrUsrHasThisPhone($phone, $userId);
-                            if ($phoneCount) {
+//                            $phoneCount = $this->checkIfOthrUsrHasThisPhone($phone, $userId);
+                            if ($isPhoneExist) {
                                 $arrApi['status'] = 0;
                                 $arrApi['message'] = 'Entered phone number already exists.';
 
                             } else {
                                 $arrApi['status'] = 1;
                                 $arrApi['message'] = 'Successfully updated customer data.';
-                                $this->updateUserRecord($isActive, $company, $fName, $phone, $datime, $userId);
-                                $this->updateBillingAddress($bStreet, $bCity, $bState, $bZip, $datime, $userId);
+                                //$this->updateUserRecord($isActive, $company, $datime, $userId);
+                                //$this->updateBillingAddress($bStreet, $bCity, $bState, $bZip, $datime, $userId);
                                 $this->updateShippingAddress($shipArr, $userId, $datime);
                                 $this->updateDiscountData($prdArr, $userId);
                                 $this->updateCustomerprofileData($trmId, $comment, $userId,$is_checked);
+                                $this->saveCustomerContact($contactInfo,$userId,'edit');
                             }
                         }
                     }
@@ -326,39 +421,190 @@ class CustomerController extends Controller
                 $statusCode = 422;
             } else {
                 if (empty($custName) && empty($sortBy) && empty($order)) {
-                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'), $limit, $offset);
+//                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array('id' => 'DESC'), $limit, $offset);
+//                    $query = $this->getDoctrine()->getManager();
+//                    $custData = $query->createQueryBuilder()
+//                            ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+//                            ->from('AppBundle:CustomerContacts', 'cc')
+//                            ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+//                            ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+//                            ->where("u.userType='customer'")
+//                            ->orderBy('cc.userId', 'DESC')
+//                            ->groupBy('u.id')
+//                            ->setFirstResult($offset)
+//                            ->setMaxResults($limit)
+//                            ->getQuery()
+//                            ->getResult()
+//                    ;
+//                    print_r($custData);die;
+                    $where="u.userType='customer'";
+                    $sort='cc.contactName';   
+                    $orderBy='ASC';
                 } else if (!empty($custName) && empty($sortBy) && empty($order)) {
-                    $custIds = $this->getCustomerIdsByNameLike($custName);
-                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds),array('id' => 'DESC'), $limit, $offset);
+                    
+//                    $custIds = $this->getCustomerIdsByNameLike($custName);
+//                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds),array('id' => 'DESC'), $limit, $offset);
+                    
+//                    $query = $this->getDoctrine()->getManager();
+//                    $custData = $query->createQueryBuilder()
+//                            ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+//                            ->from('AppBundle:CustomerContacts', 'cc')
+//                            ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+//                            ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+//                            ->where("u.userType='customer' and cc.contactName Like '".$custName."%'")
+//                            ->orderBy('cc.userId', 'DESC')
+//                            ->groupBy('u.id')
+//                            ->setFirstResult($offset)
+//                            ->setMaxResults($limit)
+//                            ->getQuery()
+//                            ->getResult()
+//                    ;
+//                    print_r($custData);die;
+                    $where="u.userType='customer' and cc.contactName Like '".$custName."%'";
+                    $sort='cc.userId';   
+                    $orderBy='DESC';
                 } else if (empty($custName) && !empty($sortBy) && !empty($order)) {
                     if ($sortBy == 'id' || $sortBy == 'createdAt') {
-                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'),array($sortBy => $order), $limit, $offset);
+//                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(
+//                        array('userType' => 'customer'),array($sortBy => $order), $limit, $offset);
+//                        print_r($custData);
+//                        $query = $this->getDoctrine()->getManager();
+//                        $custData = $query->createQueryBuilder()
+//                                ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+//                                ->from('AppBundle:CustomerContacts', 'cc')
+//                                ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+//                                ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+//                                ->where("u.userType='customer' and cc.contactName Like '".$custName."%'")
+//                                ->orderBy('u.'.$sortBy, $order)
+//                                ->groupBy('u.id')
+//                                ->setFirstResult($offset)
+//                                ->setMaxResults($limit)
+//                                ->getQuery()
+//                                ->getResult()
+//                        ;
+                        $where="u.userType='customer' and cc.contactName Like '".$custName."%'";
+                        $sort='u.'.$sortBy;   
+                        $orderBy=$order;
                     } else {
-                        $arrApi['data']['customers'] =  $this->getCustomersIdsOnSortedData($sortBy, $order);
-                        return new JsonResponse($arrApi, $statusCode);
-                        die;
+//                        $arrApi['data']['customers'] =  $this->getCustomersIdsOnSortedData($sortBy, $order);
+                        if($sortBy=='company'){
+                            $sort='p.company';
+                        } else if($sortBy=='fname'){
+                            $sort='cc.contactName';
+                        }
+                        $where="u.userType='customer' and cc.contactName Like '".$custName."%'";
+//                        $sort='u.'.$sortBy;   
+                        $orderBy=$order;
+//                        $query = $this->getDoctrine()->getManager();
+//                        $custData = $query->createQueryBuilder()
+//                                ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+//                                ->from('AppBundle:CustomerContacts', 'cc')
+//                                ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+//                                ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+//                                ->where("u.userType='customer' and cc.contactName Like '".$custName."%'")
+//                                ->orderBy($sortBy, $order)
+//                                ->groupBy('u.id')
+//                                ->setFirstResult($offset)
+//                                ->setMaxResults($limit)
+//                                ->getQuery()
+//                                ->getResult()
+//                        ;
+//                        print_r($custData);die;
+//                        die();
+//                        return new JsonResponse($arrApi, $statusCode);
+//                        die;
                         //$custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer','id' => $custIds));
                     }
                 } else if (!empty($custName) && !empty($sortBy) && !empty($order)) {
                     if ($sortBy == 'id' || $sortBy == 'createdAt') {
-                        $custIds = $this->getCustomerIdsByNameLike($custName);
-                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), array($sortBy => $order), $limit, $offset);
+//                        $custIds = $this->getCustomerIdsByNameLike($custName);
+//                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), array($sortBy => $order), $limit, $offset);
+//                        $query = $this->getDoctrine()->getManager();
+//                        $custData = $query->createQueryBuilder()
+//                                ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+//                                ->from('AppBundle:CustomerContacts', 'cc')
+//                                ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+//                                ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+//                                ->where("u.userType='customer' and cc.contactName Like '".$custName."%'")
+//                                ->orderBy('u.'.$sortBy, $order)
+//                                ->groupBy('u.id')
+//                                ->setFirstResult($offset)
+//                                ->setMaxResults($limit)
+//                                ->getQuery()
+//                                ->getResult()
+//                        ;
+                        $where="u.userType='customer' and cc.contactName Like '".$custName."%'";
+                        $sort='u.'.$sortBy;   
+                        $orderBy=$order;
                     } else {
-                        $custIds = $this->getSortedCustomerIds($custName, $sortBy, $order);
-                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), $limit, $offset);
+//                        $custIds = $this->getSortedCustomerIds($custName, $sortBy, $order);
+//                        $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer', 'id' => $custIds), $limit, $offset);
+                        if($sortBy=='company'){
+                            $sort='p.company';
+                        } else if($sortBy=='fname'){
+                            $sort='cc.contactName';
+                        }
+                        $where = "u.userType='customer' and cc.contactName Like '".$custName."%'"; 
+                        $orderBy=$order;
                     }
                 } else {
-                    $custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'), $limit, $offset);
+                    //$custData = $this->getDoctrine()->getRepository('AppBundle:User')->findBy(array('userType' => 'customer'), $limit, $offset);
+//                    $query = $this->getDoctrine()->getManager();
+//                    $custData = $query->createQueryBuilder()
+//                            ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+//                            ->from('AppBundle:CustomerContacts', 'cc')
+//                            ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+//                            ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+//                            ->where("u.userType='customer'")
+//                            ->orderBy('cc.userId', 'DESC')
+//                            ->groupBy('u.id')
+//                            ->setFirstResult($offset)
+//                            ->setMaxResults($limit)
+//                            ->getQuery()
+//                            ->getResult()
+//                    ;
+                    $sort='cc.contactName';   
+                    $orderBy='ASC';
+                    $where = "u.userType='customer'";
                 }
+                $query = $this->getDoctrine()->getManager();
+                if (empty($custName) && empty($sortBy) && empty($order)) {
+                    $custData = $query->createQueryBuilder()
+                        ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+                        ->from('AppBundle:CustomerContacts', 'cc')
+                        ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+                        ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+                        ->where("u.userType='customer' and cc.contactName Like '".$custName."%'")
+                        ->orderBy('u.id', 'DESC')
+                        ->groupBy('u.id')
+                        ->setFirstResult($offset)
+                        ->setMaxResults($limit)
+                        ->getQuery()
+                        ->getResult();
+                } else {
+                    $custData = $query->createQueryBuilder()
+                        ->select(['cc.contactName as fname','p.company','u.id','u.createdAt'])
+                        ->from('AppBundle:CustomerContacts', 'cc')
+                        ->leftJoin('AppBundle:User', 'u', 'WITH', "u.id = cc.userId")
+                        ->leftJoin('AppBundle:Profile', 'p', 'WITH', "u.id = p.userId")
+                        ->where("u.userType='customer' and cc.contactName Like '".$custName."%' OR p.company Like '".$custName."%'")
+                        ->orderBy($sort, $orderBy)
+                        ->groupBy('u.id')
+                        ->setFirstResult($offset)
+                        ->setMaxResults($limit)
+                        ->getQuery()
+                        ->getResult();
+                }
+                //print_r($custData);die;
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived customers list';
                 for ($i=0; $i<count($custData); $i++) {
-                    $userId = $custData[$i]->getId();
-                    if (!empty($userId)) {
-                        $arrApi['data']['customers'][$i]['id'] = $custData[$i]->getId();
-                        $arrApi['data']['customers'][$i]['fname'] = $this->getFnameById($userId);
-                        $arrApi['data']['customers'][$i]['comapny'] = $this->getCompanyById($userId);
-                        $arrApi['data']['customers'][$i]['createdDate'] = $this->getCreatedDateById($userId);
+//                    $userId = $custData[$i]->getId();
+                    if (!empty($custData[$i]['id'])) {
+                        $arrApi['data']['customers'][$i]['id'] = $custData[$i]['id'];
+                        $arrApi['data']['customers'][$i]['fname'] = $custData[$i]['fname'];
+                        $arrApi['data']['customers'][$i]['comapny'] = $custData[$i]['company'];
+                        $arrApi['data']['customers'][$i]['createdDate'] = $custData[$i]['createdAt']->format('m/d/Y');
                     }
                 }
             }
@@ -480,7 +726,7 @@ class CustomerController extends Controller
         $em->flush();
     }
 
-    private function updateUserRecord($isActive, $company, $fName, $phone, $datime, $userId) {
+    private function updateUserRecord($isActive, $company, $datime, $userId) {
         $em = $this->getDoctrine()->getManager();
         $user = $em->getRepository(User::class)->find($userId);
         $user->setIsActive($isActive);
@@ -490,8 +736,8 @@ class CustomerController extends Controller
         $profileId = $this->getProfileIdByUserId($userId);
         $profile = $em->getRepository(Profile::class)->find($profileId);
         $profile->setCompany($company);
-        $profile->setFname($fName);
-        $profile->setPhone($phone);
+//        $profile->setFname($fName);
+//        $profile->setPhone($phone);
         $em->persist($profile);
         $em->flush();
     }
@@ -511,26 +757,40 @@ class CustomerController extends Controller
     }
 
     private function updateShippingAddress($shipArr, $userId, $datime){
-        $deleteShipAdd = $this->deleteShippingAddressByUserId('shipping', $userId);
-        if ($deleteShipAdd) {
             $em = $this->getDoctrine()->getManager();
             foreach ($shipArr as $val) {
-                $addresses = new Addresses();
-                $addresses->setNickname(trim($val['nickname']));
-                $addresses->setStreet(trim($val['street']));
-                $addresses->setCity(trim($val['city']));
-                $addresses->setStateId(trim($val['state']));
-                $addresses->setZip(trim($val['zip']));
-                $addresses->setDeliveryCharge($this->formateDeliveryCharge(trim($val['deliveryCharge'])));
-                $addresses->setSalesTaxRate($this->formateSalestax(trim($val['salesTaxRate'])));
-                $addresses->setAddressType('shipping');
-                $addresses->setStatus(1);
-                $addresses->setUserId($userId);
-                $addresses->setUpdatedAt($datime);
-                $em->persist($addresses);
-                $em->flush();
+                if (empty($val['id'])) {
+                    $addresses = new Addresses();
+                    $addresses->setNickname(trim($val['nickname']));
+                    $addresses->setStreet(trim($val['street']));
+                    $addresses->setCity(trim($val['city']));
+                    $addresses->setStateId(trim($val['state']));
+                    $addresses->setZip(trim($val['zip']));
+                    $addresses->setDeliveryCharge($this->formateDeliveryCharge(trim($val['deliveryCharge'])));
+                    $addresses->setSalesTaxRate($this->formateSalestax(trim($val['salesTaxRate'])));
+                    $addresses->setAddressType('shipping');
+                    $addresses->setStatus(1);
+                    $addresses->setUserId($userId);
+                    $addresses->setUpdatedAt($datime);
+                    $em->persist($addresses);
+                    $em->flush();
+                } else {
+                    $addresses = $em->getRepository(Addresses::class)->find($val['id']);
+                    $addresses->setNickname(trim($val['nickname']));
+                    $addresses->setStreet(trim($val['street']));
+                    $addresses->setCity(trim($val['city']));
+                    $addresses->setStateId(trim($val['state']));
+                    $addresses->setZip(trim($val['zip']));
+                    $addresses->setDeliveryCharge($this->formateDeliveryCharge(trim($val['deliveryCharge'])));
+                    $addresses->setSalesTaxRate($this->formateSalestax(trim($val['salesTaxRate'])));
+                    $addresses->setAddressType('shipping');
+                    $addresses->setStatus(1);
+                    $addresses->setUserId($userId);
+                    $addresses->setUpdatedAt($datime);
+                    $em->persist($addresses);
+                    $em->flush();
+                }
             }
-        }
     }
 
     private function updateDiscountData($prdArr, $userId) {
@@ -683,19 +943,20 @@ class CustomerController extends Controller
         $user->setCreatedAt($datime);
         $user->setUpdatedAt($datime);
         $user->setUserType($usrType);
+        $user->setIsSalesman(0);
         $em->persist($user);
         $em->flush();
         return $user->getId();
     }
 
-    private function saveProfileData($lastUserId, $company, $fName, $email, $phone) {
+    private function saveProfileData($lastUserId, $company) {
         $em = $this->getDoctrine()->getManager();
         $profile = new Profile();
         $profile->setUserId($lastUserId);
         $profile->setCompany($company);
-        $profile->setFname($fName);
-        $profile->setEmail($email);
-        $profile->setPhone($phone);
+//        $profile->setFname($fName);
+//        $profile->setEmail($email);
+//        $profile->setPhone($phone);
         $em->persist($profile);
         $em->flush();
         return $profile->getId();
@@ -739,7 +1000,7 @@ class CustomerController extends Controller
 
     private function checkIfEmailExists($email) {
         $emailData = $this->getDoctrine()
-            ->getRepository('AppBundle:Profile')
+            ->getRepository('AppBundle:CustomerContacts')
             ->findOneBy(array('email' => $email));
         if (count($emailData) > 0 ) {
             return true;
@@ -750,7 +1011,7 @@ class CustomerController extends Controller
 
     private function checkIfPhoneExists($phone) {
         $phoneData = $this->getDoctrine()
-            ->getRepository('AppBundle:Profile')
+            ->getRepository('AppBundle:CustomerContacts')
             ->findOneBy(array('phone' => $phone));
         if (count($phoneData) > 0 ) {
             return true;
@@ -797,9 +1058,9 @@ class CustomerController extends Controller
                 $profileData = $this->getDoctrine()->getRepository('AppBundle:Profile')->findOneBy(array('userId' => $userId));
                 if (!empty($profileData)) {
                     $user['company'] = $profileData->getCompany();
-                    $user['fName'] = $profileData->getFname();
-                    $user['email'] = $profileData->getEmail();
-                    $user['phone'] = $profileData->getPhone();
+//                    $user['fName'] = $profileData->getFname();
+//                    $user['email'] = $profileData->getEmail();
+//                    $user['phone'] = $profileData->getPhone();
                 }
                 $customerProfileData = $this->getDoctrine()->getRepository('AppBundle:CustomerProfiles')->findOneBy(array('userId' => $userId));
                 if (!empty($customerProfileData)) {
@@ -817,7 +1078,7 @@ class CustomerController extends Controller
                 $add = $this->getDoctrine()->getRepository('AppBundle:Addresses')->findBy(array('userId' => $userId,'addressType'=>'shipping'));
                 if (!empty($add)) {
                     for ($i=0; $i < count($add); $i++) {
-                        //$user['shipp'][$i]['id'] = $add[$i]->getId();
+                        $user['shipp'][$i]['id'] = $add[$i]->getId();
                         $user['shipp'][$i]['nickname'] = $add[$i]->getNickname();
                         $user['shipp'][$i]['street'] = $add[$i]->getStreet();
                         $user['shipp'][$i]['city'] = $add[$i]->getCity();
@@ -840,6 +1101,19 @@ class CustomerController extends Controller
                         //$user['discount'][$i]['status'] = $discounts[$i]->getStatus();
                     }
                 }
+                $contact = $this->getDoctrine()->getRepository('AppBundle:CustomerContacts')->findBy(['userId' => $userId]);
+                $user['fname'] = $contact[0]->getContactName();
+                $user['email'] = $contact[0]->getEmail();
+                $user['phone'] = $contact[0]->getPhone();
+                if(!empty($contact)){
+                    $j=0;
+                    foreach ($contact as $v) {
+                        $user['contacts'][$j]['fname'] = $v->getContactName();
+                        $user['contacts'][$j]['email'] = $v->getEmail();
+                        $user['contacts'][$j]['phone'] = $v->getPhone();
+                        $j++;
+                    }
+                }                
                 return $user;
             }
         }
@@ -847,10 +1121,25 @@ class CustomerController extends Controller
 
     private function checkIfOthrUsrHasThisPhone($phone,$userId){
         $conn = $this->getDoctrine()->getConnection('default');
-        $SQL="select * from profiles WHERE user_id != :userid AND phone = :phone";
+        $SQL="select * from customer_contacts WHERE user_id != :userid AND phone = :phone";
         $stmt=$conn->prepare($SQL);
         $stmt->bindParam(':userid',$userId,PDO::PARAM_INT);
         $stmt->bindParam(':phone',$phone,PDO::PARAM_STR);
+        $stmt->execute();
+        $result = $stmt->fetchAll();
+        if (count($result) > 0 ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    private function checkIfOthrUsrHasThisEmail($email,$userId){
+        $conn = $this->getDoctrine()->getConnection('default');
+        $SQL="select * from customer_contacts WHERE user_id != :userid AND email = :email";
+        $stmt=$conn->prepare($SQL);
+        $stmt->bindParam(':userid',$userId,PDO::PARAM_INT);
+        $stmt->bindParam(':email',$email,PDO::PARAM_STR);
         $stmt->execute();
         $result = $stmt->fetchAll();
         if (count($result) > 0 ) {
@@ -943,5 +1232,27 @@ class CustomerController extends Controller
             }
         }
         return $res;
+    }
+    
+    private function saveCustomerContact($contactInfo,$lastUserId,$type=''){
+        if(!empty($contactInfo)){
+            $em = $this->getDoctrine()->getManager();
+            if(!empty($type) && $type == 'edit'){
+                $conn = $this->getDoctrine()->getConnection('default');
+                $SQL="delete from customer_contacts WHERE user_id = :userid";
+                $stmt=$conn->prepare($SQL);
+                $stmt->bindParam(':userid',$lastUserId,PDO::PARAM_INT);
+                $stmt->execute();
+            }
+            for ($i=0;$i<count($contactInfo);$i++){
+                $a = new CustomerContacts();
+                $a->setContactName($contactInfo[$i]['fname']);
+                $a->setEmail($contactInfo[$i]['email']);
+                $a->setPhone($contactInfo[$i]['phone']);
+                $a->setUserId($lastUserId);
+                $em->persist($a);
+                $em->flush();
+            }
+        }
     }
 }

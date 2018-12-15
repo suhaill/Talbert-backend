@@ -2,6 +2,8 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\SentQuotes;
+use AppBundle\Entity\MessageTemplates;
 use AppBundle\Service\JsonToArrayGenerator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -25,6 +27,7 @@ use AppBundle\Entity\Doors;
 use Knp\Snappy\Pdf;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use AppBundle\Entity\ShippedQuantity;
 
 use PDFMerger;
 
@@ -130,7 +133,7 @@ class OrderController extends Controller {
         $orderBy = trim($data->get('orderBy'));
         $requestColumnName = '';
         if ($columnName == '' || $columnName == 'customer') {
-            $columnName = 'u.fname';
+            $columnName = 'u.company';
         } else if ($columnName == 'estimatorId') {
             $columnName = 'q.controlNumber';
         } else if ($columnName == 'status') {
@@ -155,7 +158,7 @@ class OrderController extends Controller {
                 ->innerJoin('AppBundle:OrderStatus', 'os', 'WITH', "o.id = os.orderId")
                 ->leftJoin('AppBundle:Status', 's', 'WITH', "os.statusId=s.id ")
                 ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
-                ->where("o.isActive = 1 and q.status='Approved' and os.isActive=1 and s.id=5")
+                ->where("o.isActive = 1 and q.status = 'Approved' AND os.isActive=1 and s.id IN(5)")
                 ->orderBy($columnName, $orderBy)
                 ->getQuery()
                 ->getResult()
@@ -224,7 +227,8 @@ class OrderController extends Controller {
                 }
             }
             $this->updateQuoteData($quoteId);
-            $quoteData = $this->getOrderDataById($quoteId);//print_r($quoteData);die();
+            $quoteData = $this->getOrderDataById($quoteId);
+            //print_r($quoteData);die();
             $orderData = $this->getOrderDetailsById($quoteId);
             if (empty($quoteData)) {
                 $arrApi['status'] = 0;
@@ -234,8 +238,9 @@ class OrderController extends Controller {
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived order details';
                 $arrApi['data']['id'] = $quoteData->getId();
-                //$arrApi['data']['date'] = $quoteData->getEstimateDate();
-                $arrApi['data']['date'] = $quoteData->getUpdatedAt()->format('Y-m-d H:i:s');
+                $arrApi['data']['statusName'] = $this->getStatusNameByOrderId($quoteData->getId());
+                $arrApi['data']['date'] = $quoteData->getEstimateDate();
+                //$arrApi['data']['date'] = $quoteData->getUpdatedAt()->format('Y-m-d H:i:s');
                 $arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
                 $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
                 $arrApi['data']['version'] = $quoteData->getVersion();
@@ -258,7 +263,7 @@ class OrderController extends Controller {
                 $arrApi['data']['status'] = $quoteData->getStatus();
                 $arrApi['data']['comment'] = $quoteData->getComment();
                 $arrApi['data']['deliveryDate'] = $quoteData->getDeliveryDate();
-                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot()) ? str_replace(',', '', number_format($quoteData->getQuoteTot(), 0)) : '00.00';
+                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot()) ? str_replace(',', '', number_format($quoteData->getQuoteTot(), 2)) : '00.00';
                 $arrApi['data']['expFee'] = !empty($quoteData->getExpFee()) ? str_replace(',', '', number_format($quoteData->getExpFee(), 2)) : '00.00';
                 $arrApi['data']['discount'] = !empty($quoteData->getDiscount()) ? str_replace(',', '', number_format($quoteData->getDiscount(), 2)) : '00.00';
                 $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee()) ? str_replace(',', '', number_format($quoteData->getLumFee(), 2)) : '00.00';
@@ -266,7 +271,6 @@ class OrderController extends Controller {
                 $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax()) ? str_replace(',', '', number_format($quoteData->getSalesTax(), 2)) : '00.00';
                 $arrApi['data']['projectTot'] = ($quoteData->getProjectTot() != $quoteData->getShipCharge()) ? !empty($quoteData->getProjectTot()) ? str_replace(',', '', number_format($quoteData->getProjectTot(), 2)) : '00.00' : 0;
                 $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId);
-//                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId);
 //                $arrApi['data']['lineitems'] = $lineitems['lineItem'];
 //                $arrApi['data']['calSqrft'] = $lineitems['calSqrft'];
                 $arrApi['data']['orderDate'] = date("d.m.y",strtotime($orderData->getOrderDate()))." | ".date("h:i:s a",strtotime($orderData->getOrderDate()));
@@ -276,7 +280,7 @@ class OrderController extends Controller {
                     $b = ($qData['length'] + $qData['originalLengthFraction']);
                     $calSqrft += ($a*$b * $qData['quantity'])/144;
                 }
-                $arrApi['data']['calSqrft']= $calSqrft;
+                $arrApi['data']['calSqrft']= round($calSqrft);
                 if(count($arrApi['data']['lineitems'])==1){
                     if($arrApi['data']['lineitems'][0]['type']=='door'){
                         $arrApi['data']['ticketFlag']=false;
@@ -296,6 +300,30 @@ class OrderController extends Controller {
             throw $e->getMessage();
         }
         return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function getStatusNameByOrderId($orderId) {
+        $statusName = '';
+        $query = $this->getDoctrine()->getManager();
+        $order = $query->createQueryBuilder()
+                ->select(['o.id as orderId', 'q.controlNumber', 'q.version', 'q.customerId', 'q.estimatedate', 'q.id',
+                    'os.statusId',
+                    's.abbr as status',
+                    'u.company as companyname', 'u.fname', 'u.lname'
+                ])
+                ->from('AppBundle:Orders', 'o')
+                ->leftJoin('AppBundle:Quotes', 'q', 'WITH', "q.id = o.quoteId")
+                ->innerJoin('AppBundle:OrderStatus', 'os', 'WITH', "o.id = os.orderId")
+                ->leftJoin('AppBundle:Status', 's', 'WITH', "os.statusId=s.id ")
+                ->leftJoin('AppBundle:Profile', 'u', 'WITH', "q.customerId = u.userId")
+                ->where("o.isActive = 1 and q.status = 'Approved' AND os.isActive=1 AND o.quoteId=".$orderId)
+                ->getQuery()
+                ->getResult()
+        ;
+        if (!empty($order)) {
+            $statusName = $order[0]['status']; 
+        } 
+        return $statusName;               
     }
 
     /**
@@ -367,6 +395,14 @@ class OrderController extends Controller {
         return new JsonResponse($arrApi, $statusCode);
     }
 
+    private function getMessageTemplateforEmailQuote() {
+        $em = $this->getDoctrine()->getManager();
+        $messTemplate = $em->getRepository(MessageTemplates::class)->findOneById(1);
+        if (!empty($messTemplate)) {
+            return $messTemplate->getMessage();
+        }
+    }
+
     /**
      * @Route("/api/quote/emailOrder")
      * @Security("is_granted('ROLE_USER')")
@@ -385,14 +421,19 @@ class OrderController extends Controller {
         $msg = $_DATA['msg'];
         $cmt = $_DATA['cmt'];
         $chkVal = $_DATA['chkVal'];
-        $html = $_DATA['html'];
+        $html = $this->getOrderHtmlByOrderId($qId);
+        $orderData = $this->getOrderDataById($qId);
+        $controlNumber = $orderData->getControlNumber();
+        $version = $orderData->getVersion();
+        /* print_R($html);
+        die(); */
         $datime = new \DateTime('now');
-        if (empty($qId) || empty($currUserId) || empty($currUserEmail) || empty($custEmail) || empty($msg) || empty($html)) {
+       if (empty($qId) || empty($currUserId) || empty($currUserEmail) || empty($custEmail)) {
             $arrApi['status'] = 0;
             $arrApi['message'] = 'Parameter missing.';
             $statusCode = 422;
         } else {
-            $pdfName = 'uploads/order_screenshots/OrderPDF-' . $qId . '-' . time() . '.pdf';
+            $pdfName = 'uploads/order_screenshots/InvoicePDF-' . $qId . '-' . time() . '.pdf';
             $quotePdfUrl = $this->createOrderLineitemPDF($html, $pdfName, $request);
             $newMessage = $this->createMessageToBeSent($msg, $cmt);
             $urls = $this->getAttachmentUrls($chkVal, $request);
@@ -400,7 +441,8 @@ class OrderController extends Controller {
             $message = \Swift_Message::newInstance()
                     ->setFrom($currUserEmail)
                     ->setTo($custEmail)
-                    ->setSubject('Order Email')
+                    //->setSubject('Order Email')
+                    ->setSubject('Here\'s your Invoice from Talbert #'.$controlNumber.'-'.$version)
                     ->setBody($newMessage, 'text/plain');
             for ($i = 0; $i < count($urls); $i++) {
                 $message->attach(\Swift_Attachment::fromPath($urls[$i]));
@@ -425,13 +467,19 @@ class OrderController extends Controller {
     /**
      * @Route("/api/order/printWorkOrder")
      * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
      */
     public function testingAction(Request $request) {
         $images_destination = $this->container->getParameter('images_destination');
         $arrApi = array();
         $statusCode = 200;
+        $linItemArr = [];
         $_DATA = file_get_contents('php://input');
         $_DATA = json_decode($_DATA, true);
+        if (!empty($_DATA['linitemArr'])) {
+            $linitemArrStr = $_DATA['linitemArr'];
+            $linItemArr = $this->getLineItemArr($linitemArrStr);
+        }
         $quoteId = $_DATA['orderId'];
         $printType = ($_DATA['type'] == 'printShipper') ? 'SHIPPER' : (($_DATA['type'] == 'printInvoice') ? 'INVOICE' : 'ORDER');
         $orderData = $this->getOrderDetailsById($quoteId);
@@ -445,7 +493,17 @@ class OrderController extends Controller {
                 $arrApi['status'] = 1;
                 $arrApi['message'] = 'Successfully retreived quote details';
                 $arrApi['data']['id'] = $quoteData->getId();
-                $arrApi['data']['date'] = date("M d, Y",strtotime($quoteData->getEstimateDate()));
+               
+                if($printType == 'SHIPPER' ){
+                    date_default_timezone_set('America/Los_Angeles');
+                    $arrApi['data']['date'] = date("M d, Y");
+
+                }
+                else
+                {
+                    $arrApi['data']['date'] = date("M d, Y",strtotime($quoteData->getEstimateDate()));
+
+                }
                 $arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
                 $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
                 $arrApi['data']['version'] = $quoteData->getVersion();
@@ -480,8 +538,7 @@ class OrderController extends Controller {
                 } else {
                     $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
                 }
-//                $lineitems =  $this->getVeneerslistbyQuoteId($quoteId,$printType);
-                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId,$printType);;
+                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId,$printType,$linItemArr);
             }
         }
         catch(Exception $e) {
@@ -503,7 +560,7 @@ class OrderController extends Controller {
                     <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
                     <style>
                         body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:8pt; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
-                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;margin-bottom:18px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 4px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
                         table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}
                     </style>
                 </head>
@@ -533,7 +590,7 @@ class OrderController extends Controller {
                                                         <tr>
                                                             <td class='cellDescLbl'>Ship To</td>
                                                             <td class='cellDescTxt'>
-                                                            <h3>".$arrApi['data']['shipAdd']['nickname']."</h3>
+                                                            <h3>".$arrApi['data']['company']."</h3>
                                                             <p>".$arrApi['data']['shipAdd']['street']."</p>
                                                             <p>".$arrApi['data']['shipAdd']['city'].",".$arrApi['data']['shipAdd']['state']." ".$arrApi['data']['shipAdd']['zip']."</p>
                                                             </td>
@@ -558,8 +615,8 @@ class OrderController extends Controller {
                                     <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
                                     <style>
                                         body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:8pt; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
-                                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;margin-bottom:18px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
-                                        table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}
+                                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 4px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                                        table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}th.t-right,td.t-right{text-align:right !important;}
                                     </style>
                                 </head>
                                 <body>
@@ -592,7 +649,7 @@ class OrderController extends Controller {
                                             <th class='t-left'>Details</th>";
                                     if ($printType == 'ORDER' || $printType == 'INVOICE') {
                                         $htmlArr['body'] .= "<th>Unit Price</th>
-                                                  <th>Total</th>";
+                                                  <th class='t-right'>Total</th>";
                                     } else {
                                         $htmlArr['body'] .= "<th class='t-left qtyShipped'>Qty Shipped</th>";
                                     }
@@ -623,12 +680,28 @@ class OrderController extends Controller {
                         <td>".$qData['dimensions']."</td>
                         <td>".$qData['core']."</td>
                         ";
-            $htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])."|BE-".$this->getEdgeNameById($qData['bottomEdge'])."|RE-".$this->getEdgeNameById($qData['rightEdge'])."|LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+            //$htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])." | BE-".$this->getEdgeNameById($qData['bottomEdge'])." | RE-".$this->getEdgeNameById($qData['rightEdge'])." | LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+            
+            $edgeDetailValue1 = "<td class='t-left' style='width:250px'>Edge Detail: ";
+            $edgeDetailValue2 = '';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['topEdge']) != '') ? "TE-".$this->getEdgeNameById($qData['topEdge']):'';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['bottomEdge']) != '') ? " | BE-".$this->getEdgeNameById($qData['bottomEdge']):'';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['rightEdge']) != '') ? " | RE-".$this->getEdgeNameById($qData['rightEdge']):'';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['leftEdge']) != '') ? " | LE-".$this->getEdgeNameById($qData['leftEdge']):'';
+            //$edgeDetailValue2 .= "<br> : <td class='t-left'>";
+            if(ltrim( $edgeDetailValue2,' | ' ) != ''){
+                $htmlArr['body'] .= $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
+
+            }
+            else{
+                $htmlArr['body'] .= "<td class='t-left'>";
+            }
+
             $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
             if ($qData['finish'] == 'UV') {
-                $htmlArr['body'] .= "Finish: UV-".$qData['uvCuredId']."-".$qData['sheenId']." %-".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                $htmlArr['body'] .= "Finish: UV - ".$qData['uvCuredId']." - ".$qData['sheenId']." % - ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
             } elseif ($qData['finish'] == 'Paint') {
-                $htmlArr['body'] .= "Finish: Paint-".$qData['facPaint']."-".$qData['uvCuredId']."-".$qData['sheenId']." %".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+                $htmlArr['body'] .= "Finish: Paint - ".$qData['facPaint']." - ".$qData['uvCuredId']." - ".$qData['sheenId']." % ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
             }
             $htmlArr['body'] .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
             $htmlArr['body'] .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
@@ -655,7 +728,7 @@ class OrderController extends Controller {
                 }
             } else {
                 if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
-                    $htmlArr['body'] .= " <td>".$qData['quantity']."</td>
+                    $htmlArr['body'] .= " <td>".$qData['shipdQty']."</td>
                            </tr>";
                 } else {
                     $htmlArr['body'] .= " <td>BACK ORDERED</td>
@@ -669,7 +742,7 @@ class OrderController extends Controller {
                                 <table class='totalPrice'>
                                     <tr>";
         if ($printType == 'ORDER' || $printType == 'INVOICE') {
-            $htmlArr['body'] .= "<td>Special Tooling - Description</td><td class='price'>$350.00</td>";
+            $htmlArr['body'] .= "<td></td><td class='price'></td>";
         } else {
             $htmlArr['body'] .= "<td></td><td class='price'></td>";
         }
@@ -681,8 +754,458 @@ class OrderController extends Controller {
                                 <head>
                                     <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
                                     <style>
+                                        body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
+                                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 4px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;padding-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                                        table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}
+                                        td strong.totalPrice{font-size:16px;font-weight:700;}
+                                    </style>
+                                </head>
+                                <body>
+                    <div class=''>
+                        <div class='invoiceCtnr'>
+                                <div class='invoiceFooter'>
+                                <div class='custOdrDtls'>
+                                    <table style='width:100%'>
+                                        <tr>
+                                            <td><strong>Special Instructions:</strong> **".$arrApi['data']['comment']."**</td>
+                                            ";
+        if($printType == 'SHIPPER'){                                    
+            $htmlArr['footer'] .= "<td style='width: 70%;text-align:right;border:0px;'>Received by: <strong style='text-decoration:underline;padding:0 0 3px;margin:0 6px'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong>&nbsp;Date: <strong style='text-decoration:underline;padding:0 0 3px;margin:0 6px'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong></td>";
+        }
+        $htmlArr['footer'] .= "</tr>
+                                    </table>
+                                </div>
+                                <table class='invoiceFootBtm'>
+                                    <tr>
+                                        <td class='sideBox note'>
+                                            <div class='name'>Sold By: ".$arrApi['data']['salesman']."</div> 
+                                            <p>Talbert Architectural Panels &amp; Doors, Inc. assumes no liability beyond the replacement of individual items, but not to exceed the purchase price of said item.</p>
+                                            <p>For FSC Edgebanding. The claim for edgebanding is the same as the claim for the panels to which it is affixed.</p>
+                                        </td>                            
+                                        <td>
+                                            <div class='warnTxt'>
+                                                <h3>WARNING</h3>
+                                                <p>Drilling, Sawing, Sanding or machining wood products generate wood dust, a substance known to the State of California to cause cancer.</p>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class='approved'>
+                                                <p>Approved by: ".$orderData->getApprovedBy()." via ".$orderData->getVia()."</p>
+                                                <p>".date("d.m.y",strtotime($orderData->getOrderDate()))." | ".date("h:i:s a",strtotime($orderData->getOrderDate()))."</p>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <img src='".$images_destination."/fsc-order.png' alt=''>
+                                        </td>";
+                            if ($printType == 'ORDER' || $printType == 'INVOICE') {
+                                $htmlArr['footer'] .="<td class='sideBox'>
+                                            <table class='totalTxt'>
+                                                <tr>
+                                                    <td>Sub Total</td>
+                                                    <td>$".$arrApi['data']['quoteSubTot']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Expedite Fee</td>
+                                                    <td>$".$arrApi['data']['expFee']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Sale Tax</td>
+                                                    <td>$".$arrApi['data']['salesTax']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Shipping</td>
+                                                    <td>$".$arrApi['data']['shipCharge']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Lumber Fee</td>
+                                                    <td>$".$arrApi['data']['lumFee']."</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong class='totalPrice'>Total</strong></td>
+                                                    <td><strong class='totalPrice'>$".$arrApi['data']['projectTot']."</strong></td>
+                                                </tr>
+                                            </table>
+                                        </td>";
+                            } else {
+                                $htmlArr['footer'] .="<td class='sideBox'><table class='totalTxt'>
+                                                <tr><td></td><td></td></tr>
+                                                <tr><td></td><td></td></tr>
+                                                <tr><td></td><td></td></tr>
+                                                <tr><td></td><td></td></tr>
+                                                <tr><td><strong></strong></td><td><strong></strong></td></tr>
+                                            </table>
+                                        </td>";
+                            }
+                                        $htmlArr['footer'] .= "</tr></table></div>
+                                            </div>   
+                                        </div>
+                                    </body>
+                                </html>";
+
+        $snappy = $this->get('knp_snappy.pdf');
+        $snappy->setOption('header-html', $htmlArr['header']);
+        $snappy->setOption('footer-html', $htmlArr['footer']);
+        return new Response($snappy->getOutputFromHtml($htmlArr['body'], array('orientation'=>'Landscape',  'page-size' => 'Letter')), 200, array('Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Test.pdf"'));
+        //return new Response($snappy->getOutputFromHtml($html,array('orientation'=>'Landscape', 'page-size' => 'Letter')),200,array('Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Work-Order-Print.pdf"'));
+    }
+
+    /**
+     * @Route("/api/order/changeOrderStatus")
+     * @Method("POST")
+     */
+    public function changeOrderstatusAction(Request $request) {
+        $arrApi = array();
+        $arrApi['statusCode'] = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $quoteId  = $data->get('orderId');
+        $statusId = $data->get('statusId');
+        $arrApi = $this->changeStatusOfOrder($quoteId, $statusId);
+        return new JsonResponse($arrApi, $arrApi['statusCode']);
+    }
+
+    /**
+     * @Route("/api/order/deleteShipdQty")
+     * @Method("POST")
+     */
+    public function deleteQtyAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $shipdQtyId = $data->get('id');
+        $orderId = $data->get('orderId');
+        $lineitemId = $data->get('lineitemId');
+        $lineitemType = $data->get('lineitemType');
+        $qtyToBAddedToRem = $data->get('qtyShipped');
+        $isDeleted = $this->deleteShipdQtybyId($shipdQtyId);
+        if ($isDeleted) {
+            $isAdded = $this->addQtyToRemainingQty($qtyToBAddedToRem, $lineitemType, $lineitemId);
+            if ($isAdded) {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully deleted record'; 
+            } else {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'Remaining quantity can not be added'; 
+                $statusCode = 422;
+            }
+        }
+        return new JsonResponse($arrApi, $statusCode);
+    }
+
+    private function changeStatusOfOrder($quoteId, $statusId) {
+        $res = [];
+        $em = $this->getDoctrine()->getManager();
+        $order = $this->getDoctrine()->getRepository('AppBundle:Orders')->findOneBy(array('quoteId'=> $quoteId));
+        if (!empty($order)) {
+            $OrderStatus = $this->getDoctrine()->getRepository('AppBundle:OrderStatus')->findOneBy(array('orderId'=> $order->getId()));
+            if (!empty($OrderStatus)) {
+                $OrderStatus->setStatusId($statusId);
+                $OrderStatus->setUpdatedAt(new \DateTime('now'));
+                $em->persist($OrderStatus);
+                $em->flush();
+                $res['status'] = 1;
+                $res['message'] = 'Status has been changed';
+                $res['statusCode'] = 200;
+            } else {
+                $res['status'] = 0;
+                $res['message'] = 'There is no status of this order';
+                $res['statusCode'] = 422;
+            }
+        } else {
+            $res['status'] = 0;
+            $res['message'] = 'This order does not exists';
+            $res['statusCode'] = 422;
+        }
+        return $res;
+    }
+
+    private function convertToDecimal($fraction)
+    {
+        $numbers=explode("/",$fraction);
+        return round($numbers[0]/$numbers[1],6);
+    }
+
+    private function getOrderHtmlByOrderId($id){
+        $images_destination = $this->container->getParameter('images_destination');
+        $htmlArr = [];
+        $_DATA['orderId'] = $id;
+        $_DATA['type'] = "printInvoice";
+
+        $quoteId = $_DATA['orderId'];
+        $printType = ($_DATA['type'] == 'printShipper') ? 'SHIPPER' : (($_DATA['type'] == 'printInvoice') ? 'INVOICE' : 'ORDER');
+        $orderData = $this->getOrderDetailsById($quoteId);
+        try {
+            $quoteData = $this->getQuoteDataById($quoteId);
+            if (empty($quoteData)) {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'This quote does not exists';
+                $statusCode = 422;
+            } else {
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully retreived quote details';
+                $arrApi['data']['id'] = $quoteData->getId();
+               
+                if($printType == 'SHIPPER' ){
+                    date_default_timezone_set('America/Los_Angeles');
+                    $arrApi['data']['date'] = date("M d, Y");
+
+                }
+                else
+                {
+                    $arrApi['data']['date'] = date("M d, Y",strtotime($quoteData->getEstimateDate()));
+
+                }
+                $arrApi['data']['estimatorId'] = $quoteData->getEstimatorId();
+                $arrApi['data']['controlNumber'] = $quoteData->getControlNumber();
+                $arrApi['data']['version'] = $quoteData->getVersion();
+                $arrApi['data']['customer'] = $this->getCustomerNameById($quoteData->getCustomerId());
+                $arrApi['data']['company'] = $this->getCustomerCompanyById($quoteData->getCustomerId());
+                $arrApi['data']['userEmail'] = $this->getCustomerEmailById($quoteData->getEstimatorId());
+                $arrApi['data']['customerEmail'] = $this->getCustomerEmailById($quoteData->getCustomerId());
+                $arrApi['data']['customerId'] = $quoteData->getCustomerId();
+                $arrApi['data']['referenceNumber'] = ($quoteData->getRefNum()) ? 'PO-'.$quoteData->getRefNum() : 'None';
+                $arrApi['data']['salesman'] = $this->getSalesmanNameById($quoteData->getSalesmanId());
+                $arrApi['data']['salesmanId'] = $quoteData->getSalesmanId();
+                $arrApi['data']['job'] = ($quoteData->getJobName()) ? $quoteData->getJobName() : 'None';
+                $arrApi['data']['term'] = (string) $quoteData->getTermId();
+                $arrApi['data']['shipMethod'] = $this->getShipMethodNamebyId($quoteData->getShipMethdId());
+                $arrApi['data']['shipMethodId'] = $quoteData->getShipMethdId();
+                $arrApi['data']['billAdd'] = $this->getBillAddById($quoteData->getCustomerId());
+                $arrApi['data']['shipAdd'] = $this->getShippingAddById($quoteData->getShipAddId());
+                $arrApi['data']['shipAddId'] = $quoteData->getShipAddId();
+                $arrApi['data']['leadTime'] = $quoteData->getLeadTime();
+                $arrApi['data']['status'] = $quoteData->getStatus();
+                $arrApi['data']['comment'] = $quoteData->getComment();
+                $arrApi['data']['deliveryDate'] = date("M d, Y",strtotime($quoteData->getDeliveryDate()));
+                $arrApi['data']['quoteSubTot'] = !empty($quoteData->getQuoteTot())?str_replace(',','',number_format($quoteData->getQuoteTot(),2)):'00.00';
+                $arrApi['data']['expFee'] = !empty($quoteData->getExpFee())?str_replace(',','',number_format($quoteData->getExpFee(),2)):'00.00';
+                $arrApi['data']['discount'] = !empty($quoteData->getDiscount())?str_replace(',','',number_format($quoteData->getDiscount(),2)):'00.00';
+                $arrApi['data']['lumFee'] = !empty($quoteData->getLumFee())?str_replace(',','',number_format($quoteData->getLumFee(),2)):'00.00';
+                $arrApi['data']['shipCharge'] = !empty($quoteData->getShipCharge())?str_replace(',','',number_format($quoteData->getShipCharge(),2)):'00.00';
+                $arrApi['data']['salesTax'] = !empty($quoteData->getSalesTax())?str_replace(',','',number_format($quoteData->getSalesTax(),2)):'00.00';
+                $arrApi['data']['termName'] = $this->getTermName($quoteData->getTermId());
+                if ($quoteData->getQuoteTot() == 0) {
+                    $arrApi['data']['projectTot'] = '00.00';
+                } else {
+                    $arrApi['data']['projectTot'] = str_replace(',','',number_format($quoteData->getProjectTot(),2));
+                }
+                $arrApi['data']['lineitems'] = $this->getVeneerslistbyQuoteId($quoteId,$printType);
+            }
+        }
+        catch(Exception $e) {
+            throw $e->getMessage();
+        }
+
+        $calSqrft = 0;
+        foreach($arrApi['data']['lineitems'] as $key=>$qData){
+            $a = ($qData['width'] + $qData['originalWidthFraction']);
+            $b = ($qData['length'] + $qData['originalLengthFraction']);
+            $calSqrft += ($a*$b * $qData['quantity'])/144;
+        }
+
+        $htmlArr = [];
+
+        $htmlArr['header'] = "<!DOCTYPE html>
+                <html>
+                <head>
+                    <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
+                    <style>
+                        body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:8pt; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
+                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 4px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                        table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}
+                    </style>
+                </head>
+                <body>
+                    <div class=''>
+                        <div class='invoiceCtnr'>
+                            <table class='invoiceHeader'>
+                                <tr>
+                                    <td>
+                                        <div class='invLogo'><img src='".$images_destination."/logo-invoice.png' alt='Talbert: Architectural Panels and Doors'></div>
+                                        <table class='addressHldr'>
+                                            <tr>
+                                                <td class='addCell'>
+                                                    <table class='addCellDscHldr'>
+                                                        <tr>
+                                                            <td class='cellDescLbl'>Sold To</td>
+                                                            <td class='cellDescTxt'>
+                                                                <h3>".$arrApi['data']['company']."</h3>
+                                                                <p>".$arrApi['data']['billAdd']['street']."</p>
+                                                                <p>".$arrApi['data']['billAdd']['city'].",".$arrApi['data']['billAdd']['state']." ".$arrApi['data']['billAdd']['zip']."</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                                <td class='addCell'>
+                                                    <table class='addCellDscHldr'>
+                                                        <tr>
+                                                            <td class='cellDescLbl'>Ship To</td>
+                                                            <td class='cellDescTxt'>
+                                                            <h3>".$arrApi['data']['company']."</h3>
+                                                            
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td class='invCapt'>
+                                        <div class='captBTxt'>".$printType."</div>
+                                        <div class='subTxt'>O-".$arrApi['data']['controlNumber']."-".$arrApi['data']['version']."</div>
+                                        <p>".$arrApi['data']['date']." &nbsp;|&nbsp; Net 30 days</p>
+                                        <p><em>At Talbert Architectural <br>Your Total Satisfaction <br>is Our Goal!</em></p>
+                                    </td>
+                                </tr>
+                            </table></div></div></body></html>";
+                            
+                $htmlArr['body'] = "<!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
+                                    <style>
                                         body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:8pt; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
-                                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 8px;margin-bottom:18px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 4px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
+                                        table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}th.t-right,td.t-right{text-align:right !important;}
+                                    </style>
+                                </head>
+                                <body>
+                    <div class=''>
+                        <div class='invoiceCtnr'>
+                            <div class='custOdrDtls'>
+                                    <table>
+                                        <tr>
+                                            <td>Customer Reference: ".$arrApi['data']['referenceNumber']."</td>
+                                            <td>Job Name: ".$arrApi['data']['job']."</td>
+                                            <td>Delivery Date: ".$arrApi['data']['deliveryDate']."</td>
+                                            <td>Ship Via: ".$arrApi['data']['shipMethod']."</td>
+                                            <td>SqFt: ". round($calSqrft)."</td>
+                                        </tr>
+                                    </table>
+                            </div>
+                            <div class='itemListTablHldr'>
+                                <table class='prodItmLst'>
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Qty</th>
+                                            <th>Grain</th>
+                                            <th>Species</th>
+                                            <th>PTRN</th>
+                                            <th>Grd</th>
+                                            <th>Back</th>
+                                            <th>Dimensions</th>
+                                            <th>Core</th>
+                                            <th class='t-left'>Details</th>";
+                                    if ($printType == 'ORDER' || $printType == 'INVOICE') {
+                                        $htmlArr['body'] .= "<th>Unit Price</th>
+                                                  <th class='t-right'>Total</th>";
+                                    } else {
+                                        $htmlArr['body'] .= "<th class='t-left qtyShipped'>Qty Shipped</th>";
+                                    }
+
+        $htmlArr['body'] .= "</tr></thead><tbody>";
+
+        foreach($arrApi['data']['lineitems'] as $key=>$qData){
+
+            if($qData['type'] == 'plywood'){
+                $index = ($key+1)." P";
+            }
+            else if($qData['type'] == 'veneer'){
+                $index = ($key+1)." V";
+            }
+            else{
+                $index = ($key+1)." D";
+            }
+
+            $htmlArr['body'] .= "<tr>
+                        <th>".$index."</th>
+                        <td>".$qData['quantity']."</td>
+                        <td>".$qData['grain']."</td>
+                        <td>".$qData['species']."</td>
+                        <td>".$qData['pattern']."</td>
+                        <td>".$qData['grade']."</td>
+                        <td>".$qData['back']."</td>
+                        <!--<td>".$qData['width']."-".$qData['widthFraction']." x ".$qData['length']."-".$qData['lengthFraction']." x ".$qData['thickness']."</td>-->
+                        <td>".$qData['dimensions']."</td>
+                        <td>".$qData['core']."</td>
+                        ";
+            //$htmlArr['body'] .= ($qData['edgeDetail'] == 1) ? "<td class='t-left'>Edge Detail: TE-".$this->getEdgeNameById($qData['topEdge'])." | BE-".$this->getEdgeNameById($qData['bottomEdge'])." | RE-".$this->getEdgeNameById($qData['rightEdge'])." | LE-".$this->getEdgeNameById($qData['leftEdge'])."<br>" : "<td class='t-left'>";
+            $edgeDetailValue1 = " <td class='t-left' style='width:250px'>Edge Detail: ";
+            $edgeDetailValue2 = '';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['topEdge']) != '') ? "TE-".$this->getEdgeNameById($qData['topEdge']):'';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['bottomEdge']) != '') ? " | BE-".$this->getEdgeNameById($qData['bottomEdge']):'';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['rightEdge']) != '') ? " | RE-".$this->getEdgeNameById($qData['rightEdge']):'';
+            $edgeDetailValue2 .= ($qData['edgeDetail'] == 1 && $this->getEdgeNameById($qData['leftEdge']) != '') ? " | LE-".$this->getEdgeNameById($qData['leftEdge']):'';
+            //$edgeDetailValue2 .= "<br> : <td class='t-left'>";
+            if(ltrim( $edgeDetailValue2,' | ' ) != ''){
+                $htmlArr['body'] .= $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
+
+            }
+            else{
+                $htmlArr['body'] .= "<td class='t-left'>";
+            }
+
+            $htmlArr['body'] .= ($qData['milling'] == 1) ? "Miling: ".$qData['millingDescription'].' '.$this->getUnitNameById($qData['unitMesureCostId'])."<br>" : "";
+            if ($qData['finish'] == 'UV') {
+                $htmlArr['body'] .= "Finish: UV - ".$qData['uvCuredId']." - ".$qData['sheenId']." % - ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+            } elseif ($qData['finish'] == 'Paint') {
+                $htmlArr['body'] .= "Finish: Paint - ".$qData['facPaint']." - ".$qData['uvCuredId']." - ".$qData['sheenId']." % ".$qData['shameOnId'].$qData['coreSameOnbe'].$qData['coreSameOnte'].$qData['coreSameOnre'].$qData['coreSameOnle']."<br>";
+            }
+            $htmlArr['body'] .= ($qData['comment']) ? "Comment: ".$qData['comment']."<br>" : "";
+            $htmlArr['body'] .= ($qData['isLabels']) ? "Label:".$qData['autoNumber']."</td>" : "";
+
+            if ($printType == 'ORDER') {
+                if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
+                    $htmlArr['body'] .= "<td>$".$qData['unitPrice']."</td>
+                              <td>$".$qData['totalPrice']."</td>
+                              </tr>";
+                } else {
+                    $htmlArr['body'] .= "<td></td>
+                              <td>BACK ORDERED</td>
+                              </tr>";
+                }
+            } elseif ($printType == 'INVOICE') {
+                if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
+                    $htmlArr['body'] .= "<td>$".$qData['unitPrice']."</td>
+                              <td>$".$qData['totalPrice']."</td>
+                              </tr>";
+                } else {
+                    $htmlArr['body'] .= "<td></td>
+                              <td>BACK ORDERED</td>
+                              </tr>";
+                }
+            } else {
+                if ($qData['isGreyedOut'] != 'LineItemBackOrder') {
+                    $htmlArr['body'] .= " <td>".($qData['quantity'] - $qData['quantityRemaining'])."</td>
+                           </tr>";
+                } else {
+                    $htmlArr['body'] .= " <td>BACK ORDERED</td>
+                           </tr>";
+                }
+            }
+        }
+
+        $htmlArr['body'] .= "</tbody>
+                                </table>
+                                <table class='totalPrice'>
+                                    <tr>";
+        if ($printType == 'ORDER' || $printType == 'INVOICE') {
+            $htmlArr['body'] .= "<td></td><td class='price'></td>";
+        } else {
+            $htmlArr['body'] .= "<td></td><td class='price'></td>";
+        }
+        $htmlArr['body'] .= "</tr></table>
+                            </div></div></div></body></html>";
+
+        $htmlArr['footer'] = "<!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet'>
+                                    <style>
+                                        body{font-family:'Roboto Condensed',sans-serif;font-weight:400;line-height:1.4;font-size:14px;}table{width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 15px;}body h1,body h2,body h3,body label,body strong,table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e ;}table h3{font-size:16px;color:#272425;}table.invoiceHeader table{margin:0;}
+                                        .invoiceWrap{width:1100px;margin:auto;border:solid 1px #7f7d7e;padding:18px 22px;}.invoiceHeader td{vertical-align:top;}.invCapt{width:170px;text-align:center;}.captBTxt{font-size:36px;color:#919396;text-transform:uppercase;line-height:1;}.subTxt{font-size:18px;color:#919396;margin:0 0 6px;}.invCapt p{color:#434041;font-size:13px;margin:0 0 12px;}.invCapt p:last-of-type{margin:0;}.invLogo{margin:0 0 20px;line-height:0;}.addressHldr .addCell{width:50%;padding:0;}.addCellDscHldr td.cellDescLbl{width:96px;text-align:right;padding:0 8px 0 0;vertical-align:middle;color:#a9abad;font-size:11px;text-transform:uppercase;}.addCellDscHldr td.cellDescTxt{padding:0 8px;border-left:solid 2px #918f90;vertical-align:top;}.addCellDscHldr td.cellDescTxt h3,.addCellDscHldr td.cellDescTxt p{margin:0;padding:0;}.addCellDscHldr td.cellDescTxt p{font-size:14px;}.custOdrDtls{padding:10px 0 4px;border-bottom:solid 1px #a0a0a0;color:#000000;font-size:13px;}.custOdrDtls p{margin:0;padding:0;}.custOdrDtls table{width:auto;margin:0;}.custOdrDtls table td{padding:0 14px;border-left:solid 1px #a0a0a0;}.custOdrDtls table td:first-child{padding-left:0;border-left:0;}table.prodItmLst th,table.prodItmLst td{font-family:'Roboto Condensed',sans-serif; font-size:14px; color:#302d2e; text-align:center;padding:3px 6px;vertical-align:top;font-weight:400;}table.prodItmLst th.t-left,table.prodItmLst td.t-left{text-align:left;}table.prodItmLst th{color:#ababab;}table.prodItmLst td{color:#302d2e;}table.prodItmLst td a{color:#302d2e !important;text-decoration:none;}.invoiceCtnr table.prodItmLst td a:hover{color:#000000;}table.prodItmLst td:first-child{text-align:left;}table.prodItmLst td:last-child{text-align:right;}table.prodItmLst tr th,table.prodItmLst tr td{border-bottom:solid 1px #a0a0a0;}table.invoiceFootBtm td{vertical-align:top;color:#171717;font-size:13px;padding:3px 8px;}table.invoiceFootBtm td.sideBox{width:220px;}td.midDesc{text-align:center;}.sideBox .name{margin:0 0 12px;font-weight:700;text-align:left;padding-left:10px;}.invoiceFooter .custOdrDtls{margin-bottom:12px;}.invoiceFooter table{margin:0;}.sideBox .totalTxt td{color:#222222;font-size:14px;padding:0;text-align:right;}.sideBox table.totalTxt tr td:last-child{padding-right:0;}.midDescTxt{width:535px;margin:auto;font-size:11px;padding:4px 0 0;}.midDescTxt p{margin:0 0 8px;}.warnTxt{background-color:#e5e5e6;padding:4px 12px;width:250px;text-align:center;}.warnTxt p{margin:0;padding:0;font-size:11px;font-weight:700;}.warnTxt h3{font-size:18px;text-transform:uppercase;margin:0;padding:0;color:#7a7b7e;}table.totalPrice td{font-size:12px;color:#000000;padding:3px 6px;vertical-align:top;text-align:right;font-weight:400;}table.totalPrice td.price{width:110px;}.invoiceFooter{border-top:solid 1px #a0a0a0;padding-top:8px;}table.invoiceFootBtm td.sideBox.note{text-align:center;width:320px;}.sideBox.note p{font-size:10px;margin:0 0 4px;font-weight:400;}td .approved{border:solid 1px #a0a0a0;padding:10px;font-size:12px;width:200px;text-align:center;}.t-center{text-align:center;}td .approved p{margin:0;}
                                         table.prodItmLst th.qtyShipped{color:#302d2e; text-align: right; font-weight:300; font-size:16px;}
                                     </style>
                                 </head>
@@ -690,13 +1213,13 @@ class OrderController extends Controller {
                     <div class=''>
                         <div class='invoiceCtnr'>
                                 <div class='invoiceFooter'>
-                                <!--<div class='custOdrDtls'>
+                                <div class='custOdrDtls'>
                                     <table>
                                         <tr>
                                             <td><strong>Special Instructions:</strong> **".$arrApi['data']['comment']."**</td>
                                         </tr>
                                     </table>
-                                </div> -->
+                                </div>
                                 <table class='invoiceFootBtm'>
                                     <tr>
                                         <td class='sideBox note'>
@@ -754,23 +1277,13 @@ class OrderController extends Controller {
                                             </table>
                                         </td>";
                             }
-        $htmlArr['footer'] .= "</tr></table></div>
-                                                            </div>   
-                                                        </div>
-                                                    </body>
-                                                </html>";
+                                $htmlArr['footer'] .= "</tr></table></div>
+                                    </div>   
+                                </div>
+                            </body>
+                        </html>";
 
-        $snappy = $this->get('knp_snappy.pdf');
-        $snappy->setOption('header-html', $htmlArr['header']);
-        $snappy->setOption('footer-html', $htmlArr['footer']);
-        return new Response($snappy->getOutputFromHtml($htmlArr['body'], array('orientation'=>'Landscape',  'page-size' => 'Letter')), 200, array('Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Test.pdf"'));
-        //return new Response($snappy->getOutputFromHtml($html,array('orientation'=>'Landscape', 'page-size' => 'Letter')),200,array('Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="Work-Order-Print.pdf"'));
-    }
-
-    private function convertToDecimal($fraction)
-    {
-        $numbers=explode("/",$fraction);
-        return round($numbers[0]/$numbers[1],6);
+        return $htmlArr;
     }
 
     private function getOrderDetailsById($orderId) {
@@ -1170,13 +1683,23 @@ class OrderController extends Controller {
     }
 
     private function createOrderLineitemPDF($html, $pdfName, $request) {
-        $fs = new Filesystem();
+        /* $fs = new Filesystem();
         $snappy = new Pdf('../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename=$pdfName');
         $snappy->generateFromHtml($html, $pdfName);
         $fs->chmod($pdfName, 0777);
         return 'http://' . $request->getHost() . '/' . $request->getBasePath() . '/' . $pdfName;
+         */
+        $fs = new Filesystem();
+        $snappy = new Pdf(  '../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename=$pdfName');
+        $snappy->setOption('header-html', $html['header']);
+        $snappy->setOption('footer-html', $html['footer']);
+        $snappy->generateFromHtml($html['body'], $pdfName, array('orientation'=>'Landscape', 'page-size' => 'Letter'));
+        $fs->chmod($pdfName, 0777);
+        return 'http://'.$request->getHost().'/'.$request->getBasePath().'/'.$pdfName;
     }
 
     private function createMessageToBeSent($msg, $cmt) {
@@ -1294,14 +1817,13 @@ class OrderController extends Controller {
         }
     }
 
-    private function getVeneerslistbyQuoteId($qId,$printType=null) {
-        
+    private function getVeneerslistbyQuoteId($qId,$printType=null,$linItemArr=null) {
         $query = $this->getDoctrine()->getManager();
 
         if($printType == 'SHIPPER'){
            
             $plywoodRecords = $query->createQueryBuilder()
-            ->select(['p.id, p.quantity, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName','p.millingDescription'])
+            ->select(['p.id, p.quantity, p.quantityRemaining, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName','p.millingDescription'])
             ->from('AppBundle:Plywood', 'p')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1313,15 +1835,15 @@ class OrderController extends Controller {
             ->addSelect(['pat.name as pattern'])
             ->leftJoin('AppBundle:BackerGrade', 'bgrd', 'WITH', "p.backerId = bgrd.id")
             ->addSelect(['bgrd.name as backerName'])
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId and p.isActive=1 AND s.statusName !='LineItemBackOrder'")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND p.quoteId = :quoteId and p.isActive=1 AND s.statusName !='LineItemBackOrder' AND p.id IN(".$linItemArr['pIdStr'].")")
             ->orderBy('p.id','ASC')
             ->setParameter('quoteId', $qId)
             ->setParameter('lineItemType', 'Plywood')
             ->getQuery()
             ->getResult();
-
+            
             $veneerRecords = $query->createQueryBuilder()
-            ->select(['v.id, v.quantity, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName',"'' as millingDescription"])
+            ->select(['v.id, v.quantity, v.quantityRemaining, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName',"'' as millingDescription"])
             ->from('AppBundle:Veneer', 'v')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1335,29 +1857,30 @@ class OrderController extends Controller {
             ->addSelect(['b.name as backerName'])
             ->leftJoin('AppBundle:CoreType', 'ct', 'WITH', "ct.id = v.coreTypeId")
             ->addSelect(['ct.name as coreType'])
-            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND v.quoteId = :quoteId and v.isActive=1 AND s.statusName !='LineItemBackOrder'")
+            ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND v.quoteId = :quoteId and v.isActive=1 AND s.statusName !='LineItemBackOrder' AND v.id IN(".$linItemArr['vIdStr'].")")
             ->orderBy('v.id','ASC')
             ->setParameter('quoteId', $qId)
             ->setParameter('lineItemType', 'Veneer')
             ->getQuery()
             ->getResult();
+
             $doorRecords = $query->createQueryBuilder()
-                ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType,d.millingDescription'])
+                ->select(['d.id, d.qty, d.quantityRemaining, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType,d.millingDescription'])
                 ->from('AppBundle:Doors', 'd')
                 ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
                 ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
-                ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND d.quoteId = :quoteId and d.status=1 AND s.statusName !='LineItemBackOrder'")
+                ->where("s.isActive = 1 and lis.isActive=1 AND lis.lineItemType= :lineItemType AND d.quoteId = :quoteId and d.status=1 AND s.statusName !='LineItemBackOrder' AND d.id IN(".$linItemArr['dIdStr'].")")
                 ->orderBy('d.id','ASC')
                 ->setParameter('quoteId', $qId)
                 ->setParameter('lineItemType', 'Door')
                 ->getQuery()
                 ->getResult();
         }
-        else{
-
+        else
+        {
 
             $plywoodRecords = $query->createQueryBuilder()
-            ->select(['p.id, p.quantity, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName,p.millingDescription'])
+            ->select(['p.id, p.quantity, p.quantityRemaining, p.speciesId, p.patternId,p.patternMatch, p.gradeId,p.backerId,p.finishThickId,p.finishThickType, p.finThickFraction, p.plywoodWidth, p.plywoodLength, p.coreType,p.sellingPrice,p.totalCost,p.widthFraction, p.lengthFraction,p.grainPatternId,p.backOrderEstNo,p.edgeDetail,p.topEdge,p.bottomEdge,p.rightEdge,p.leftEdge,p.milling,p.unitMesureCostId,p.finish,p.comments,p.uvCuredId,p.sheenId,p.shameOnId,p.coreSameOnbe,p.coreSameOnte,p.coreSameOnre,p.coreSameOnle,p.facPaint,p.isLabels, p.autoNumber, p.coreType,s.statusName,p.millingDescription'])
             ->from('AppBundle:Plywood', 'p')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = p.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1376,7 +1899,7 @@ class OrderController extends Controller {
             ->getQuery()
             ->getResult();
         $veneerRecords = $query->createQueryBuilder()
-            ->select(['v.id, v.quantity, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName',"'' as millingDescription"])
+            ->select(['v.id, v.quantity, v.quantityRemaining, v.speciesId, v.patternId,v.patternId, v.gradeId, v.backer, v.thicknessId,v.width, v.length,v.coreTypeId,v.sellingPrice,v.totalCost,v.widthFraction, v.lengthFraction,v.grainPatternId,v.backOrderEstNo, v.comments,s.statusName',"'' as millingDescription"])
             ->from('AppBundle:Veneer', 'v')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1397,7 +1920,7 @@ class OrderController extends Controller {
             ->getQuery()
             ->getResult();
         $doorRecords = $query->createQueryBuilder()
-            ->select(['d.id, d.qty, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType,d.millingDescription'])
+            ->select(['d.id, d.qty, d.quantityRemaining, d.width, d.length,d.widthFraction, d.lengthFraction,d.finishThickType,d.finishThickId,d.finThickFraction,d.backOrderEstNo, d.edgeFinish,d.topEdge,d.bottomEdge,d.rightEdge,d.leftEdge,d.milling,d.unitMesureCostId,d.finish,d.uvCured,d.sheen,d.sameOnBack,d.sameOnBottom,d.sameOnTop,d.sameOnRight,d.sameOnLeft,d.facPaint,d.comment,d.isLabel,d.autoNumber,s.statusName,d.coreType,d.millingDescription'])
             ->from('AppBundle:Doors', 'd')
             ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = d.id")
             ->leftJoin('AppBundle:Status', 's', 'WITH', "s.id = lis.statusId")
@@ -1430,9 +1953,11 @@ class OrderController extends Controller {
                         $thickness=$p['finishThickId'].' '.$p['finishThickType'];
                     }
                     $lineItem[$i]['id'] = $p['id'];
+                    $lineItem[$i]['shipdQty'] = $this->getLineItemQtyForShipper($qId , $p['id'], 'Plywood');
                     $lineItem[$i]['type'] = 'plywood';
                     $lineItem[$i]['url'] = 'line-item/edit-plywood';
                     $lineItem[$i]['quantity'] = $p['quantity'];
+                    $lineItem[$i]['quantityRemaining'] = $p['quantityRemaining'];
                     $lineItem[$i]['species'] = $this->getSpeciesNameById($p['speciesId']);
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($p['patternMatch']);
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($p['gradeId']))[0];
@@ -1450,6 +1975,16 @@ class OrderController extends Controller {
                     $lineItem[$i]['originalLengthFraction'] = ($p['lengthFraction']);                    
                     $lineItem[$i]['grain'] = $this->getGrainNameById($p['patternId']);
                     $lineItem[$i]['edgeDetail'] = ($p['edgeDetail']) ? 1 : 0;
+
+                    $edgeDetailValue1 = ' ';
+                    $edgeDetailValue2 = '';
+                    $edgeDetailValue2 .= ($p['edgeDetail'] == 1 && $this->getEdgeNameById($p['topEdge']) != '') ? "TE-".$this->getEdgeNameById($p['topEdge']):'';
+                    $edgeDetailValue2 .= ($p['edgeDetail'] == 1 && $this->getEdgeNameById($p['bottomEdge']) != '') ? " | BE-".$this->getEdgeNameById($p['bottomEdge']):'';
+                    $edgeDetailValue2 .= ($p['edgeDetail'] == 1 && $this->getEdgeNameById($p['rightEdge']) != '') ? " | RE-".$this->getEdgeNameById($p['rightEdge']):'';
+                    $edgeDetailValue2 .= ($p['edgeDetail'] == 1 && $this->getEdgeNameById($p['leftEdge']) != '') ? " | LE-".$this->getEdgeNameById($p['leftEdge']):'';
+
+                    $lineItem[$i]['edgeDetailValue'] = $edgeDetailValue1.ltrim( $edgeDetailValue2,' | ' );
+
                     $lineItem[$i]['topEdge'] = $p['topEdge'];
                     $lineItem[$i]['bottomEdge'] = $p['bottomEdge'];
                     $lineItem[$i]['rightEdge'] = $p['rightEdge'];
@@ -1459,11 +1994,11 @@ class OrderController extends Controller {
                     $lineItem[$i]['finish'] = $p['finish'];
                     $lineItem[$i]['uvCuredId'] = $this->getUVCuredNameById($p['uvCuredId']);
                     $lineItem[$i]['sheenId'] = $this->getSheenById($p['sheenId']);
-                    $lineItem[$i]['shameOnId'] = ($p['shameOnId']) ? 'BS' : '';
-                    $lineItem[$i]['coreSameOnbe'] = ($p['coreSameOnbe']) ? ',BE' : '';
-                    $lineItem[$i]['coreSameOnte'] = ($p['coreSameOnte']) ? ',TE' : '';
-                    $lineItem[$i]['coreSameOnre'] = ($p['coreSameOnre']) ? ',RE' : '';
-                    $lineItem[$i]['coreSameOnle'] = ($p['coreSameOnle']) ? ',LE' : '';
+                    $lineItem[$i]['shameOnId'] = ($p['shameOnId']) ? ' BS' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($p['coreSameOnbe']) ? ', BE' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($p['coreSameOnte']) ? ', TE' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($p['coreSameOnre']) ? ', RE' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($p['coreSameOnle']) ? ', LE' : '';
                     $lineItem[$i]['facPaint'] = $this->getFacPaintById($p['facPaint']);
                     $lineItem[$i]['isLabels'] = $p['isLabels'];
                     $lineItem[$i]['autoNumber'] = $this->getFirstLabel($p['autoNumber']);
@@ -1490,9 +2025,11 @@ class OrderController extends Controller {
                 foreach ($veneerRecords as $v) {
 //                    $calSqrftV += ((float)($v['width'] + $v['widthFraction'])*(float)($v['length'] + $v['lengthFraction']));
                     $lineItem[$i]['id'] = $v['id'];
+                    $lineItem[$i]['shipdQty'] = $this->getLineItemQtyForShipper($qId , $v['id'], 'Veneer');
                     $lineItem[$i]['type'] = 'veneer';
                     $lineItem[$i]['url'] = 'line-item/edit-veneer';
                     $lineItem[$i]['quantity'] = $v['quantity'];
+                    $lineItem[$i]['quantityRemaining'] = $v['quantityRemaining'];
                     $lineItem[$i]['species'] = $this->getSpeciesNameById($v['speciesId']);
                     $lineItem[$i]['pattern'] = $this->getPatternNameById($v['patternId']);
                     $lineItem[$i]['grade'] = explode('-', $this->getGradeNameById($v['gradeId']))[0];
@@ -1568,9 +2105,11 @@ class OrderController extends Controller {
                         $thickness=$d['finishThickId'].' '.$d['finishThickType'];
                     }
                     $lineItem[$i]['id'] = $d['id'];
+                    $lineItem[$i]['shipdQty'] = $this->getLineItemQtyForShipper($qId , $d['id'], 'Door');
                     $lineItem[$i]['type'] = 'door';
                     $lineItem[$i]['url'] = 'door/edit-door';
                     $lineItem[$i]['quantity'] = $d['qty'];
+                    $lineItem[$i]['quantityRemaining'] = $d['quantityRemaining'];
                     if ($this->getSpeciesNameById($this->getSpeciesIdByDoorId($d['id'])) == null) {
                         $lineItem[$i]['grain'] = 'Other';
                         $lineItem[$i]['species'] = 'Other';
@@ -1602,11 +2141,11 @@ class OrderController extends Controller {
                     $lineItem[$i]['finish'] = $d['finish'];
                     $lineItem[$i]['uvCuredId'] = $this->getUVCuredNameById($d['uvCured']);
                     $lineItem[$i]['sheenId'] = $this->getSheenById($d['sheen']);
-                    $lineItem[$i]['shameOnId'] = ($d['sameOnBack']) ? 'BS' : '';
-                    $lineItem[$i]['coreSameOnbe'] = ($d['sameOnBottom']) ? ',BE' : '';
-                    $lineItem[$i]['coreSameOnte'] = ($d['sameOnTop']) ? ',TE' : '';
-                    $lineItem[$i]['coreSameOnre'] = ($d['sameOnRight']) ? ',RE' : '';
-                    $lineItem[$i]['coreSameOnle'] = ($d['sameOnLeft']) ? ',LE' : '';
+                    $lineItem[$i]['shameOnId'] = ($d['sameOnBack']) ? ' BS' : '';
+                    $lineItem[$i]['coreSameOnbe'] = ($d['sameOnBottom']) ? ', BE' : '';
+                    $lineItem[$i]['coreSameOnte'] = ($d['sameOnTop']) ? ', TE' : '';
+                    $lineItem[$i]['coreSameOnre'] = ($d['sameOnRight']) ? ', RE' : '';
+                    $lineItem[$i]['coreSameOnle'] = ($d['sameOnLeft']) ? ', LE' : '';
                     $lineItem[$i]['facPaint'] = $this->getFacPaintById($d['facPaint']);
                     $lineItem[$i]['isLabels'] = $d['isLabel'];
                     $lineItem[$i]['autoNumber'] = $this->getFirstLabel($d['autoNumber']);
@@ -1795,16 +2334,13 @@ class OrderController extends Controller {
     private function updateQuoteData($quoteId) {
         $salesTaxRate = 0;
         $salesTaxAmount = 0;
-        $quoteSubTotal = $this->getPlywoodSubTotalByQuoteId($quoteId) + $this->getVeneerSubTotalByQuoteId($quoteId);
+        $quoteSubTotal = $this->getPlywoodSubTotalByQuoteId($quoteId) + $this->getVeneerSubTotalByQuoteId($quoteId) + $this->getDoorSubTotalByQuoteId($quoteId);
         $quoteData = $this->getOrderDataById($quoteId);
-        $shipAddId = $quoteData->getShipAddId();
+        $shipCharge = $quoteData->getShipCharge();
         $expFee = $quoteData->getExpFee();
         $discount = $quoteData->getDiscount();
-        if (!empty($shipAddId)) {
-            $salesTaxRate = $this->getSalesTaxRateByAddId($shipAddId);
-        }
-        $salesTaxAmount = (($quoteSubTotal + $expFee - $discount ) * ($salesTaxRate)) / 100;
-        $shipCharge = $this->getShippingChargeByAddId($shipAddId);
+        $salesTaxRate = $quoteData->getSalesTaxRate();
+        $salesTaxAmount = (($quoteSubTotal) * ($salesTaxRate)) / 100;
         $lumFee = $this->getPlywoodLumberFeeByQuoteId($quoteId) + $this->getVeneerLumberFeeByQuoteId($quoteId);
         $projectTotal = ($quoteSubTotal + $expFee - $discount + $salesTaxAmount + $shipCharge + $lumFee);
         $this->saveQuoteCalculatedData($quoteId, $quoteSubTotal, $salesTaxAmount, $shipCharge, $lumFee, $projectTotal);
@@ -2252,11 +2788,11 @@ class OrderController extends Controller {
         $data = $jsontoarraygenerator->getJson($request);
         $quoteId = !empty($data->get('quote_id')) ? trim($data->get('quote_id')) : '';
         $plywoodData = $this->getPlywoodDataByQuoteId($quoteId);
+
         $veneerData = $this->getVeneerDataByQuoteId($quoteId);
         $doorData= $this->getDoorDataByQuoteId($quoteId);
         $arr = array_merge($veneerData, $plywoodData);
         $final = $this->arraySortByColumn($arr, 'lineItemNum');
-        
         $images_destination = $this->container->getParameter('images_destination');
         $lineItemHTML = '';
         $plyHtmlV ='';
@@ -2271,13 +2807,17 @@ class OrderController extends Controller {
                     //for ($i=0;$i<$v['quantity'];$i++) {
                         $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLV($v, $images_destination);
                         $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLC($v, $images_destination);
-                        $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLS($v, $images_destination);
+                        //$htmlBlocks[] = $this->getOrderTicketPlywoodHTMLS($v, $images_destination);
+                        $htmlBlocks[] = $this->getOrderTicketPlywoodHTMLSnew($v, $images_destination);
+
                     //}
                 }
                 if (!empty($v['type']) && $v['type'] == 'Veneer') {
                     //for ($i=0;$i<$v['quantity'];$i++) {
                         $htmlBlocks[] = $this->getOrderTicketVeneerHTMLV($v, $images_destination);
-                        $htmlBlocks[] = $this->getOrderTicketVeneerHTMLS($v, $images_destination);
+                        //$htmlBlocks[] = $this->getOrderTicketVeneerHTMLS($v, $images_destination);
+                        $htmlBlocks[] = $this->getOrderTicketVeneerHTMLSnew($v, $images_destination);
+
                     //}
                 }
 //                if (!empty($v['type']) && $v['type'] == 'Door') {
@@ -2312,11 +2852,98 @@ class OrderController extends Controller {
         return $response;
     }
 
+    /**
+     * @Route("/api/order/addShippedQty")
+     * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
+     */
+    public function addShipQtyAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $orderId = $data->get('orderId');
+        $lineItemArr = explode('-', $data->get('lineItemIdArr'));
+        $lineItemId = $lineItemArr[0];
+        $lineItemType = ( ($lineItemArr[1] == 'V') ? "Veneer" : (($lineItemArr[1] == 'P') ? "Plywood" : "Door") );
+        $qtyToBeShipped = $lineItemArr[2];
+        $loggedinUserId = $data->get('loggedInUser');
+        $createdDate = new \DateTime('now');
+        $currentQty = $this->getCurrQtyOfLineItem($orderId, $lineItemId, $lineItemType);
+        if ($qtyToBeShipped <= $currentQty) {
+            $remainingQty = $currentQty - $qtyToBeShipped;
+            $saved = $this->insertShippedQty($orderId, $lineItemId, $lineItemType, $qtyToBeShipped, $loggedinUserId, $currentQty, $createdDate);
+            if ($saved) {
+                $this->updateRemQty($orderId, $lineItemId, $lineItemType, $remainingQty);
+                $arrApi['status'] = 1;
+                $arrApi['message'] = 'Successfully added shipped quantity';
+            } else {
+                $arrApi['status'] = 0;
+                $arrApi['message'] = 'There is some error';
+            }
+        } else {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'You can not ship this quantity';
+        }
+        return new JsonResponse($arrApi);
+    }
+
+    /**
+     * @Route("/api/order/getShippedlineitemData")
+     * @Method("POST")
+     * @Security("is_granted('ROLE_USER')")
+     */
+    public function getShippedlineitemAction(Request $request) {
+        $arrApi = array();
+        $statusCode = 200;
+        $jsontoarraygenerator = new JsonToArrayGenerator();
+        $data = $jsontoarraygenerator->getJson($request);
+        $lineitemType = ( ($data->get('lineitemType') == 'plywood') ? 'Plywood' : ( ($data->get('lineitemType') == 'door') ? 'Door' : 'Veneer'));
+        $shippedData = $this->getShippedLineitemDataByParams($data, $lineitemType);
+        //print_r($shippedData);die;
+        if (empty($shippedData)) {
+            $arrApi['status'] = 0;
+            $arrApi['message'] = 'There is no shipped quantity for this line item';
+        } else {
+            $arrApi['status'] = 1;
+            $arrApi['message'] = 'Success';
+            $i = 0;
+            foreach ($shippedData as $d) {
+                $arrApi['data'][$i]['id'] = $d['id'];
+                $arrApi['data'][$i]['fname'] = strtoupper($d['fname']);
+                $arrApi['data'][$i]['lname'] = strtoupper($d['lname']);
+                $arrApi['data'][$i]['orderId'] = $d['orderId'];
+                $arrApi['data'][$i]['lineitemId'] = $d['lineitemId'];
+                $arrApi['data'][$i]['lineitemType'] = $d['lineitemType'];
+                $arrApi['data'][$i]['qtyShipped'] = $d['qtyShipped'];
+                $arrApi['data'][$i]['createdAt'] = date_format($d['createdAt'],"l").' '.date_format($d['createdAt'],"M d, Y");
+                $i++;
+            }
+        }
+        return new JsonResponse($arrApi);
+    }
+
+    private function getShippedLineitemDataByParams($data, $lineitemType) {
+        $query = $this->getDoctrine()->getManager();
+        $result = $query->createQueryBuilder()
+            ->select(['sq.id','sq.orderId', 'sq.lineitemId', 'sq.lineitemType','sq.qtyShipped','sq.createdAt'])
+            ->from('AppBundle:ShippedQuantity', 'sq')
+            ->leftJoin('AppBundle:Profile', 'p', 'WITH', 'sq.loggedinUserId = p.userId')
+            ->addSelect(['p.fname', 'p.lname'])
+            ->where("sq.orderId = :orderId AND sq.lineitemId = :lineitemId AND sq.lineitemType=:lineitemtype")
+            ->setParameter(':orderId', $data->get('orderId'))
+            ->setParameter(':lineitemId', $data->get('lineitemId'))
+            ->setParameter(':lineitemtype', $lineitemType)
+            ->getQuery()
+            ->getResult();
+        return $result;
+    }
+
     private function getPlywoodDataByQuoteId($quoteId) {
         if (!empty($quoteId)) {
             $query = $this->getDoctrine()->getManager();
             $result = $query->createQueryBuilder()
-                    ->select(['v.id','v.quantity', 'v.plywoodWidth as width','v.widthFraction', 'v.plywoodLength as length','v.lengthFraction', 'v.comments', 'v.speciesId', 'v.topEdge', 'v.bottomEdge',
+                    ->select(['v.autoNumber','v.id','v.quantity', 'v.plywoodWidth as width','v.widthFraction', 'v.plywoodLength as length','v.lengthFraction', 'v.comments', 'v.speciesId', 'v.topEdge', 'v.bottomEdge',
                         'v.rightEdge', 'v.leftEdge', "v.finishThickId as pThicknessName", 'v.finishThickType', "'Plywood' as type",
                         "v.finThickFraction", "v.thickness as panelThicknessName", 'v.lineItemNum', 'v.isSequenced','v.isLabels','st.statusName'])
                     ->from('AppBundle:Plywood', 'v')
@@ -2375,6 +3002,7 @@ class OrderController extends Controller {
         } else {
             $result = [];
         }
+        
         return $result;
     }
 
@@ -2404,7 +3032,7 @@ class OrderController extends Controller {
             ->getResult(); */
 
             $result = $query->createQueryBuilder()
-                    ->select(['v.quantity', 'v.width','v.widthFraction', 'v.length','v.lengthFraction', 'v.comments', 'v.sequenced', 'v.lineItemNum', "'Veneer' as type,st.statusName"])
+                    ->select(['v.quantity', 'v.width','v.widthFraction', 'v.length','v.lengthFraction', 'v.comments', 'v.sequenced', 'v.lineItemNum', 'v.thicknessId', "'Veneer' as type,st.statusName"])
                     ->from('AppBundle:Veneer', 'v')
                     ->leftJoin('AppBundle:LineItemStatus', 'lis', 'WITH', "lis.lineItemId = v.id")
                     ->leftJoin('AppBundle:Status', 'st', 'WITH', "st.id = lis.statusId")
@@ -2496,13 +3124,13 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                     <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
                 </head>
                 <body>
                 <div class="ticketWrap">
-        <div class="ticketScreen veneer">
+            <div class="ticketScreen veneer">
             <table class="ticketHead">
                 <tr>
                     <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
@@ -2510,15 +3138,15 @@ class OrderController extends Controller {
                 </tr> 
             </table></div></div></body></html>';
 
-    $htmlArr['body'] = '<!DOCTYPE html>
+        $htmlArr['body'] = '<!DOCTYPE html>
             <html>
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                     <style>
-                        body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:40px;}
-                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:90px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:36px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 20px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:16px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                        body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:700;font-family:inherit;}table.ticketFoot{margin-top:40px;}
+                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:90px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:36px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 20px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:16px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
                         .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                     </style>
                 </head>
@@ -2550,15 +3178,15 @@ class OrderController extends Controller {
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Veneer Size</label></td>
-                    <td class="cellDesc" style="font-size:16px;">'.($v['width'] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v['length']+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
+                    <td class="cellDesc" style="font-size:16px;"><strong>'.($v['width'] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v['length']+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Veneer Thickness</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['thicknessName'].'</td>
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Finished Size</label></td>
-                    <td class="cellDesc" style="font-size:16px;">'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
-                </tr>
-                <tr>
-                    <td class="cellLabel"><label>Thickness</label></td>
-                    <td class="cellDesc" style="font-size:16px;">'.$v['thicknessName'].'</td>
+                    <td class="cellDesc" style="font-size:16px;"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"'.($v['thicknessId']!=0?' x '.$this->getThicknessNameById($v['thicknessId']):'').'</strong></td>
                 </tr>
                 <tr>
                     <td class="cellLabel"><label>Species</label></td>
@@ -2575,19 +3203,23 @@ class OrderController extends Controller {
                 <tr>
                     <td class="cellLabel"><label>Back</label></td>
                     <td class="cellDesc" style="font-size:16px;">'.$v['backerName'].'</td>
-                </tr>
-                <tr>
-                    <td class="cellLabel"><label>Sequenced</label></td>
-                    <td class="cellDesc" style="font-size:16px;">'.($v['sequenced'] ? 'Yes' : 'No').'</td>
-                </tr>
-                <tr>
+                </tr>';
+
+                if($v["isSequenced"]){
+                    $htmlArr['body'] .= '<tr>
+                        <td class="cellLabel"><label>Sequenced</label></td>
+                        <td class="cellDesc">'.($v["isSequenced"] == 1 ? "<strong>SEQUENCED</strong>" : "").'</td>
+                    </tr>';
+                }
+
+                $htmlArr['body'] .= '<tr>
                     <td class="cellLabel"><label>Pattern</label></td>
                     <td class="cellDesc" style="font-size:16px;">'.$v['patternName'].'</td>
                 </tr>
-                <tr>
+                <!--<tr>
                     <td class="cellLabel"><label>Label</label></td>
                     <td class="cellDesc" style="font-size:16px;">No</td>
-                </tr>
+                </tr>-->
                 <tr>
                     <td class="cellLabel"><label>Core</label></td>
                     <td class="cellDesc" style="font-size:16px;">'.$v['coreType'].'</td>
@@ -2605,7 +3237,154 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                     <style>
                         body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:40px;}
-                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:90px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:36px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 20px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:90px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:36px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 20px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                        .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    </style>
+                </head>
+                <body>
+                <div class="ticketWrap">
+        <div class="ticketScreen veneer">
+                <table class="ticketFoot">
+                <tr>
+                    <td class="lftFoot"></td>
+                    <td class="dep footIN">
+                        <table>
+                            <tr>
+                                <td><span class="itTxt t-left">' . date('l | M d', strtotime($v['deliveryDate'])) . '</span></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr> 
+            </table>
+        </div>
+    </div></body></html>';
+        return $htmlArr;
+    }
+
+    private function getOrderTicketVeneerHTMLSnew($v, $images_destination) {
+        $htmlArr = [];
+        $htmlArr['header'] = '<!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
+                    <style>
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                </style>
+                </head>
+                <body>
+                <div class="ticketWrap">
+        <div class="ticketScreen veneer">
+            <table class="ticketHead">
+                <tr>
+                    <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                    <td class="dep">Sanding Department</td>
+                </tr> 
+            </table></div></div></body></html>';
+
+    $htmlArr['body'] = '<!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
+                    <style>
+                        body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:700;font-family:inherit;}table.ticketFoot{margin-top:40px;}
+                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:90px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:36px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 20px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:16px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                        .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    </style>
+                </head>
+                <body>
+                <div class="ticketWrap">
+        <div class="ticketScreen veneer">
+                <table class="ticketDesc">
+                <tr>
+                    <td class="cellLabel"></td>
+                    <td class="cellDesc"><label class="custName">' . $v['username'] . '</label></td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"></td>
+                    <td class="cellDesc" style="font-size:16px;">PO: ' . $v['refNum'] . '<br>Order: ' . $v['estNumber'] . '<br>Item: '.$v['lineItemNum'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"></td>
+                    <td class="cellDesc"><hr></td>
+                </tr>
+            </table>
+            <table class="ticketDesc" style="min-height:300px;">
+                <tr>
+                    <td class="cellLabel"><label>Quantity</label></td>
+                    <td class="cellDesc" style="font-size:16px;">' . $v['quantity'] . ' Pieces</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Species</label></td>
+                    <td class="cellDesc" style="font-size:16px;">' . $v['SpecieName'] . ' - ' . $v['patternName'] . '</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Veneer Size</label></td>
+                    <td class="cellDesc" style="font-size:16px;"><strong>'.($v['width'] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v['length']+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Veneer Thickness</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['thicknessName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Finished Size</label></td>
+                    <td class="cellDesc" style="font-size:16px;"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"'.($v['thicknessId']!=0?' x '.$this->getThicknessNameById($v['thicknessId']):'').'</strong></td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Species</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['SpecieName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Face Grade</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['faceGradeName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Grain Direction</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['grainDirectionName'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Back</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['backerName'].'</td>
+                </tr>';
+
+                if($v["isSequenced"]){
+                    $htmlArr['body'] .= '<tr>
+                        <td class="cellLabel"><label>Sequenced</label></td>
+                        <td class="cellDesc">'.($v["isSequenced"] == 1 ? "<strong>SEQUENCED</strong>" : "").'</td>
+                    </tr>';
+                }
+
+                $htmlArr['body'] .= '<tr>
+                    <td class="cellLabel"><label>Pattern</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['patternName'].'</td>
+                </tr>
+                <!--<tr>
+                    <td class="cellLabel"><label>Label</label></td>
+                    <td class="cellDesc" style="font-size:16px;">No</td>
+                </tr>-->
+                <tr>
+                    <td class="cellLabel"><label>Core</label></td>
+                    <td class="cellDesc" style="font-size:16px;">'.$v['coreType'].'</td>
+                </tr>
+                <tr>
+                    <td class="cellLabel"><label>Notes:</label></td>
+                    <td class="cellDesc" style="font-size:16px;"><strong>'.$v['comments'].'</strong></td>
+                </tr>
+            </table></div></div></body></html>';
+    $htmlArr['footer'] = '<!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
+                    <style>
+                        body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:40px;}
+                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:90px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:36px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 20px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
                         .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                     </style>
                 </head>
@@ -2639,7 +3418,7 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                     <style>
                         body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:40px;}
-                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:90px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:36px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 20px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:16px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:90px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:36px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 20px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:16px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
                         .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                     </style>
                 </head>
@@ -2660,7 +3439,7 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                     <style>
                         body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
                         .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                     </style>
                 </head>
@@ -2717,12 +3496,16 @@ class OrderController extends Controller {
                 <tr>
                     <td class="cellLabel"><label>Back</label></td>
                     <td class="cellDesc" style="font-size:16px;">'.$v['backerName'].'</td>
-                </tr>
-                <tr>
-                    <td class="cellLabel"><label>Sequenced</label></td>
-                    <td class="cellDesc" style="font-size:16px;">'.($v['sequenced'] ? 'Yes' : 'No').'</td>
-                </tr>
-                <tr>
+                </tr>';
+
+                if($v["isSequenced"]){
+                    $htmlArr['body'] .= '<tr>
+                        <td class="cellLabel"><label>Sequenced</label></td>
+                        <td class="cellDesc">'.($v["isSequenced"] == 1 ? "<strong>SEQUENCED</strong>" : "").'</td>
+                    </tr>';
+                }
+
+                $htmlArr['body'] .= '<tr>
                     <td class="cellLabel"><label>Pattern</label></td>
                     <td class="cellDesc" style="font-size:16px;">'.$v['patternName'].'</td>
                 </tr>
@@ -2748,7 +3531,7 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                     <style>
                         body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                        .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
                         .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                     </style>
                 </head>
@@ -2785,35 +3568,44 @@ class OrderController extends Controller {
         $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
         $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
         $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
-        $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
-        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
-        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
-        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
+        $topSpeciesName = !empty($v['topSpeciesName']) ? $v['topSpeciesName'] : 'SaF';
+        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'SaF';
+        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'SaF';
+        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'SaF';
         $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
         $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
-
-
+        $autoNumber = $this->getFirstLabel($v['autoNumber']);
         $edge = '';
-        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
-                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
-                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
-                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
-            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
-                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
-            }
-            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
-                $edge .= 'BE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
-            }
-            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
-                $edge .= 'RE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
-            }
-            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
-                $edge .= 'LE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+
+        if($v['finishThickType'] == 'inch'){
+            if($v['finishThickId']>0){
+                $thickness=$v['finishThickId'].($v['finThickFraction']!=0?' '.$this->float2rat($v['finThickFraction']):'').'"';
+            } else {
+                $thickness=$this->float2rat($v['finThickFraction']).'"';
             }
         } else {
-            $edge = 'No';
+            $thickness=$v['finishThickId'].' '.$v['finishThickType'];
         }
 
+        if ( $topEdgeName == 'N/A' && $bottomEdgeName == 'N/A' && $rightEdgeName == 'N/A' && $leftEdgeName == 'N/A' ) {
+            $edge = 'No';
+        } 
+        else 
+        {
+            if ($topEdgeName !== 'N/A' ) {
+                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
+            }
+            if ($bottomEdgeName !== 'N/A' ) {
+                $edge .= 'BE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
+            }
+            if ($rightEdgeName !== 'N/A' ) {
+                $edge .= 'RE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
+            }
+            if ($leftEdgeName !== 'N/A' ) {
+                $edge .= 'LE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+            }
+        }
+       
         $htmlArr = [];
         $htmlArr['header'] = '<!DOCTYPE html>
         <html>
@@ -2822,9 +3614,9 @@ class OrderController extends Controller {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
-                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:700;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -2836,7 +3628,6 @@ class OrderController extends Controller {
                         </tr> 
                     </table></div></div></body></html>';
 
-
     $htmlArr['body'] = '<!DOCTYPE html>
         <html>
             <head>
@@ -2844,9 +3635,9 @@ class OrderController extends Controller {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
-                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:700;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -2872,15 +3663,15 @@ class OrderController extends Controller {
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Veneer Size</label></td>
-                            <td class="cellDesc">'.($v["width"] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
+                            <td class="cellDesc"><strong>'.($v["width"] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Veneer Thickness</label></td>
+                            <td class="cellDesc">' . $v["thicknessName"] . '"</td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Finished Size</label></td>
-                            <td class="cellDesc">'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Thickness</label></td>
-                            <td class="cellDesc">' . $v["thicknessName"] . '"</td>
+                            <td class="cellDesc"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"'.($thickness!=0?' x '.$thickness:'').'</strong></td>
                         </tr>
                         <tr>
                             <td class="cellLabel"><label>Species</label></td>
@@ -2901,24 +3692,34 @@ class OrderController extends Controller {
                         <tr>
                             <td class="cellLabel"><label>Grain Direction</label></td>
                             <td class="cellDesc">' . $v["grainDirectionName"] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Sequenced</label></td>
-                            <td class="cellDesc">'.($v["isSequenced"] == 1 ? "Yes" : "No").'</td>
-                        </tr>
-                        <tr>
+                        </tr>';
+
+                        if($v["isSequenced"]){
+                            $htmlArr['body'] .= '<tr>
+                                <td class="cellLabel"><label>Sequenced</label></td>
+                                <td class="cellDesc">'.($v["isSequenced"] == 1 ? "<strong>SEQUENCED</strong>" : "").'</td>
+                            </tr>';
+                        }
+
+                        $htmlArr['body'] .= '<tr>
                             <td class="cellLabel"><label>Back</label></td>
                             <td class="cellDesc">' . $v["backerName"] . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Edge Details</label></td>
-                            <td class="cellDesc">' . $edge . '</td>
-                        </tr>
-                        <tr>
-                            <td class="cellLabel"><label>Label</label></td>
-                            <td class="cellDesc">'.($v["isLabels"] ? "Yes" : "No").'</td>
-                        </tr>
-                        <tr>
+                        </tr>';
+
+                        if($edge != 'No' ){
+                            $htmlArr['body'] .= '<tr>
+                                <td class="cellLabel"><label>Edge Details</label></td>
+                                <td class="cellDesc">' . $edge . '</td>
+                            </tr>';
+                        }
+                        if($autoNumber != '' && $v["isLabels"]){
+                            $htmlArr['body'] .= '<tr>
+                                <td class="cellLabel"><label>Label</label></td>
+                                <td class="cellDesc">'.($v["isLabels"] ? "$autoNumber" : "").'</td>
+                            </tr>';
+                        }
+                        
+                        $htmlArr['body'] .= '<tr>
                             <td class="cellLabel"><label>Core</label></td>
                             <td class="cellDesc">'.$v["coreType"].' - '.$this->float2rat($v["panelThicknessName"]).'"</td>
                         </tr>
@@ -2935,8 +3736,208 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                </style>
+            </head>
+            <body><div class="ticketWrap">
+                <div class="ticketScreen veneer">
+                <table class="ticketFoot">
+                        <tr>
+                            <td class="lftFoot"></td>
+                            <td class="dep footIN">
+                                <table>
+                                    <tr>
+                                        <td><span class="itTxt t-left">'.date("D | M d",strtotime($v["deliveryDate"])).'</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr> 
+                    </table>
+                </div>
+            </div></body></html>';
+        return $htmlArr;
+    }
+
+    private function getOrderTicketPlywoodHTMLSnew($v, $images_destination) {
+        $topEdgeName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $bottomEdgeName = !empty($v['bottomEdgeName']) ? $v['bottomEdgeName'] : 'N/A';
+        $rightEdgeName = !empty($v['rightEdgeName']) ? $v['rightEdgeName'] : 'N/A';
+        $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
+        $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
+        $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
+        $topSpeciesName = !empty($v['topSpeciesName']) ? $v['topSpeciesName'] : 'SaF';
+        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'SaF';
+        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'SaF';
+        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'SaF';
+        $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
+        $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
+        $autoNumber = $this->getFirstLabel($v['autoNumber']);
+        $edge = '';
+
+        if($v['finishThickType'] == 'inch'){
+            if($v['finishThickId']>0){
+                $thickness=$v['finishThickId'].($v['finThickFraction']!=0?' '.$this->float2rat($v['finThickFraction']):'').'"';
+            } else {
+                $thickness=$this->float2rat($v['finThickFraction']).'"';
+            }
+        } else {
+            $thickness=$v['finishThickId'].' '.$v['finishThickType'];
+        }
+        
+        if ( $topEdgeName == 'N/A' && $bottomEdgeName == 'N/A' && $rightEdgeName == 'N/A' && $leftEdgeName == 'N/A' ) {
+            $edge = 'No';
+        } 
+        else 
+        {
+            if ($topEdgeName !== 'N/A' ) {
+                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
+            }
+            if ($bottomEdgeName !== 'N/A' ) {
+                $edge .= 'BE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
+            }
+            if ($rightEdgeName !== 'N/A' ) {
+                $edge .= 'RE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
+            }
+            if ($leftEdgeName !== 'N/A' ) {
+                $edge .= 'LE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+            }
+        }
+
+        $htmlArr = [];
+        $htmlArr['header'] = '<!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
+                <style>
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                </style>
+            </head>
+            <body><div class="ticketWrap">
+                <div class="ticketScreen veneer">
+                    <table class="ticketHead">
+                        <tr>
+                            <td class="lftLogo"><img src="' . $images_destination . '/ticket-images/logo-ico.png" alt="Department Logo"></td>
+                            <td class="dep">Sanding Department</td>
+                        </tr> 
+                    </table></div></div></body></html>';
+
+
+    $htmlArr['body'] = '<!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
+                <style>
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:700;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                </style>
+            </head>
+            <body><div class="ticketWrap">
+                <div class="ticketScreen veneer">
+                       <table class="ticketDesc">
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><label class="custName">' . $v["username"] . '</label></td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc">PO: ' . $v["refNum"] . '<br>Order: ' . $v["estNumber"] . '<br>Item: '.$v["lineItemNum"].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"></td>
+                            <td class="cellDesc"><hr></td>
+                        </tr>
+                    </table>
+                    <table class="ticketDesc" style="min-height:300px;">
+                        <tr>
+                            <td class="cellLabel"><label>Quantity</label></td>
+                            <td class="cellDesc">' . $v["quantity"] . ' Pieces</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Veneer Size</label></td>
+                            <td class="cellDesc"><strong>'.($v["width"] + 1).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]+1).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'</strong>"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Veneer Thickness</label></td>
+                            <td class="cellDesc">' . $v["thicknessName"] . '"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Finished Size</label></td>
+                            <td class="cellDesc"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"'.($thickness!=0?' x '.$thickness:'').'</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Species</label></td>
+                            <td class="cellDesc">' . $v["SpecieName"] . ' - ' . $v["patternName"] . '</td>
+                        </tr>
+                        <!--<tr>
+                            <td class="cellLabel"><label>Species</label></td>
+                            <td class="cellDesc">' . $v["patternName"] . '</td>
+                        </tr>-->
+                        <tr>
+                            <td class="cellLabel"><label>Pattern</label></td>
+                            <td class="cellDesc">'.$v['patternMatch'].'</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Face Grade</label></td>
+                            <td class="cellDesc">' . $v["faceGradeName"] . '</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Grain Direction</label></td>
+                            <td class="cellDesc">' . $v["grainDirectionName"] . '</td>
+                        </tr>';
+
+                        if($v["isSequenced"]){
+                            $htmlArr['body'] .= '<tr>
+                                <td class="cellLabel"><label>Sequenced</label></td>
+                                <td class="cellDesc">'.($v["isSequenced"] == 1 ? "<strong>SEQUENCED</strong>" : "").'</td>
+                            </tr>';
+                        }
+
+                        $htmlArr['body'] .= '<tr>
+                            <td class="cellLabel"><label>Back</label></td>
+                            <td class="cellDesc">' . $v["backerName"] . '</td>
+                        </tr>';
+
+                        if($edge != 'No' ){
+                            $htmlArr['body'] .= '<tr>
+                                <td class="cellLabel"><label>Edge Details</label></td>
+                                <td class="cellDesc">' . $edge . '</td>
+                            </tr>';
+                        }
+
+                        if($v["isLabels"] && $autoNumber  !=''){
+                            $htmlArr['body'] .= '<tr>
+                                <td class="cellLabel"><label>Label</label></td>
+                                <td class="cellDesc">'.($v["isLabels"] ? "$autoNumber" : "").'</td>
+                            </tr>';
+                        }
+                        
+                        $htmlArr['body'] .= '<tr>
+                            <td class="cellLabel"><label>Core</label></td>
+                            <td class="cellDesc">'.$v["coreType"].' - '.$this->float2rat($v["panelThicknessName"]).'"</td>
+                        </tr>
+                        <tr>
+                            <td class="cellLabel"><label>Notes:</label></td>
+                            <td class="cellDesc"><strong>'.$v["comments"].'</strong></td>
+                        </tr>
+                    </table></div></div></body></html>';
+        $htmlArr['footer'] = '<!DOCTYPE html>
+        <html> 
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
+                <style>
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -2965,33 +3966,41 @@ class OrderController extends Controller {
         $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
         $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
         $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
-        $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
-        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
-        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
-        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
+        $topSpeciesName = !empty($v['topSpeciesName']) ? $v['topSpeciesName'] : 'SaF';
+        $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'SaF';
+        $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'SaF';
+        $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'SaF';
         $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
         $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
 
-
-        $edge = '';
-        if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
-                ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') ||
-                ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') ||
-                ($leftEdgeName !== ' N/A' && $leftEdgeName !== 'None')) {
-            if ($topEdgeName !== 'N/A' && $topEdgeName !== 'None') {
-                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
-            }
-            if ($bottomEdgeName !== 'N/A' && $bottomEdgeName !== 'None') {
-                $edge .= 'BE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
-            }
-            if ($rightEdgeName !== 'N/A' && $rightEdgeName !== 'None') {
-                $edge .= 'RE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
-            }
-            if ($leftEdgeName !== 'N/A' && $leftEdgeName !== 'None') {
-                $edge .= 'LE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+        if($v['finishThickType'] == 'inch'){
+            if($v['finishThickId']>0){
+                $thickness=$v['finishThickId'].($v['finThickFraction']!=0?' '.$this->float2rat($v['finThickFraction']):'').'"';
+            } else {
+                $thickness=$this->float2rat($v['finThickFraction']).'"';
             }
         } else {
+            $thickness=$v['finishThickId'].' '.$v['finishThickType'];
+        }
+        
+        $edge = '';
+        if ( $topEdgeName == 'N/A' && $bottomEdgeName == 'N/A' && $rightEdgeName == 'N/A' && $leftEdgeName == 'N/A' ) {
             $edge = 'No';
+        } 
+        else 
+        {
+            if ($topEdgeName !== 'N/A' ) {
+                $edge .= 'TE: ' . $topEdgeName . ' &nbsp; |  &nbsp;' . $topEdgeMaterialName . ' &nbsp; |  &nbsp;' . $topSpeciesName . ' <br>';
+            }
+            if ($bottomEdgeName !== 'N/A' ) {
+                $edge .= 'BE: ' . $bottomEdgeName . ' &nbsp; |  &nbsp;' . $bottomEdgeMaterialName . ' &nbsp; |  &nbsp;' . $bottomSpeciesName . ' <br>';
+            }
+            if ($rightEdgeName !== 'N/A' ) {
+                $edge .= 'RE: ' . $rightEdgeName . ' &nbsp; |  &nbsp;' . $rightEdgeMaterialName . ' &nbsp; |  &nbsp;' . $rightSpeciesName . ' <br>';
+            }
+            if ($leftEdgeName !== 'N/A' ) {
+                $edge .= 'LE: ' . $leftEdgeName . ' &nbsp; |  &nbsp;' . $leftEdgeMaterialName . ' &nbsp; |  &nbsp;' . $leftSpeciesName . ' <br>';
+            }
         }
 
         $htmlArr = [];
@@ -3003,8 +4012,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3023,9 +4032,9 @@ class OrderController extends Controller {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
-                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:700;font-family:inherit;}table.ticketFoot{margin-top:50px;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3058,11 +4067,11 @@ class OrderController extends Controller {
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
-                        <td class="cellDesc">'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"</td>
+                        <td class="cellDesc"><strong>'.($v["width"]).($this->float2rat($v["widthFraction"])>0?' '.$this->float2rat($v["widthFraction"]):'').'" x '.($v["length"]).($this->float2rat($v["lengthFraction"])>0?' '.$this->float2rat($v["lengthFraction"]):'').'"'.($thickness!=0?' x '.$thickness:'').'</strong></td>
                     </tr>
                     <!--<tr>
                         <td class="cellLabel"><label>Finished Size</label></td>
-                        <td class="cellDesc">'.($v["width"] + 1).'" x '.($v["length"]+1).'"</td>
+                        <td class="cellDesc"><strong>'.($v["width"] + 1).'" x '.($v["length"]+1).'</strong>"</td>
                     </tr>-->
                     <tr>
                         <td class="cellLabel"><label>Core Thickness</label></td>
@@ -3070,17 +4079,19 @@ class OrderController extends Controller {
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Core</label></td>
-                        <td class="cellDesc">'.$v["coreType"].'"</td>
+                        <td class="cellDesc">'.$v["coreType"].'</td>
                     </tr>
                     <tr>
                         <td class="cellLabel"><label>Back</label></td>
                         <td class="cellDesc">'.$v["backerName"].'</td>
-                    </tr>
-                    <tr>
-                        <td class="cellLabel"><label>Edge</label></td>
-                        <td class="cellDesc">'.$edge.'</td>
-                    </tr>
-                    <tr>
+                    </tr>';
+                    if($edge != 'No' ){
+                        $htmlArr['body'] .= '<tr>
+                            <td class="cellLabel"><label>Edge Details</label></td>
+                            <td class="cellDesc">' . $edge . '</td>
+                        </tr>';
+                    }
+                    $htmlArr['body'] .= '<tr>
                         <td class="cellLabel"><label></label></td>
                         <td class="cellDesc"></td>
                     </tr>
@@ -3110,8 +4121,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3141,13 +4152,16 @@ class OrderController extends Controller {
         $topEdgeMaterialName = !empty($v['topEdgeMaterialName']) ? $v['topEdgeMaterialName'] : 'N/A';
         $rightEdgeMaterialName = !empty($v['rightEdgeMaterialName']) ? $v['rightEdgeMaterialName'] : 'N/A';
         $leftEdgeMaterialName = !empty($v['leftEdgeMaterialName']) ? $v['leftEdgeMaterialName'] : 'N/A';
-        $topSpeciesName = !empty($v['topEdgeName']) ? $v['topEdgeName'] : 'N/A';
+        $topSpeciesName = !empty($v['topSpeciesName']) ? $v['topSpeciesName'] : 'N/A';
         $bottomSpeciesName = !empty($v['bottomSpeciesName']) ? $v['bottomSpeciesName'] : 'N/A';
         $rightSpeciesName = !empty($v['rightSpeciesName']) ? $v['rightSpeciesName'] : 'N/A';
         $leftSpeciesName = !empty($v['leftSpeciesName']) ? $v['leftSpeciesName'] : 'N/A';
         $leftEdgeName = !empty($v['leftEdgeName']) ? $v['leftEdgeName'] : 'N/A';
         $bottomEdgeMaterialName = !empty($v['bottomEdgeMaterialName']) ? $v['bottomEdgeMaterialName'] : 'N/A';
 
+        if($v["pThicknessName"] == 0){
+            $v["pThicknessName"] = '';
+        }
 
         $edge = '';
         if (($topEdgeName !== 'N/A' && $topEdgeName !== 'None') ||
@@ -3178,8 +4192,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3199,8 +4213,8 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
-.veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:16px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
             <body><div class="ticketWrap">
@@ -3246,12 +4260,16 @@ class OrderController extends Controller {
                     <tr>
                         <td class="cellLabel"><label>Edge</label></td>
                         <td class="cellDesc">' . $edge . '</td>
-                    </tr>
-                    <tr>
-                        <td class="cellLabel"><label>Sequenced</label></td>
-                        <td class="cellDesc">' . ($v["isSequenced"] == 1 ? "Yes" : "No") . '</td>
-                    </tr>
-                    <!--<tr>
+                    </tr>';
+
+                    if($v["isSequenced"]){
+                        $htmlArr['body'] .= '<tr>
+                            <td class="cellLabel"><label>Sequenced</label></td>
+                            <td class="cellDesc">'.($v["isSequenced"] == 1 ? "<strong>SEQUENCED</strong>" : "").'</td>
+                        </tr>';
+                    }
+
+                    $htmlArr['body'] .= '<!--<tr>
                         <td class="cellLabel"><label>Species</label></td>
                         <td class="cellDesc">' . $v["patternName"] . '</td>
                     </tr>
@@ -3289,7 +4307,7 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+.ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:26px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:"Roboto Condensed",sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
 .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
@@ -3323,7 +4341,7 @@ class OrderController extends Controller {
                     <link href="http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
                 <style>
                     body{font-family:"Roboto Condensed",sans-serif;font-weight:300;}table{width:100%;border-collapse:collapse;border-spacing:0;}h1,h2,h3,label,strong{font-weight:400;font-family:inherit;}table.ticketFoot{margin-top:50px;}
-                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:13px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
+                    .ticketWrap{width:600px;margin:auto;}.ticketWrap.broad{width:1132px;}.ticketScreen{padding:20px 0;}.ticketHead{margin-bottom:30px;}.lftLogo,.cellLabel{width:121px;line-height:0;}.lftFoot{width:124px;line-height:0;}.ticketHead td,.ticketDesc td{padding:0 6px;vertical-align:middle;text-align:left;}td.dep{padding:0 30px;color:#ffffff;font-size:38px;font-weight:400;height:95px;}.lftLogo img{margin:0 0 0 6px;display:block;padding:0;}.ticketHead td.lftLogo,.ticketDesc td.cellLabel{padding-left:0;}td.cellDesc{font-size:24px;color:#212121;}td.cellLabel{font-size:14px;color:#999999;text-align:right;vertical-align:top;letter-spacing:0.3px;}.ticketDesc td.cellDesc{padding-left:0;}.cellLabel label{padding-right:10px;display:inline-block;padding-top:7px;font-weight:300;}label.custName,td.cellDesc label.custName{font-size:42px;font-family:\'Roboto Condensed\',sans-serif;font-weight:700;color:#212121;padding:0 0 30px;line-height:1;}table.ticketDesc td{padding:0 6px 3px;}table.ticketDesc td.cellLabel{padding-top:3px;}td.cellDesc label{padding:0 8px 3px;display:inline-block;vertical-align:middle;color:#f02232;font-size:14px;font-weight:400;}table td hr{height:1px;display:block;width:90%;background-color:#212121;border:0;margin:0 0 10px;}td.cellDesc .noteTxt{font-size:15px;display:inline-block;padding-bottom:3px;}td.cellDesc label.grnTxt{font-size:10px;color:#33b598;padding:0 0 3px;}td.dep.footIN{height:auto;padding:10px 15px;}.footIN table td{padding:0;vertical-align:bottom;color:#f02232;font-size:13px;text-align:center;}td span.itTxt{font-size:32px;color:#ffffff;}td.itBx{width:110px;}.footIN table td.footImg{padding:10px 0 10px 20px;text-align:left;height:90px;}.footImg img{margin:0 16px;display:inline;}.ticketFoot td.cellDesc label.custName{font-size:32px;}.ticketWrap table.hlfGrdTable{width:100%;}.ticketWrap table.hlfGrdTable td{width:50%;vertical-align:top;padding-left:20px;padding-right:20px;border-left:solid 1px #212121;}.ticketWrap table.hlfGrdTable td.cellLabel{width:121px;}.ticketWrap table.hlfGrdTable td.cellDesc{width:auto;}.ticketWrap table.hlfGrdTable td.cellLabel,.ticketWrap table.hlfGrdTable td.cellDesc{padding-left:6px;padding-right:6px;border:0;}.ticketWrap table.hlfGrdTable td.fstGrd{padding-left:0;padding-right:0;border:0;}.ticketWrap.broad table.ticketHead .lftLogo,.ticketWrap.broad table.ticketFoot .cellLabel,.ticketWrap.broad table.ticketFoot .lftFoot{width:131px;}.ticketWrap.broad .lftLogo img{margin-left:16px;}.ticketWrap table.ticketDesc td.cellDesc td,.ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td{padding:0;border:0;}.ticketWrap table.ticketDesc td.cellDesc td, .ticketWrap table.hlfGrdTable table.ticketDesc td.cellDesc td td.w20p,td.w20p{width:20%;}td.dep.footIN span.t-left{display:block;padding:10px 4px 6px;text-align:left;}
                     .veneer td.dep{background-color:#9c946b;}.core td.dep,.laminating td.dep{background-color:#9c946b;}.sanding td.dep{background-color:#9c946b;}.door td.dep,.shipping td.dep{background-color:#9c946b;}
                 </style>
             </head>
@@ -3361,11 +4379,11 @@ class OrderController extends Controller {
     }
 
     private function getSheenById($id) {
-        return ($id == 1) ? '3' : ($id == 2) ? '5' : ($id == 3) ? '10' : ($id == 4) ? '20' : ($id == 5) ? '30' : ($id == 6) ? '40' : ($id == 7) ? '50' : ($id == 8) ? '60' : ($id == 9) ? '70' : ($id == 10) ? '80' : ($id == 11) ? '90' : ($id == 12) ? '100' : '0';
+        return ($id == 1) ? '3' : (($id == 2) ? '5' : (($id == 3) ? '10' : (($id == 4) ? '20' : (($id == 5) ? '30' : (($id == 6) ? '40' : (($id == 7) ? '50' : (($id == 8) ? '60' : (($id == 9) ? '70' : (($id == 10) ? '80' : (($id == 11) ? '90' : (($id == 12) ? '100' : '0')))))))))));
     }
 
     private function getFacPaintById($id) {
-        return ($id == 1) ? 'Prime Only' : ($id == 2) ? 'White / Light Color' : 'Dark Color';
+        return ($id == 1) ? 'Prime Only' : (($id == 2) ? 'White / Light Color' : 'Dark Color');
     }
 
     private function getGrainPatternOfDoor($id) {
@@ -3452,5 +4470,161 @@ class OrderController extends Controller {
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'attachment; filename="Test.pdf"'
             ]);        
+    }
+
+    private function getCurrQtyOfLineItem($orderId, $lineItemId, $lineItemType) {
+        $qty = 0;
+        if ($lineItemType == 'Veneer') {
+            $veneer = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findOneBy([ 'id' => $lineItemId, 'quoteId' => $orderId]);
+            $qty = $veneer->getQuantityRemaining();
+        } elseif ($lineItemType == 'Plywood') {
+            $plywood = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findOneBy([ 'id' => $lineItemId, 'quoteId' => $orderId]);
+            $qty = $plywood->getQuantityRemaining();
+        } else {
+            $door = $this->getDoctrine()->getRepository('AppBundle:Doors')->findOneBy([ 'id' => $lineItemId, 'quoteId' => $orderId]);
+            $qty = $door->getQuantityRemaining();
+        }
+        return $qty;
+    }
+
+    private function insertShippedQty($orderId, $lineItemId, $lineItemType, $qtyToBeShipped, $loggedinUserId, $currentQty, $createdDate) {
+        $em = $this->getDoctrine()->getManager();
+        $em->getConnection()->beginTransaction();
+        try {
+            $shippedQuantity = new ShippedQuantity();
+            $shippedQuantity->setOrderId($orderId);
+            $shippedQuantity->setLineitemId($lineItemId);
+            $shippedQuantity->setLineitemType($lineItemType);
+            $shippedQuantity->setQtyShipped($qtyToBeShipped);
+            $shippedQuantity->setLoggedinUserId($loggedinUserId);
+            $shippedQuantity->setCreatedAt($createdDate);
+            $em->persist($shippedQuantity);
+            $em->flush();
+            $em->getConnection()->commit();
+        } catch (Exception $ex) {
+            $em->getConnection()->rollback();
+        }
+        return true;
+    }
+
+    private function updateRemQty($orderId, $lineItemId, $lineItemType, $remainingQty) {
+        $em = $this->getDoctrine()->getManager();
+        if ($lineItemType == 'Veneer') {
+            $veneer = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findOneBy([ 'id' => $lineItemId, 'quoteId' => $orderId]);
+            $veneer->setQuantityRemaining($remainingQty);
+            $em->persist($veneer);
+
+        } elseif ($lineItemType == 'Plywood') {
+            $plywood = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findOneBy([ 'id' => $lineItemId, 'quoteId' => $orderId]);
+            $plywood->setQuantityRemaining($remainingQty);
+            $em->persist($plywood);
+        } else {
+            $door = $this->getDoctrine()->getRepository('AppBundle:Doors')->findOneBy([ 'id' => $lineItemId, 'quoteId' => $orderId]);
+            $door->setQuantityRemaining($remainingQty);
+            $em->persist($door);
+        }
+        $em->flush();
+    }
+
+    private function getDoorSubTotalByQuoteId($quoteId) {
+        $subtotal = 0;
+        $query = $this->getDoctrine()->getManager();
+        $doorRecords = $query->createQueryBuilder()
+            ->select(['dc.totalCost as totolCost'])
+            ->from('AppBundle:DoorCalculator', 'dc')
+            ->leftJoin('AppBundle:Doors', 'd', 'WITH', 'dc.doorId = d.id')
+            ->where('d.quoteId = '.$quoteId, 'd.status = 1')
+            ->getQuery()
+            ->getResult();
+        //print_r($doorRecords);die;
+//        $doorRecords = $this->getDoctrine()->getRepository('AppBundle:Doors')->findBy(array('quoteId' => $quoteId,'status'=>1));
+        if (!empty($doorRecords)) {
+            $i=0;
+            foreach ($doorRecords as $d) {
+                $subtotal += $d['totolCost'];
+                $i++;
+            }
+        } else {
+            $subtotal = 0;
+        }
+        return $subtotal;
+    }
+
+    private function deleteShipdQtybyId($shipdQtyId) {
+        $conn = $this->getDoctrine()->getConnection('default');
+        $SQL="DELETE FROM shipped_quantity WHERE id = :id";
+        $stmt=$conn->prepare($SQL);
+        $stmt->bindParam(':id',$shipdQtyId,PDO::PARAM_INT);
+        $stmt->execute();
+        return true;
+    }
+
+    private function addQtyToRemainingQty($qtyToBAddedToRem, $lineitemType, $lineitemId) {
+        $em = $this->getDoctrine()->getManager();
+        if ($lineitemType == 'Veneer') {
+            $lineItem = $this->getDoctrine()->getRepository('AppBundle:Veneer')->findOneById($lineitemId);
+        } elseif ($lineitemType == 'Plywood') {
+            $lineItem = $this->getDoctrine()->getRepository('AppBundle:Plywood')->findOneById($lineitemId);
+        } else {
+            $lineItem = $this->getDoctrine()->getRepository('AppBundle:Doors')->findOneById($lineitemId);
+        }
+        $newRemQty = $lineItem->getQuantityRemaining() + $qtyToBAddedToRem;
+        $lineItem->setQuantityRemaining($newRemQty);
+        $em->persist($lineItem);
+        $em->flush();
+        return true;
+    }
+
+    private function getLineItemQtyForShipper($orderId , $lineItemId, $lineItemType) {
+        $qtyShipped = 0;
+        $conn = $this->getDoctrine()->getConnection('default');
+        $SQL="SELECT qty_shipped FROM shipped_quantity WHERE order_id=:order_id AND lineitem_id=:lineitem_id AND lineitem_type=:lineitem_type AND DATE(createdAt) = DATE(NOW()) ORDER BY id DESC LIMIT 0,1";
+        $stmt=$conn->prepare($SQL);
+        $stmt->bindParam(':order_id',$orderId,PDO::PARAM_INT);
+        $stmt->bindParam(':lineitem_id',$lineItemId,PDO::PARAM_INT);
+        $stmt->bindParam(':lineitem_type',$lineItemType, PDO::PARAM_STR);
+        $stmt->execute();
+        $res = $stmt->fetchAll();
+        if (!empty($res)) {
+            $qtyShipped = $res[0]['qty_shipped'];
+        }
+        return $qtyShipped;
+    }
+
+    private function getLineItemArr($linitemArrStr) {
+        $arr = [];
+        $pIdStr = '';
+        $vIdStr = '';
+        $dIdStr = '';
+        if (!empty($linitemArrStr)) {
+            $str = rtrim($linitemArrStr,',');
+            $liArr = explode(',', $str);
+            for ($i=0; $i<count($liArr);$i++) {
+                $litm = explode('-', $liArr[$i]);
+                if ($litm[1] == 'P') {
+                    $pIdStr .= $litm[0].',';
+                } elseif ($litm[1] == 'V') {
+                    $vIdStr .= $litm[0].',';
+                } else {
+                    $dIdStr .= $litm[0].',';
+                }
+            }
+            if (!empty($pIdStr)) {
+                $arr['pIdStr'] = rtrim($pIdStr, ',');
+            } else {
+                $arr['pIdStr'] = 0;
+            }
+            if (!empty($vIdStr)) {
+                $arr['vIdStr'] = rtrim($vIdStr, ',');
+            } else {
+                $arr['vIdStr'] = 0;
+            }
+            if (!empty($dIdStr)) {
+                $arr['dIdStr'] = rtrim($dIdStr, ',');
+            } else {
+                $arr['dIdStr'] = 0;
+            }
+        }
+        return $arr;
     }
 }
