@@ -749,6 +749,7 @@ class DoorController extends Controller
         $door = $em->getRepository(Doors::class)->find($data->get('doorId'));
         $datime = new \DateTime('now');
         $door->setQty($data->get('qty'));
+        $door->setQuantityRemaining($data->get('qty'));
         $door->setLineItemNum($data->get('editLineItemNumber'));
         $door->setPair($data->get('pair'));
         $door->setSwing($data->get('swing'));
@@ -1010,6 +1011,9 @@ class DoorController extends Controller
         $doorCalculator->setFinishEdgeCost($doorCalCData->getFinishEdgeCost());
         $doorCalculator->setFinishEdgeWaste($doorCalCData->getFinishEdgeWaste());
         $doorCalculator->setSubTotalFinishEdge($doorCalCData->getSubTotalFinishEdge());
+        $doorCalculator->setMillingCost($doorCalCData->getMillingCost());
+        $doorCalculator->setMillingWaste($doorCalCData->getMillingWaste());
+        $doorCalculator->setSubTotalMilling($doorCalCData->getSubTotalMilling());
         $doorCalculator->setRunningCost($doorCalCData->getRunningCost());
         $doorCalculator->setRunningWaste($doorCalCData->getRunningWaste());
         $doorCalculator->setSubTotalrunning($doorCalCData->getSubTotalrunning());
